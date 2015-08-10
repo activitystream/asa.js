@@ -1,20 +1,9 @@
 var cookies = require('./cookies.js');
 var r = require('superagent');
-
-// var SESSION_EXPIRE_TIMEOUT = 15;
-var SESSION_EXPIRE_TIMEOUT = 30 * 60;
-var SESSION_COOKIE_NAME = '__asa_session';
-
-var extendSession = function () {
-	if (!cookies.hasItem(SESSION_COOKIE_NAME)) {
-		console.log('starting session');
-	}
-	cookies.setItem(SESSION_COOKIE_NAME, '1', SESSION_EXPIRE_TIMEOUT, null, '.' + window.location.host);
-};
+var session = require('./session');
 
 var submitEvent = function (e) {
-	e.user_id = cookies.getItem('__utma');
-	e.session = cookies.getItem(SESSION_COOKIE_NAME);
+	e.session = session.getSessionId();
 	if (cookies.hasItem('__asa_partner_id')){
 		e.partner_id = cookies.getItem('__asa_partner_id');
 	}
@@ -60,6 +49,5 @@ module.exports = {
 		}
 		throw new Error('Upsi! There is something wrong with this event:', a);
 	},
-	extendSession: extendSession,
 	submitEvent: submitEvent
 }

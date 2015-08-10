@@ -1,7 +1,9 @@
 (function() {
 	var core = require('./asa');
+	var session = require('./session');
+	
 	var inbox = function inbox(){
-		core.extendSession();
+		session.extendSession();
 		var event = core.gatherMetaInfo(arguments);
 		console.log('got: ', arguments, ', which generated:', event);
 		core.submitEvent(event);				
