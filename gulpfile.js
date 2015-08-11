@@ -25,7 +25,19 @@ gulp.task('webserver', function() {
         .pipe($.webserver({
             host: 'localhost', //change to 'localhost' to disable outside connections
             livereload: false,
+            port: 80,
             https: false,
+            open: false
+        }));
+});
+
+gulp.task('webserver-https', function() {
+    return gulp.src(['dist'])
+        .pipe($.webserver({
+            host: 'localhost', //change to 'localhost' to disable outside connections
+            livereload: false,
+            port: 443,
+            https: true,
             open: false
         }));
 });
@@ -48,7 +60,7 @@ gulp.task( 'pack', function ( callback ) {
 
 gulp.task('serve', function() {
     $.livereload({start: true});
-    runSequence('clean:dist','pack','webserver');
+    runSequence('clean:dist','pack','webserver', 'webserver-https');
 
     gulp.watch('src/**/*.js', ['pack']);
     // gulp.watch(['_layouts/*.html','_posts/*'], ['pages']);

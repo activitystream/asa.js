@@ -4,11 +4,13 @@ var session = require('./session');
 
 var submitEvent = function (e) {
 	e.session = session.getSessionId();
-	if (cookies.hasItem('__asa_partner_id')){
-		e.partner_id = cookies.getItem('__asa_partner_id');
+	var partnerId = window.sessionStorage.getItem('__as.partner_id'); 
+	var partnerSId = window.sessionStorage.getItem('__as.partner_sid'); 
+	if (partnerId){
+		e.partner_id = partnerId;
 	}
-	if (cookies.hasItem('__asa_partner_sid')){
-		e.partner_sid = cookies.getItem('__asa_partner_sid');
+	if (partnerSId){
+		e.partner_sid = partnerSId;
 	}
 	e.tenant_id = window.asaId;
 	console.log('event: ', e);
