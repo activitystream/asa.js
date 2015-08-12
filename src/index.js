@@ -10,6 +10,10 @@
 			autoTrack.links(arguments[1]);
 			return;
 		}
+		if (arguments[0] == 'debug'){
+			debug.setDebugMode(arguments[1]);
+			return;
+		}
 		session.extendSession();
 		var event = core.gatherMetaInfo(arguments);
 		debug.log('got: ', arguments, ', which generated:', event);
