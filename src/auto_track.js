@@ -1,4 +1,6 @@
 var session = require('./session');
+var parseUri = require('./parseuri');
+
 module.exports = {
 	sections: function () {
 		var locationHashChanged = function (oldHash, newHash) {
@@ -17,7 +19,8 @@ module.exports = {
 	links : function(){
 		document.addEventListener('mousedown', function(ev){
 			var ref = ev.target.href;
-			ref = ref + '?__asa_partner_id='+encodeURIComponent(window.asaId)+'&__asa_partner_sid='+encodeURIComponent(session.getSessionId());
+			var alreadyHasParams = ev.target.href.indexOf('?') !== -1;			
+			ref = ref + (alreadyHasParams ? '&' : '?')+'__asa_partner_id='+encodeURIComponent(window.asaId)+'&__asa_partner_sid='+encodeURIComponent(session.getSessionId());
 			ev.target.href = ref; 
 		});
 	}
