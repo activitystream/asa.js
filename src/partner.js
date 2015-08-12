@@ -6,12 +6,12 @@
 		var partnerId = uri.queryKey.__asa_partner_id;
 		var partnerSId = uri.queryKey.__asa_partner_sid;
 		if (partnerId){
-			window.sessionStorage.setItem(partnerIdKey, uri.queryKeys.__asa_partner_id);				
+			window.sessionStorage.setItem(partnerIdKey, uri.queryKey.__asa_partner_id);				
 		} else {
 			window.sessionStorage.removeItem(partnerIdKey);
 		}
 		if (partnerSId){
-			window.sessionStorage.setItem(partnerSIdKey, uri.queryKeys.__asa_partner_sid);				
+			window.sessionStorage.setItem(partnerSIdKey, uri.queryKey.__asa_partner_sid);				
 		} else {
 			window.sessionStorage.removeItem(partnerSIdKey);
 		}
