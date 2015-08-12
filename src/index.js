@@ -7,8 +7,8 @@
 		var partnerIdKey = '__as.partner_id';
 		var partnerSIdKey = '__as.partner_sid';
 		var uri = parseUri(window.location.href);
-		var partnerId = uri.queryKeys.__asa_partner_id;
-		var partnerSId = uri.queryKeys.__asa_partner_sid;
+		var partnerId = uri.queryKey.__asa_partner_id;
+		var partnerSId = uri.queryKey.__asa_partner_sid;
 		if (partnerId){
 			window.sessionStorage.setItem(partnerIdKey, uri.queryKeys.__asa_partner_id);				
 		} else {
