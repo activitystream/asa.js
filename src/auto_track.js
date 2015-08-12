@@ -1,6 +1,5 @@
 var session = require('./session');
 var parseUri = require('./parseuri');
-
 module.exports = {
 	sections: function () {
 		var locationHashChanged = function (oldHash, newHash) {
@@ -15,13 +14,22 @@ module.exports = {
 			}
 		}, 100);
 	},
-	
-	links : function(){
-		document.addEventListener('mousedown', function(ev){
-			var ref = ev.target.href;
-			var alreadyHasParams = ev.target.href.indexOf('?') !== -1;			
-			ref = ref + (alreadyHasParams ? '&' : '?')+'__asa_partner_id='+encodeURIComponent(window.asaId)+'&__asa_partner_sid='+encodeURIComponent(session.getSessionId());
-			ev.target.href = ref; 
-		});
+
+	links: function (domains) {
+		var domainsTracked = domains;
+		var tracker = function (ev) {
+			var href = ev.target.href;
+			if (href) {
+				var destination = parseUri(href);
+				if (domainsTracked.indexOf(destination.authority) > -1) {
+					var alreadyHasParams = ev.target.href.indexOf('?') !== -1;
+					href = href + (alreadyHasParams ? '&' : '?') + '__asa_partner_id=' + encodeURIComponent(window.asaId) + '&__asa_partner_sid=' + encodeURIComponent(session.getSessionId());
+					ev.target.href = href;
+				}
+			}
+		};
+		document.addEventListener('mousedown', tracker);
+		document.addEventListener('keyup', tracker);
+		document.addEventListener('touchstart', tracker);
 	}
 }

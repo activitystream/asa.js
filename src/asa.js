@@ -1,6 +1,7 @@
 var cookies = require('./cookies.js');
 var r = require('superagent');
 var session = require('./session');
+var debug = require('./debug');
 
 var submitEvent = function (e) {
 	e.session = session.getSessionId();
@@ -13,7 +14,7 @@ var submitEvent = function (e) {
 		e.partner_sid = partnerSId;
 	}
 	e.tenant_id = window.asaId;
-	console.log('event: ', e);
+	debug.log('event: ', e);
 	r
 		.post('http://localhost:6502/log')
 		.set('Content-Type', 'application/json')

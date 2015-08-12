@@ -1,4 +1,5 @@
 var cookies = require('./cookies.js');
+var debug = require('./debug');
 
 var SESSION_EXPIRE_TIMEOUT = 30 * 60;
 // SESSION_EXPIRE_TIMEOUT = 30 * 60;
@@ -28,7 +29,7 @@ var sessionStore = store;
 var s = module.exports = {
 	extendSession : function(){
 		if (!sessionStore.hasItem(SESSION_COOKIE_NAME)) {
-			console.log('starting session');
+			debug.log('starting session');
 			sessionStore.setItem(SESSION_COOKIE_NAME, ''+Math.random(), SESSION_EXPIRE_TIMEOUT);			
 		} else {
 			sessionStore.updateTimeout(SESSION_COOKIE_NAME, SESSION_EXPIRE_TIMEOUT)

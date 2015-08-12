@@ -3,11 +3,16 @@
 	var session = require('./session');
 	var partner = require('./partner');	
 	var autoTrack = require('./auto_track');
+	var debug = require('./debug');
 	
 	var inbox = function inbox(){
+		if (arguments[0] == 'trackLinks'){
+			autoTrack.links(arguments[1]);
+			return;
+		}
 		session.extendSession();
 		var event = core.gatherMetaInfo(arguments);
-		console.log('got: ', arguments, ', which generated:', event);
+		debug.log('got: ', arguments, ', which generated:', event);
 		core.submitEvent(event);				
 	};
 
@@ -23,5 +28,4 @@
 	
 	partner.setPartnerInfo();	
 	autoTrack.sections();	
-	autoTrack.links();
 })();
