@@ -1,5 +1,6 @@
+var session = require('./session');
 module.exports = {
-	autoTrackSections: function () {
+	sections: function () {
 		var locationHashChanged = function (oldHash, newHash) {
 			asa('sectionentered', newHash.substr(1));
 		}
@@ -11,5 +12,13 @@ module.exports = {
 				storedHash = newHash;
 			}
 		}, 100);
+	},
+	
+	links : function(){
+		document.addEventListener('mousedown', function(ev){
+			var ref = ev.target.href;
+			ref = ref + '?__asa_partner_id='+encodeURIComponent(window.asaId)+'&__asa_partner_sid='+encodeURIComponent(session.getSessionId());
+			ev.target.href = ref; 
+		});
 	}
 }

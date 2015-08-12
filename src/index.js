@@ -22,5 +22,6 @@
 	}
 	
 	partner.setPartnerInfo();	
-	autoTrack.autoTrackSections();	
+	autoTrack.sections();	
+	autoTrack.links();
 })();
