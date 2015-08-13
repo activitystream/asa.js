@@ -5,7 +5,7 @@ var webpack = require('webpack'),
 module.exports = {
   cache: true,
   devtool: '#source-map',
-  entry: { main: './src/index.js' },
+  entry: { asa: './src/index.js' },
   output: {
     path: path.join(__dirname, "/dist"),
     filename: "[name].js",
