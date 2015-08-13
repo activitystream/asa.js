@@ -1,11 +1,11 @@
 var debugMode = false;
-module.exports = {
-	log : function(){
-		if (debugMode){
-			console.log.apply(console, arguments);
-		}
-	},
-	setDebugMode : function(on){
-		debugMode = on;
+var noLog = function noLog() { };
+var doLog = function doLog() {
+	console.log.apply(console, arguments);
+};
+var me = module.exports = {
+	log: noLog,
+	setDebugMode: function (on) {
+		me.log = on ? doLog : noLog;
 	}
 }
