@@ -7,7 +7,9 @@
 	var microdata = require('./microdata');
 	
 	var inbox = function inbox(){
+
 		session.extendSession();
+
 		if (arguments[0] == 'trackLinks'){
 			autoTrack.links(arguments[1]);
 			return;
@@ -16,20 +18,17 @@
 			debug.setDebugMode(arguments[1]);
 			return;
 		}
+
+		var event = core.gatherMetaInfo(arguments);
+
 		if (arguments[0] == 'itemview'){
-			var metaD = microdata.extract(arguments[1]);
-			debug.log('metadata:', metaD);
-			return;
+			event.meta = microdata.extract(arguments[1]);
 		}
 		if (arguments[0] == 'sectionentered'){
-			var metaD = microdata.extract('#'+arguments[1]);
-			debug.log('metadata:', metaD);
-			var event = core.gatherMetaInfo(arguments);
-			core.submitEvent(event);				
-			return;
+			event.meta = microdata.extract('#'+arguments[1]);
 		}
-		debug.log('unhandled message');
-		debug.log.apply(null, arguments);
+
+		core.submitEvent(event);				
 	};
 
 	var pendingEvents = [];	
