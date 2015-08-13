@@ -4,8 +4,10 @@
 	var partner = require('./partner');	
 	var autoTrack = require('./auto_track');
 	var debug = require('./debug');
+	var microdata = require('./microdata');
 	
 	var inbox = function inbox(){
+		session.extendSession();
 		if (arguments[0] == 'trackLinks'){
 			autoTrack.links(arguments[1]);
 			return;
@@ -14,10 +16,20 @@
 			debug.setDebugMode(arguments[1]);
 			return;
 		}
-		session.extendSession();
-		var event = core.gatherMetaInfo(arguments);
-		debug.log('got: ', arguments, ', which generated:', event);
-		core.submitEvent(event);				
+		if (arguments[0] == 'itemview'){
+			var metaD = microdata.extract(arguments[1]);
+			debug.log('metadata:', metaD);
+			return;
+		}
+		if (arguments[0] == 'sectionentered'){
+			var metaD = microdata.extract('#'+arguments[1]);
+			debug.log('metadata:', metaD);
+			var event = core.gatherMetaInfo(arguments);
+			core.submitEvent(event);				
+			return;
+		}
+		debug.log('unhandled message');
+		debug.log.apply(null, arguments);
 	};
 
 	var pendingEvents = [];	
