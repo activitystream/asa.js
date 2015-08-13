@@ -26,7 +26,7 @@ var store = {
 }
 
 var sessionStore = store;
-var s = module.exports = {
+module.exports = {
 	extendSession : function(){
 		if (!sessionStore.hasItem(SESSION_COOKIE_NAME)) {
 			debug.log('starting session');
@@ -37,7 +37,6 @@ var s = module.exports = {
 	},
 	
 	getSessionId : function(){
-		s.extendSession();
 		return sessionStore.getItem(SESSION_COOKIE_NAME);		
 	},
 }
