@@ -7,7 +7,6 @@
 	var microdata = require('./microdata');
 
 	var inbox = function inbox() {
-
 		try {
 			session.extendSession();
 
