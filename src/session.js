@@ -23,7 +23,7 @@ var store = {
 		var item = JSON.parse(window.sessionStorage.getItem(name));
 		store.setItem(name, item.v, timeout);
 	}
-}
+};
 
 var sessionStore = store;
 module.exports = {
@@ -32,11 +32,11 @@ module.exports = {
 			debug.log('starting session');
 			sessionStore.setItem(SESSION_COOKIE_NAME, ''+Math.random(), SESSION_EXPIRE_TIMEOUT);			
 		} else {
-			sessionStore.updateTimeout(SESSION_COOKIE_NAME, SESSION_EXPIRE_TIMEOUT)
+			sessionStore.updateTimeout(SESSION_COOKIE_NAME, SESSION_EXPIRE_TIMEOUT);
 		}
 	},
 	
 	getSessionId : function(){
 		return sessionStore.getItem(SESSION_COOKIE_NAME);		
 	},
-}
+};

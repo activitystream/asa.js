@@ -22,8 +22,8 @@ module.exports = {
 		var referrer = parseUri(document.referrer).authority;
 		var currentHost = parseUri(window.location.origin).authority;
 		if (referrer != currentHost){
-			updatePartnerInfo()
+			updatePartnerInfo();
 		}
 	}
 	
-}
+};

@@ -21,12 +21,12 @@ var submitEvent = function (e) {
 		.send(e)
 		.end(function (err, res) {
 			if (err) {
-				debug.log('error on server', err)
+				debug.log('error on server', err);
 			} else { 
 				debug.log('server got it'); 
 			}
 		});
-}
+};
 
 var pageview = function (page, location, title) {
 	title = title || document.title;
@@ -65,4 +65,4 @@ module.exports = {
 		throw new Error('Upsi! There is something wrong with this event:', a);
 	},
 	submitEvent: submitEvent
-}
+};

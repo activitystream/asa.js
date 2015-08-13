@@ -8,4 +8,4 @@ var me = module.exports = {
 	setDebugMode: function (on) {
 		me.log = on ? doLog : noLog;
 	}
-}
+};

@@ -36,7 +36,7 @@
 
 	try {
 		var pendingEvents = [];
-		if (!(typeof window.asa === 'undefined') && !(typeof window.asa.q === 'undefined')) {
+		if ((typeof window.asa !== 'undefined') && (typeof window.asa.q !== 'undefined')) {
 			pendingEvents = window.asa.q;
 		}
 

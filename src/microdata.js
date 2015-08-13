@@ -16,7 +16,7 @@ var collectComplexProperty = function (element) {
 		"type": element.attr("itemtype"),
 		"properties": {}
 	};
-	collectReferencedProperties(element, item)
+	collectReferencedProperties(element, item);
 	collectProperties(element, item);
 	return item;
 };

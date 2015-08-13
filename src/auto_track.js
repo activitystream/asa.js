@@ -4,7 +4,7 @@ module.exports = {
 	sections: function () {
 		var locationHashChanged = function (oldHash, newHash) {
 			asa('sectionentered', newHash.substr(1));
-		}
+		};
 		var storedHash = '';
 		window.setInterval(function () {
 			if (window.location.hash != storedHash) {
@@ -32,4 +32,4 @@ module.exports = {
 		document.addEventListener('keyup', tracker);
 		document.addEventListener('touchstart', tracker);
 	}
-}
+};
