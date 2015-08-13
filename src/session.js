@@ -1,4 +1,3 @@
-var cookies = require('./cookies.js');
 var debug = require('./debug');
 
 var SESSION_EXPIRE_TIMEOUT = 30 * 60;

@@ -1,4 +1,3 @@
-var cookies = require('./cookies.js');
 var r = require('superagent');
 var session = require('./session');
 var debug = require('./debug');

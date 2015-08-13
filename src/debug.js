@@ -1,4 +1,3 @@
-var debugMode = false;
 var noLog = function noLog() { };
 var doLog = function doLog() {
 	[].unshift.call(arguments, 'asa.js:');

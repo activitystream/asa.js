@@ -1,5 +1,3 @@
-var debug = require('./debug');
-
 var collectReferencedProperties = function (element, item) {
 	var refString = element.attr('itemref');
 	if (typeof refString !== 'undefined') {
