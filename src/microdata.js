@@ -74,6 +74,13 @@ var findTopLevelItems = function (el) {
 	return items;
 };
 
+var extractFromHead = function(){
+	var meta = {};
+	$('head > meta[property^="og:"]').each(function() {var m = $(this); meta[m.attr('property')] = m.attr('content');});
+	return meta;
+}
+
 module.exports = {
-	extract: findTopLevelItems
+	extract: findTopLevelItems,
+	extractFromHead: extractFromHead
 };

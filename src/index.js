@@ -21,6 +21,9 @@
 
 			var event = core.gatherMetaInfo(arguments);
 
+			if (arguments[0] == 'pageview') {
+				event.meta = microdata.extractFromHead();
+			}
 			if (arguments[0] == 'itemview') {
 				event.meta = microdata.extract(arguments[1]);
 			}
