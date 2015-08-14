@@ -14,6 +14,10 @@
 				autoTrack.links(arguments[1]);
 				return;
 			}
+			if (arguments[0] == 'tenantId') {
+				window.asaId = arguments[1];
+				return;
+			}
 			if (arguments[0] == 'debug') {
 				debug.setDebugMode(arguments[1]);
 				return;
