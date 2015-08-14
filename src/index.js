@@ -10,7 +10,7 @@
 		try {
 			session.extendSession();
 
-			if (arguments[0] == 'trackLinks') {
+			if (arguments[0] == 'connectedPartners') {
 				autoTrack.links(arguments[1]);
 				return;
 			}
