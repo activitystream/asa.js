@@ -2,6 +2,8 @@ var r = require('superagent');
 var session = require('./session');
 var debug = require('./debug');
 
+// var postalAddress = 'http://localhost:6502/log';
+var postalAddress = 'http://inbox.activitystream.com/asa';
 var submitEvent = function (e) {
 	e.session = session.getSessionId();
 	var partnerId = window.sessionStorage.getItem('__as.partner_id');
@@ -15,7 +17,7 @@ var submitEvent = function (e) {
 	e.tenant_id = window.asaId;
 	debug.log('submitting event: ', e);
 	r
-		.post('http://localhost:6502/log')
+		.post(postalAddress)
 		.set('Content-Type', 'application/json')
 		.send(e)
 		.end(function (err, res) {
