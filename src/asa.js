@@ -41,8 +41,8 @@ var sectionentered = function (section, page) {
 	return { type: 'section_entered', page: page, section: section };
 };
 
-var custom = function (event, params) {
-	return { type: 'custom', event: event, params: params };
+var custom = function (event) {
+	return { type: 'custom', event: event };
 };
 
 module.exports = {

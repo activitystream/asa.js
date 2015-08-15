@@ -52,6 +52,9 @@ var collectProperties = function (el, item) {
 
 var findTopLevelItems = function (el) {
 	var items = [];
+	if (typeof el === 'string') { el = $('#' + el) } 
+	else if (typeof el === 'object' && typeof el.tagName === 'string') { el = $(el); }
+	else return {};
 
 	var processElement = function (e) {
 		var el = $(e);
@@ -74,9 +77,9 @@ var findTopLevelItems = function (el) {
 	return items;
 };
 
-var extractFromHead = function(){
+var extractFromHead = function () {
 	var meta = {};
-	$('head > meta[property^="og:"]').each(function() {var m = $(this); meta[m.attr('property')] = m.attr('content');});
+	$('head > meta[property^="og:"]').each(function () { var m = $(this); meta[m.attr('property')] = m.attr('content'); });
 	return meta;
 }
 
