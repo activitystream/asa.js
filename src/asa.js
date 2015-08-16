@@ -3,7 +3,7 @@ var session = require('./session');
 var debug = require('./debug');
 
 // var postalAddress = 'http://localhost:6502/log';
-var postalAddress = 'http://inbox.activitystream.com/asa';
+var postalAddress = '//inbox.activitystream.com/asa';
 var submitEvent = function (e) {
 	e.session = session.getSessionId();
 	var partnerId = window.sessionStorage.getItem('__as.partner_id');
