@@ -41,6 +41,6 @@ module.exports = function inbox() {
 
 		core.submitEvent(event);
 	} catch (e) {
-		debug.log('inbox exception:', e);
+		debug.forceLog('inbox exception:', e);
 	}
 };

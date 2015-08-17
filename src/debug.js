@@ -7,5 +7,6 @@ var me = module.exports = {
 	log: noLog,
 	setDebugMode: function (on) {
 		me.log = on ? doLog : noLog;
-	}
+	},
+	forceLog:doLog
 };

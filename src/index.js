@@ -18,6 +18,6 @@
 		partner.setPartnerInfo();
 		autoTrack.sections();
 	} catch (e) {
-		debug.log('exception during init: ', e);
+		debug.forceLog('exception during init: ', e);
 	}
 })();
