@@ -29,10 +29,10 @@ var submitEvent = function (e) {
 		});
 };
 
-var pageview = function (page, location, title) {
-	title = title || document.title;
-	location = location || window.location.protocol + '//' + window.location.host + window.location.pathname + window.location.search;
-	page = page || window.location.pathname + window.location.search;
+var pageview = function () {
+	var title = document.title;
+	var location = window.location.protocol + '//' + window.location.host + window.location.pathname + window.location.search;
+	var page = window.location.pathname + window.location.search;
 	return { type: 'pageview', page: page, location: location, title: title };
 };
 
