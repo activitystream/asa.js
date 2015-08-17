@@ -19,9 +19,15 @@ gulp.task('clean:dist', function() {
     del.sync(['dist']);
 });
 
+gulp.task('pages', function(){
+  return gulp.src('test/*.html')
+    .pipe($.injectReload())
+    .pipe(gulp.dest('.tmp'))
+    .pipe($.livereload());
+});
 
 gulp.task('webserver', function() {
-    return gulp.src(['dist'])
+    return gulp.src(['dist','.tmp'])
         .pipe($.webserver({
             host: 'localhost', //change to 'localhost' to disable outside connections
             livereload: false,
@@ -42,15 +48,16 @@ gulp.task( 'pack', function ( callback ) {
         $.util.log( "[webpack:build]", stats.toString( {
             colors: true
         } ) );
-        $.livereload('asa.js')
+        $.livereload('asa.js');
+        $.livereload.reload('test.html');
         callback();
     } );
 } );
 
 gulp.task('serve', function() {
     $.livereload({start: true});
-    runSequence('clean:dist','pack','webserver');
+    runSequence(['clean:dist', 'clean:dev'],['pack', 'pages'], 'webserver');
 
-    gulp.watch('src/**/*.js', ['pack']);
-    // gulp.watch(['_layouts/*.html','_posts/*'], ['pages']);
+    gulp.watch(['src/**/*.js', 'test/**/*.js'], ['pack']);
+    gulp.watch(['test/*.html'], ['pages']);
 });

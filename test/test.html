@@ -1,0 +1,65 @@
+<html>
+<head>
+    <!--
+      Most of the items in the head are test items
+    -->
+
+    <meta charset="UTF-8">
+    <meta name="apple-mobile-web-app-title" content="Operaen">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, minimum-scale=1, maximum-scale=1, minimal-ui">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="np7PQ-SjTiYqsz6D8nnoz2KlG-_vj3DAIFvKa7-oPtk">
+    <title>Opera, Ballett og Konserter | Operaen \ Den Norske Opera &amp; Ballett</title>
+    <!--[if lt IE 9 ]>
+        <link href="/Content/ie8?v=_hmuQN_V-p-C9agRm_LlvuH-rGE5ReyTIpNF7oyexCk1" rel="stylesheet" />
+    <![endif]-->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/apple-touch-icon-72x72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/apple-touch-icon-114x114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/apple-touch-icon-144x144-precomposed.png">
+    <link rel="apple-touch-startup-image" href="/startup-320x460.png" media="screen and (max-device-width : 320px)">
+    <link rel="apple-touch-startup-image" href="/startup-640x920.png" media="all and (max-device-width : 480px) and (-webkit-min-device-pixel-ratio : 2)">
+    <link rel="apple-touch-startup-image" href="/startup-640x1096.png" media="all and (max-device-width : 548px) and (-webkit-min-device-pixel-ratio : 2)">
+    <link rel="apple-touch-startup-image" sizes="1024x748" href="/startup-1024x748.png" media="screen and (min-device-width : 481px) and (max-device-width : 1024px) and (orientation : landscape)">
+    <link rel="apple-touch-startup-image" sizes="768x1004" href="/startup-768x1004.png" media="screen and (min-device-width : 481px) and (max-device-width : 1024px) and (orientation : portrait)">
+    <meta name="description" content="Velkommen til Den Norske Opera &amp;amp; Ballett.  Her finner du informasjon om våre forestillinger: opera, ballett, konserter og andre kulturtilbud.">
+    <meta name="keywords" content="Den Norske Opera &amp;amp; Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter">
+    <meta property="og:description" content="Velkommen til Den Norske Opera &amp; Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.">
+    <meta property="og:url" content="http://operaen.no/">
+    <meta property="og:title" content="Opera, Ballett og Konserter | Operaen  \ Den Norske Opera &amp; Ballett">
+    <meta property="fb:app_id" content="160613907360101">
+    <meta property="og:site_name" content="Operaen.no">
+    <meta property="og:type" content="website">
+    <meta name="twitter:title" content="Opera, Ballett og Konserter | Operaen  \ Den Norske Opera &amp; Ballett">
+
+    <!--
+      The rest is to support the framework
+    -->
+
+    <link href="https://cdn.rawgit.com/mochajs/mocha/2.2.5/mocha.css" rel="stylesheet" />
+</head>
+<body>
+  <div id="mocha"></div>
+
+	<div itemscope itemtype="http://schema.org/Offer" id="offer1" style="display:none">
+		<span itemprop="name">Blend-O-Matic</span>
+		<span itemprop="price">$19.95</span>
+		<div itemprop="reviews" itemscope itemtype="http://schema.org/AggregateRating">
+			<meta itemprop="ratingValue" content="4" />
+			<meta itemprop="bestRating" content="5" />Based on
+			<span itemprop="ratingCount">25</span>user ratings</div>
+	</div>
+
+  <script src="https://cdn.rawgit.com/jquery/jquery/2.1.4/dist/jquery.min.js"></script>
+  <script src="https://cdn.rawgit.com/mochajs/mocha/2.2.5/mocha.js"></script>
+  <script>mocha.setup('bdd')</script>
+  <script src="tests.js"></script>
+  <script>
+    mocha.checkLeaks();
+    mocha.globals(['jQuery']);
+    mocha.run();
+  </script>
+</body>
+</html>
