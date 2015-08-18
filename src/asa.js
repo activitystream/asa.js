@@ -39,7 +39,7 @@ var pageview = function () {
 };
 
 var sectionentered = function (section, page) {
-	page = page || window.location.pathname + window.location.search;
+	page = page || window.location.pathname + window.location.hash + window.location.search;
 	return { type: 'section_entered', page: page, section: section };
 };
 
