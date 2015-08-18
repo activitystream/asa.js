@@ -31,7 +31,7 @@ var submitEvent = function (e) {
 
 var pageview = function () {
 	var title = document.title;
-	var location = window.location.protocol + '//' + window.location.host + window.location.pathname + window.location.search;
+	var location = window.location.protocol + '//' + window.location.host + window.location.pathname + window.location.hash + window.location.search;
 	var page = window.location.pathname + window.location.search;
 	return { type: 'pageview', page: page, location: location, title: title };
 };
