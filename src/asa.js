@@ -1,6 +1,7 @@
 var r = require('superagent');
 var session = require('./session');
 var debug = require('./debug');
+var info = require('./version');
 
 // var postalAddress = 'http://localhost:6502/log';
 var postalAddress = '//inbox.activitystream.com/asa';
@@ -15,6 +16,7 @@ var submitEvent = function (e) {
 		e.partner_sid = partnerSId;
 	}
 	e.tenant_id = window.asaId;
+	e.v = info.version;
 	debug.log('submitting event: ', e);
 	r
 		.post(postalAddress)
