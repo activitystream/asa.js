@@ -8,9 +8,6 @@ var runSequence = require('run-sequence');
 var del = require('del');
 var webpack = require( 'webpack' );
 
-var prodWebpackConfig = require( './webpack.config.build.js' );
-
-
 gulp.task('clean:dev', function() {
     del.sync(['.tmp']);
 });
@@ -38,7 +35,8 @@ gulp.task('webserver', function() {
 });
 
 gulp.task( 'pack', function ( callback ) {
-    var myConfig = Object.create( prodWebpackConfig );
+    var devWebpack = require( './webpack.config.dev.js' );
+    var myConfig = Object.create( devWebpack );
     // myConfig.devtool = "#source-map";
 
     // run webpack
@@ -54,6 +52,21 @@ gulp.task( 'pack', function ( callback ) {
     } );
 } );
 
+gulp.task( 'prod-pack', function ( callback ) {
+    var prodWebpack = require( './webpack.config.prod.js' );
+    var myConfig = Object.create( prodWebpack );
+
+    // run webpack
+    webpack( myConfig, function ( err, stats ) {
+        if ( err ) throw new $.util.PluginError( "webpack:build", err );
+        
+        $.util.log( "[webpack:build]", stats.toString( {
+            colors: true
+        } ) );
+        callback();
+    } );
+} );
+
 gulp.task('serve', function() {
     $.livereload({start: true});
     runSequence(['clean:dist', 'clean:dev'],['pack', 'pages'], 'webserver');
@@ -61,3 +74,7 @@ gulp.task('serve', function() {
     gulp.watch(['src/**/*.js', 'test/**/*.js'], ['pack']);
     gulp.watch(['test/*.html'], ['pages']);
 });
+
+gulp.task('package', function(){
+    runSequence(['clean:dist', 'clean:dev'],['prod-pack', 'pages']);    
+})
