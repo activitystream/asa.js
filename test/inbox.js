@@ -25,8 +25,8 @@ describe('inbox', function () {
 
 	describe('default pageview', function () {
 		it('should sent only one event', function () {
-			var callback = sinon.spy();
 			inbox('pageview');
+
 			expect(requests.length).to.eql(1);
 		})
 		it('should be a POST with data describing the event', function () {
@@ -39,10 +39,11 @@ describe('inbox', function () {
 	
 	describe('pageview with custom meta', function(){
 		it('should be a POST with data describing the event', function () {
+
 			inbox('pageview', {a : 's'});
+
 			var expectation = { "type": "pageview", "page": "/test.html", "location": "http://localhost/test.html", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "a" : "s" } };
-			console.log('rd', lastRequest());
-			console.log('rd1', expectation);
+
 			expect(lastRequest()).to.eql(expectation);
 		})
 		

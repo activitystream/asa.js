@@ -52,15 +52,38 @@
 			<span itemprop="ratingCount">25</span>user ratings</div>
 	</div>
 
-  <script src="https://cdn.rawgit.com/jquery/jquery/2.1.4/dist/jquery.min.js"></script>
-  <script src="https://cdn.rawgit.com/mochajs/mocha/2.2.5/mocha.js"></script>
   <script src="http://sinonjs.org/releases/sinon-1.15.4.js"></script>
+  <script src="https://cdn.rawgit.com/mochajs/mocha/2.2.5/mocha.js"></script>
   <script>mocha.setup('bdd')</script>
   <script src="tests.js"></script>
   <script>
-    mocha.checkLeaks();
-    mocha.globals(['jQuery']);
-    mocha.run();
+    onload = function(){
+      //mocha.checkLeaks();
+      //mocha.globals(['foo']);
+      var runner = mocha.run();
+  
+      var failedTests = [];
+      runner.on('end', function(){
+        window.mochaResults = runner.stats;
+        window.mochaResults.reports = failedTests;
+      });
+  
+      runner.on('fail', logFailure);
+  
+      function logFailure(test, err){
+  
+        var flattenTitles = function(test){
+          var titles = [];
+          while (test.parent.title){
+            titles.push(test.parent.title);
+            test = test.parent;
+          }
+          return titles.reverse();
+        };
+  
+        failedTests.push({name: test.title, result: false, message: err.message, stack: err.stack, titles: flattenTitles(test) });
+      };
+    };
   </script>
 </body>
 </html>
