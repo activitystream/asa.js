@@ -3,10 +3,6 @@
 function DOMElement() {
 };
 
-DOMElement.prototype.get = function get() {
-    return this._element;
-};
-
 DOMElement.prototype.text = function text() {
     return this._element.textContent;
 };
