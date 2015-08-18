@@ -1,10 +1,20 @@
+// var jq = $;
+var jq = require('./DOM');
+var debug = require('./debug');
+
 var collectReferencedProperties = function (element, item) {
 	var refString = element.attr('itemref');
 	if (typeof refString !== 'undefined') {
 		var refs = refString.split(' ');
 		for (var i = 0; i < refs.length; i++) {
 			var ref = refs[i];
-			collectProperties($('#' + ref), item);
+			var refItem = jq('#' + ref);
+			if (refItem.length === 1){
+				collectProperties(refItem.get(0), item);
+			}
+			else {
+				debug.log('missing metadata element', ref);
+			}
 		}
 	}
 };
@@ -34,7 +44,7 @@ var collectSimpleProperty = function (el) {
 
 var collectProperties = function (el, item) {
 	el.children().each(function (_, c) {
-		var child = $(c);
+		var child = jq(c);
 		var prop = child.attr('itemprop');
 		if (typeof prop === 'string') {
 			if (typeof child.attr('itemscope') !== 'undefined') {
@@ -52,12 +62,12 @@ var collectProperties = function (el, item) {
 
 var findTopLevelItems = function (el) {
 	var items = [];
-	if (typeof el === 'string') { el = $('#' + el) } 
-	else if (typeof el === 'object' && typeof el.tagName === 'string') { el = $(el); }
+	if (typeof el === 'string') { el = jq('#'+el).get(0); }
+	else if (typeof el === 'object' && typeof el.tagName === 'string') { el = jq(el); }
 	else return {};
 
 	var processElement = function (e) {
-		var el = $(e);
+		var el = jq(e);
 		var scope = el.attr('itemscope');
 		var prop = el.attr('itemprop');
 		if (typeof scope !== 'undefined') {
@@ -79,7 +89,7 @@ var findTopLevelItems = function (el) {
 
 var extractFromHead = function () {
 	var meta = {};
-	$('head > meta[property^="og:"]').each(function () { var m = $(this); meta[m.attr('property')] = m.attr('content'); });
+	jq('head > meta[property^="og:"]').each(function () { var m = jq(this); meta[m.attr('property')] = m.attr('content'); });
 	return meta;
 }
 
