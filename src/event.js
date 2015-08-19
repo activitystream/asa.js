@@ -1,4 +1,6 @@
 var microdata = require('./microdata');
+var session = require('./session');
+var info = require('./version');
 
 var explicitMeta = function (o) {
 	if (o.length < 2) return false;
@@ -35,18 +37,32 @@ var gatherMetaInfo = function gatherMetaInfo(a) {
 			default:
 				eventBody = custom.apply(null, a);
 		}
-		eventBody.t = 1 * new Date();
 		return eventBody;
 	}
 	throw new Error('Upsi! There is something wrong with this event:', a);
 };
 
+var gatherSystemInfo = function (e) {
+	e.t = 1 * new Date();
+	e.session = session.getSessionId();
+	var partnerId = window.sessionStorage.getItem('__as.partner_id');
+	var partnerSId = window.sessionStorage.getItem('__as.partner_sid');
+	if (partnerId) {
+		e.partner_id = partnerId;
+	}
+	if (partnerSId) {
+		e.partner_sid = partnerSId;
+	}
+	e.tenant_id = window.asaId;
+	e.v = info.version;
+	return e;
+};
 
 module.exports = {
 	package: function () {
 
 		var event = gatherMetaInfo(arguments);
-
+		event = gatherSystemInfo(event);
 		if (arguments[0] == 'pageview') {
 			event.meta = explicitMeta(arguments) || microdata.extractFromHead();
 		} else
