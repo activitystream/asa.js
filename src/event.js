@@ -7,20 +7,20 @@ var explicitMeta = function (o) {
 };
 
 module.exports = {
-	package : function(args){
+	package : function(){
 
-			var event = core.gatherMetaInfo(args);
+			var event = core.gatherMetaInfo(arguments);
 
-			if (args[0] == 'pageview') {
-				event.meta = explicitMeta(args) || microdata.extractFromHead();
+			if (arguments[0] == 'pageview') {
+				event.meta = explicitMeta(arguments) || microdata.extractFromHead();
 			} else
-				if (args[0] == 'itemview') {
-					event.meta = explicitMeta(args) || microdata.extract(args[1]);
+				if (arguments[0] == 'itemview') {
+					event.meta = explicitMeta(arguments) || microdata.extract(arguments[1]);
 				} else
-					if (args[0] == 'sectionentered') {
-						event.meta = explicitMeta(args) || microdata.extract(args[1]);
+					if (arguments[0] == 'sectionentered') {
+						event.meta = explicitMeta(arguments) || microdata.extract(arguments[1]);
 					} else {
-						event.meta = explicitMeta(args) || undefined;
+						event.meta = explicitMeta(arguments) || undefined;
 					}
 			return event;
 	}
