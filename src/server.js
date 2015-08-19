@@ -3,11 +3,11 @@ var debug = require('./debug');
 
 var pendingSubmission = [], done = true;
 var batchIntervalHandler;
-// var postalAddress = 'http://localhost:6502/log';
+
 var postalAddress = '//inbox.activitystream.com/asa';
 
 var submitNow = function(ev){
-	done = false;
+	// done = false;
 	if (!(ev instanceof Array)) ev = [ev];
 	var packet = {
 		ev : ev,
@@ -22,10 +22,10 @@ var submitNow = function(ev){
 			if (err) {
 				debug.log('error on server', err);
 			} else {
-				pendingSubmission.splice(0, ev.length);
+				// pendingSubmission.splice(0, ev.length);
 				debug.log('server got it');
 			}
-			done = true;
+			// done = true;
 		});
 };
 module.exports = {
