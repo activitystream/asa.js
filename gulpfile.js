@@ -75,6 +75,9 @@ gulp.task('serve', function() {
     gulp.watch(['test/*.html'], ['pages']);
 });
 
+gulp.task('clean', function(){
+    runSequence(['clean:dist', 'clean:dev']);    
+})
 gulp.task('package', function(){
-    runSequence(['clean:dist', 'clean:dev'],['prod-pack', 'pages']);    
+    runSequence(['clean'],['prod-pack', 'pages']);    
 })
