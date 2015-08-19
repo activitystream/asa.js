@@ -1,5 +1,5 @@
 var webpackConf = require('./webpack.config')();
 
-webpackConf.devtool = '#eval-source-map';
+webpackConf.devtool = '#cheap-module-source-map';
 
 module.exports = webpackConf;
