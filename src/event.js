@@ -1,4 +1,4 @@
-var core = require('./asa');
+var core = require('./core');
 var microdata = require('./microdata');
 
 var explicitMeta = function (o) {

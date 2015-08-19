@@ -3,7 +3,7 @@
 	var autoTrack = require('./auto_track');
 	var debug = require('./debug');
 	var inbox = require('./inbox');	
-	var core = require('./asa');
+	var core = require('./core');
 
 	try {
 		var pendingEvents = [];

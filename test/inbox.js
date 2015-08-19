@@ -1,6 +1,6 @@
 var inbox = require('inbox');
 var expect = require('chai').expect;
-var core = require('asa');
+var core = require('core');
 
 describe('inbox', function () {
     var requests = [];
