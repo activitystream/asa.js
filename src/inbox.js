@@ -1,4 +1,3 @@
-var core = require('./core');
 var session = require('./session');
 var microdata = require('./microdata');
 var autoTrack = require('./auto_track');
