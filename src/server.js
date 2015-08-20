@@ -6,13 +6,41 @@ var batchIntervalHandler;
 
 var postalAddress = '//inbox.activitystream.com/asa';
 
+var post = function(packet, callback){
+	var request = new XMLHttpRequest();
+	request.open('POST', postalAddress, true);
+	request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+	request.onload = function () {
+		if (request.status >= 200 && request.status < 400) {
+			callback(null, request.status);
+		} else {
+			callback(request.status, null);
+		}
+	};
+
+	request.onerror = function () {
+		callback(1000, null);
+	};
+	request.send(JSON.stringify(packet));	
+	
+}
 var submitNow = function(ev){
 	if (!(ev instanceof Array)) ev = [ev];
 	var packet = {
 		ev : ev,
 		t: 1 * new Date()
 	};
+	
 	debug.log('submitting event: ', ev);
+
+		
+	false && post(packet, function(err, _){
+		if (err) {
+			debug.log('error on server', err);
+		} else {
+			debug.log('server got it');
+		}
+	});
 	r
 		.post(postalAddress)
 		.set('Content-Type', 'application/json')
