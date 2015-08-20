@@ -2,6 +2,7 @@ var inbox = require('inbox');
 var expect = require('chai').expect;
 var core = require('server');
 var info = require('version');
+var features = require('features');
 
 describe('inbox', function () {
     var requests = [];
@@ -26,6 +27,7 @@ describe('inbox', function () {
 	};
 
 	beforeEach(function () {
+		features.clearExperiments();
 		requests = [];
 		xhr = sinon.useFakeXMLHttpRequest();
         xhr.onCreate = function (xhr) {
@@ -54,6 +56,18 @@ describe('inbox', function () {
 	describe('pageview with custom meta', function(){
 		it('should be a POST with data describing the event', function () {
 
+			inbox(function(e) {core.submitEvent(e);})('pageview', {a : 's'});
+
+			var expectation = addSystemInfo({ "ev" : [{ "type": "pageview", "page": "/test.html", "location": "http://localhost/test.html", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "a" : "s" } }]});
+
+			expect(lastRequest()).to.eql(expectation);
+		})
+		
+	});
+
+	describe('experiment miniAjax', function(){
+		it('should be a POST with data describing the event', function () {
+			features.defineExperiment(features.MINI_AJAX, 100);
 			inbox(function(e) {core.submitEvent(e);})('pageview', {a : 's'});
 
 			var expectation = addSystemInfo({ "ev" : [{ "type": "pageview", "page": "/test.html", "location": "http://localhost/test.html", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "a" : "s" } }]});
