@@ -20,7 +20,7 @@ describe('inbox', function () {
 	var addSystemInfo = function(ev){
 		for (var i = 0; i < ev.ev.length; i++) {
 			var element = ev.ev[i];
-			element["v"] = info.version;
+			element["v"] = info.version();
 		}	
 		return ev;
 	};

@@ -54,7 +54,7 @@ var gatherSystemInfo = function (e) {
 		e.partner_sid = partnerSId;
 	}
 	e.tenant_id = window.asaId;
-	e.v = info.version;
+	e.v = info.version();
 	return e;
 };
 
