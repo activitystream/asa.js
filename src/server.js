@@ -24,7 +24,7 @@ var post = function (packet, callback) {
 	};
 	request.send(JSON.stringify(packet));
 
-}
+};
 var submitNow = function (ev) {
 	if (!(ev instanceof Array)) ev = [ev];
 	var packet = {

@@ -1,7 +1,7 @@
 
 // Prototype of our jQuery killer ;)
 function DOMElement() {
-};
+}
 
 DOMElement.prototype.text = function text() {
     return this._element.textContent;
@@ -9,10 +9,10 @@ DOMElement.prototype.text = function text() {
 
 DOMElement.prototype.attr = function attr(name) {
     // emulating the jQuery behaviour
-    var attr = this._element.getAttribute('' + name);
-    if (attr == null) return undefined;
+    var attrValue = this._element.getAttribute('' + name);
+    if (attrValue === null) return undefined;
     else
-        return attr;
+        return attrValue;
 };
 
 DOMElement.prototype.prop = function prop(name) {

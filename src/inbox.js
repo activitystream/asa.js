@@ -25,5 +25,5 @@ module.exports = function inbox(transport) {
 		} catch (e) {
 			debug.forceLog('inbox exception:', e);
 		}
-	}
+	};
 };

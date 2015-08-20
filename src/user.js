@@ -4,7 +4,7 @@ var randomness = require('./randomness');
 var USER_ID_COOKIE = '__as_user';
 var generateUserId = function () {
 	return hash(window.location.host) + '.' + hash('' + randomness.getNumber());
-}
+};
 var getUserId = function () {
 	if (!cookies.hasItem(USER_ID_COOKIE)) {
 		cookies.setItem(USER_ID_COOKIE, generateUserId(), Infinity);

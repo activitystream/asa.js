@@ -91,7 +91,7 @@ var extractFromHead = function () {
 	var meta = {};
 	jq('head > meta[property^="og:"]').each(function () { var m = jq(this); meta[m.attr('property')] = m.attr('content'); });
 	return meta;
-}
+};
 
 module.exports = {
 	extract: findTopLevelItems,
