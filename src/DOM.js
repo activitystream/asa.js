@@ -51,7 +51,7 @@ DOMElements.prototype.get = function get(index) {
 var $DOM = module.exports = function $DOM(query) {
 
     if (!query || !(typeof query === 'string' || query instanceof Element || query instanceof DOMElement || query instanceof DOMElements)) {
-        throw new Error('Invalid argument provided');
+        throw new Error('Invalid argument provided:' + query);
     }
 
     if (query instanceof DOMElement || query instanceof DOMElements) return query;
