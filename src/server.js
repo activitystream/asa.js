@@ -10,7 +10,7 @@ var postalAddress = '//inbox.activitystream.com/asa';
 var post = function (packet, callback) {
 	var request = new XMLHttpRequest();
 	request.open('POST', postalAddress, true);
-	request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+	request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
 	request.onload = function () {
 		if (request.status >= 200 && request.status < 400) {
 			callback(null, request.status);
