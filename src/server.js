@@ -7,7 +7,6 @@ var batchIntervalHandler;
 var postalAddress = '//inbox.activitystream.com/asa';
 
 var submitNow = function(ev){
-	// done = false;
 	if (!(ev instanceof Array)) ev = [ev];
 	var packet = {
 		ev : ev,
@@ -22,10 +21,30 @@ var submitNow = function(ev){
 			if (err) {
 				debug.log('error on server', err);
 			} else {
-				// pendingSubmission.splice(0, ev.length);
 				debug.log('server got it');
 			}
-			// done = true;
+		});
+};
+var submitNow2 = function(ev){
+	done = false;
+	if (!(ev instanceof Array)) ev = [ev];
+	var packet = {
+		ev : ev,
+		t: 1 * new Date()
+	};
+	debug.log('submitting event: ', ev);
+	r
+		.post(postalAddress)
+		.set('Content-Type', 'application/json')
+		.send(packet)
+		.end(function (err, res) {
+			if (err) {
+				debug.log('error on server', err);
+			} else {
+				pendingSubmission.splice(0, ev.length);
+				debug.log('server got it');
+			}
+			done = true;
 		});
 };
 module.exports = {
@@ -35,9 +54,13 @@ module.exports = {
 	},
 	batchOn: function(){
 		batchIntervalHandler = setInterval(function batchProcessor(){
-			if (pendingSubmission.length > 0 && done) {
-				var batchSize = Math.min(pendingSubmission.length, 10);
-				submitNow(pendingSubmission.slice(0, batchSize));
+			try{
+				if (pendingSubmission.length > 0 && done) {
+					var batchSize = Math.min(pendingSubmission.length, 10);
+					submitNow2(pendingSubmission.slice(0, batchSize));
+				}
+			} catch(e){
+				debug.log('exception submitting', e);				
 			}
 		}, 400);
 	},
