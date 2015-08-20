@@ -8,6 +8,9 @@ module.exports = {
 		var exp = experiments[name];
 		return !!exp;
 	},
+	clearExperiments : function(){
+		experiments = {};	
+	},
 	experimentsLive : function(){
 		var result = [];
 		for (var exp in experiments) {
@@ -15,7 +18,7 @@ module.exports = {
 				if (experiments[exp]) result.push(exp);				
 			}
 		}
-		return result.join();
+		return result.join('.');
 	},
 	MINI_AJAX : 'miniAjax'	
 }
