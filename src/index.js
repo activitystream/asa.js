@@ -4,6 +4,7 @@
 	var debug = require('./debug');
 	var inbox = require('./inbox');	
 	var core = require('./server');
+	var features = require('./features');
 
 	try {
 		var pendingEvents = [];
@@ -12,6 +13,9 @@
 		}
 
 		window.asa = inbox(function(e) {core.submitEvent(e);});
+
+		// features.defineExperiment(features.MINI_AJAX, 10);
+
 		for (var i = 0; i < pendingEvents.length; i++) {
 			window.asa.apply(null, pendingEvents[i]);
 		}
