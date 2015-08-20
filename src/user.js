@@ -7,7 +7,7 @@ var generateUserId = function () {
 };
 var getUserId = function () {
 	if (!cookies.hasItem(USER_ID_COOKIE)) {
-		cookies.setItem(USER_ID_COOKIE, generateUserId(), Infinity);
+		cookies.setItem(USER_ID_COOKIE, generateUserId(), Infinity, '/');
 	}
 
 	return cookies.getItem(USER_ID_COOKIE);
