@@ -1,5 +1,6 @@
 var r = require('superagent');
 var debug = require('./debug');
+var features = require('./features');
 
 var pendingSubmission = [], done = true;
 var batchIntervalHandler;
@@ -32,16 +33,17 @@ var submitNow = function(ev){
 	};
 	
 	debug.log('submitting event: ', ev);
-
-		
-	false && post(packet, function(err, _){
+	if (features.isExperiment(features.MINI_AJAX)){
+	 post(packet, function(err, _){
 		if (err) {
 			debug.log('error on server', err);
 		} else {
 			debug.log('server got it');
 		}
 	});
-	r
+		
+	} else	{
+	  r
 		.post(postalAddress)
 		.set('Content-Type', 'application/json')
 		.send(packet)
@@ -51,7 +53,8 @@ var submitNow = function(ev){
 			} else {
 				debug.log('server got it');
 			}
-		});
+		});		
+	}	
 };
 var submitNow2 = function(ev){
 	done = false;
