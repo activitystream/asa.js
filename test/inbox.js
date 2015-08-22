@@ -22,6 +22,7 @@ describe('inbox', function () {
 		for (var i = 0; i < ev.ev.length; i++) {
 			var element = ev.ev[i];
 			element["v"] = info.version();
+			element["location"] = "http://localhost:8080/test.html"
 		}	
 		return ev;
 	};
@@ -47,7 +48,7 @@ describe('inbox', function () {
 		})
 		it('should be a POST with data describing the event', function () {
 			inbox(function(e) {core.submitEvent(e);})('pageview');
-			var expectation = addSystemInfo({ "ev" : [{ "type": "pageview", "page": "/test.html", "location": "http://localhost/test.html", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "og:description": "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.", "og:url": "http://operaen.no/", "og:title": "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett", "og:site_name": "Operaen.no", "og:type": "website" } } ]});
+			var expectation = addSystemInfo({ "ev" : [{ "type": "pageview", "page": "/test.html", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "og:description": "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.", "og:url": "http://operaen.no/", "og:title": "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett", "og:site_name": "Operaen.no", "og:type": "website" } } ]});
 
 			expect(lastRequest()).to.eql(expectation);
 		})
@@ -58,7 +59,7 @@ describe('inbox', function () {
 
 			inbox(function(e) {core.submitEvent(e);})('pageview', {a : 's'});
 
-			var expectation = addSystemInfo({ "ev" : [{ "type": "pageview", "page": "/test.html", "location": "http://localhost/test.html", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "a" : "s" } }]});
+			var expectation = addSystemInfo({ "ev" : [{ "type": "pageview", "page": "/test.html", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "a" : "s" } }]});
 
 			expect(lastRequest()).to.eql(expectation);
 		})
@@ -70,7 +71,7 @@ describe('inbox', function () {
 			features.defineExperiment(features.MINI_AJAX, 100);
 			inbox(function(e) {core.submitEvent(e);})('pageview', {a : 's'});
 
-			var expectation = addSystemInfo({ "ev" : [{ "type": "pageview", "page": "/test.html", "location": "http://localhost/test.html", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "a" : "s" } }]});
+			var expectation = addSystemInfo({ "ev" : [{ "type": "pageview", "page": "/test.html", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "a" : "s" } }]});
 
 			expect(lastRequest()).to.eql(expectation);
 		})
@@ -86,9 +87,8 @@ describe('inbox', function () {
 
 			setTimeout(function(){
 				core.batchOff();
-				var expectation = addSystemInfo({ "ev" : [{ "type": "pageview", "page": "/test.html", "location": "http://localhost/test.html", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "a" : "s" } }, { "type": "pageview", "page": "/test.html", "location": "http://localhost/test.html", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "a" : "d" } }]});
+				var expectation = addSystemInfo({ "ev" : [{ "type": "pageview", "page": "/test.html", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "a" : "s" } }, { "type": "pageview", "page": "/test.html", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "a" : "d" } }]});
 	
-			
 				expect(lastRequest()).to.eql(expectation);
 				done();
 			}, 700);

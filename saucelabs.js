@@ -9,7 +9,7 @@ cloud.browser('chrome', '', 'Mac');
 // cloud.browser('', '9.0', 'Mac', 'iPad Simulator');
 // cloud.browser('', '8.0', 'Mac', 'iPad Simulator');
 // cloud.browser('', '7.0', 'Mac', 'iPad Simulator');
-cloud.url('http://localhost/test.html');
+cloud.url('http://localhost:8080/test.html');
  
 cloud.on('init', function(browser){
   console.log('  init : %s %s', browser.id(), browser.version);
