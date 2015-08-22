@@ -84,16 +84,19 @@ var findTopLevelItems = function (el) {
 	};
 
 	processElement(el);
-	return items;
+	return theOneMapper(items);
 };
 
 var extractFromHead = function () {
 	var meta = {};
 	jq('head > meta[property^="og:"]').each(function () { var m = jq(this); meta[m.attr('property')] = m.attr('content'); });
-	return meta;
+	return theOneMapper(meta);
 };
-
+var theOneMapper = function(m){return m;};
 module.exports = {
 	extract: findTopLevelItems,
-	extractFromHead: extractFromHead
+	extractFromHead: extractFromHead,
+	setMapper : function(mapper){
+		theOneMapper = mapper;
+	}
 };

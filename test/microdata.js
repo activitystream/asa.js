@@ -11,4 +11,16 @@ describe('microdata', function () {
 		var data = m.extractFromHead();
 		expect(data).to.deep.equal({ "og:description": "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.", "og:url": "http://operaen.no/", "og:title": "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett", "og:site_name": "Operaen.no", "og:type": "website" });
 	});
+	
+	describe('meta-data mapper', function(){
+		it('should process each extracted metadata', function(){
+			
+			m.setMapper(function(meta){
+				return {c : 'd'};
+			});
+			var data = m.extractFromHead();
+			expect(data).to.deep.equal({ "c" : "d" });	
+		})
+	});
+	
 })
