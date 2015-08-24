@@ -1,6 +1,7 @@
 var microdata = require('./microdata');
 var session = require('./session');
 var info = require('./version');
+var _ = require('./utils');
 
 var explicitMeta = function (o) {
 	if (o.length < 2) return false;
@@ -64,7 +65,10 @@ module.exports = {
 		var event = gatherMetaInfo(arguments);
 		event = gatherSystemInfo(event);
 		if (arguments[0] == 'pageview') {
-			event.meta = explicitMeta(arguments) || microdata.extractFromHead();
+			event.meta = microdata.extractFromHead();
+			if (typeof arguments[1] === 'object'){
+				_.override(event.meta, arguments[1]);
+			}
 		} else
 			if (arguments[0] == 'itemview') {
 				event.meta = explicitMeta(arguments) || microdata.extract(arguments[1]);
