@@ -77,7 +77,15 @@ describe('inbox', function () {
 		it('should send metadata when client id specified as string', function(){
 			inbox(core.submitEvent)('custom_one', 'offer1');
 
-			var expectation = addSystemInfo({ "ev" : [{ "type": "custom", "event": "custom_one", "location" : "sadfs", "meta" : { "type": "http://schema.org/Offer", "properties": { "name": "Blend-O-Matic", "price": "$19.95", "reviews": { "type": "http://schema.org/AggregateRating", "properties": { "ratingValue": "4", "bestRating": "5", "ratingCount": "25" } } } } }]});
+			var expectation = addSystemInfo({ "ev" : [{ "type": "custom", "event": "custom_one",  "meta" : { "type": "http://schema.org/Offer", "properties": { "name": "Blend-O-Matic", "price": "$19.95", "reviews": { "type": "http://schema.org/AggregateRating", "properties": { "ratingValue": "4", "bestRating": "5", "ratingCount": "25" } } } } }]});
+			console.log('ef', lastRequest());
+
+			expect(lastRequest()).to.eql(expectation);
+		});
+		it('should send metadata when specified as DOM element', function(){
+			inbox(core.submitEvent)('custom_one', document.getElementById('offer1'));
+
+			var expectation = addSystemInfo({ "ev" : [{ "type": "custom", "event": "custom_one", "meta" : { "type": "http://schema.org/Offer", "properties": { "name": "Blend-O-Matic", "price": "$19.95", "reviews": { "type": "http://schema.org/AggregateRating", "properties": { "ratingValue": "4", "bestRating": "5", "ratingCount": "25" } } } } }]});
 			console.log('ef', lastRequest());
 
 			expect(lastRequest()).to.eql(expectation);
