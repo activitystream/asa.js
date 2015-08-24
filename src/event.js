@@ -3,7 +3,7 @@ var session = require('./session');
 var info = require('./version');
 var _ = require('./utils');
 
-var explicitMeta = function (o) {
+var DOMMeta = function (o) {
 	if (o.length < 2) return false;
 	return (typeof o[1] === 'object' && typeof o[1].tagName === 'undefined') ? o[1] : false;
 };
@@ -66,17 +66,26 @@ module.exports = {
 		event = gatherSystemInfo(event);
 		if (arguments[0] == 'pageview') {
 			event.meta = microdata.extractFromHead();
-			if (typeof arguments[1] === 'object'){
-				_.override(event.meta, arguments[1]);
+			if (typeof arguments[1] === 'object') {
+				event.meta = _.override(event.meta, arguments[1]);
 			}
 		} else
 			if (arguments[0] == 'itemview') {
-				event.meta = explicitMeta(arguments) || microdata.extract(arguments[1]);
+				event.meta = DOMMeta(arguments) || microdata.extract(arguments[1]);
 			} else
 				if (arguments[0] == 'sectionentered') {
-					event.meta = explicitMeta(arguments) || microdata.extract(arguments[1]);
+					event.meta = DOMMeta(arguments) || microdata.extract(arguments[1]);
 				} else {
-					event.meta = explicitMeta(arguments) || microdata.extract(arguments[1]);
+					var meta = undefined;
+					if (typeof domElement === 'string' || (typeof domElement === 'object' && typeof domElement.tagName !== 'undefined')) { 
+						meta = microdata.extract(domElement); 
+					} else
+					if (typeof extra === 'undefined' && typeof domElement === 'object') { 
+						extra = domElement; 
+						domElement = null; 
+					}
+					meta = _.override(meta, extra);
+					if (meta !== undefined) event.meta = meta;
 				}
 		return event;
 	}
