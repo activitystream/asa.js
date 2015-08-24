@@ -60,7 +60,7 @@ var gatherSystemInfo = function (e) {
 };
 
 module.exports = {
-	package: function () {
+	package: function (eventname, domElement, extra) {
 
 		var event = gatherMetaInfo(arguments);
 		event = gatherSystemInfo(event);
@@ -76,7 +76,7 @@ module.exports = {
 				if (arguments[0] == 'sectionentered') {
 					event.meta = explicitMeta(arguments) || microdata.extract(arguments[1]);
 				} else {
-					event.meta = explicitMeta(arguments) || undefined;
+					event.meta = explicitMeta(arguments) || microdata.extract(arguments[1]);
 				}
 		return event;
 	}

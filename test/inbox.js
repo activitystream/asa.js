@@ -22,7 +22,7 @@ describe('inbox', function () {
 		for (var i = 0; i < ev.ev.length; i++) {
 			var element = ev.ev[i];
 			element["v"] = info.version();
-			element["location"] = "http://localhost:8080/test.html"
+			if (element["location"]) element["location"] = "http://localhost:8080/test.html"
 		}	
 		return ev;
 	};
@@ -42,13 +42,13 @@ describe('inbox', function () {
 
 	describe('default pageview', function () {
 		it('should sent only one event', function () {
-			inbox(function(e) {core.submitEvent(e);})('pageview');
+			inbox(core.submitEvent)('pageview');
 
 			expect(requests.length).to.equal(1);
 		})
 		it('should be a POST with data describing the event', function () {
-			inbox(function(e) {core.submitEvent(e);})('pageview');
-			var expectation = addSystemInfo({ "ev" : [{ "type": "pageview", "page": "/test.html", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "og:description": "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.", "og:url": "http://operaen.no/", "og:title": "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett", "og:site_name": "Operaen.no", "og:type": "website" } } ]});
+			inbox(core.submitEvent)('pageview');
+			var expectation = addSystemInfo({ "ev" : [{ "type": "pageview", "page": "/test.html", "location" : "sadfs", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "og:description": "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.", "og:url": "http://operaen.no/", "og:title": "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett", "og:site_name": "Operaen.no", "og:type": "website" } } ]});
 
 			expect(lastRequest()).to.eql(expectation);
 		})
@@ -57,21 +57,39 @@ describe('inbox', function () {
 	describe('pageview with custom meta', function(){
 		it('should be a POST with data describing the event', function () {
 
-			inbox(function(e) {core.submitEvent(e);})('pageview', {a : 's'});
+			inbox(core.submitEvent)('pageview', {a : 's'});
 
-			var expectation = addSystemInfo({ "ev" : [{ "type": "pageview", "page": "/test.html", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "og:description": "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.", "og:url": "http://operaen.no/", "og:title": "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett", "og:site_name": "Operaen.no", "og:type": "website", "a": "s" } }]});
+			var expectation = addSystemInfo({ "ev" : [{ "type": "pageview", "page": "/test.html", "location" : "sadfs", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "og:description": "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.", "og:url": "http://operaen.no/", "og:title": "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett", "og:site_name": "Operaen.no", "og:type": "website", "a": "s" } }]});
 
 			expect(lastRequest()).to.eql(expectation);
 		})
 		
 	});
+	
+	describe('custom events', function(){
+		it('should send no metadata when none specified', function(){
+			inbox(core.submitEvent)('custom_one');
+
+			var expectation = addSystemInfo({ "ev" : [{ "type": "custom", "event": "custom_one" }]});
+
+			expect(lastRequest()).to.eql(expectation);
+		});
+		it('should send metadata when client id specified as string', function(){
+			inbox(core.submitEvent)('custom_one', 'offer1');
+
+			var expectation = addSystemInfo({ "ev" : [{ "type": "custom", "event": "custom_one", "location" : "sadfs", "meta" : { "type": "http://schema.org/Offer", "properties": { "name": "Blend-O-Matic", "price": "$19.95", "reviews": { "type": "http://schema.org/AggregateRating", "properties": { "ratingValue": "4", "bestRating": "5", "ratingCount": "25" } } } } }]});
+			console.log('ef', lastRequest());
+
+			expect(lastRequest()).to.eql(expectation);
+		});
+	})
 
 	describe('experiment miniAjax', function(){
 		it('should be a POST with data describing the event', function () {
 			features.defineExperiment(features.MINI_AJAX, 100);
-			inbox(function(e) {core.submitEvent(e);})('pageview', {a : 's'});
+			inbox(core.submitEvent)('pageview', {a : 's'});
 
-			var expectation = addSystemInfo({ "ev" : [{ "type": "pageview", "page": "/test.html", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "og:description": "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.", "og:url": "http://operaen.no/", "og:title": "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett", "og:site_name": "Operaen.no", "og:type": "website", "a": "s" } }]});
+			var expectation = addSystemInfo({ "ev" : [{ "type": "pageview", "page": "/test.html", "location" : "sadfs", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "og:description": "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.", "og:url": "http://operaen.no/", "og:title": "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett", "og:site_name": "Operaen.no", "og:type": "website", "a": "s" } }]});
 
 			expect(lastRequest()).to.eql(expectation);
 		})
@@ -81,13 +99,13 @@ describe('inbox', function () {
 	describe('batching', function(){
 		it('should have both events', function (done) {
 			core.batchOn();
-			var batchingInbox = inbox(function(e) {core.batchEvent(e);});
+			var batchingInbox = inbox(core.batchEvent);
 			batchingInbox('pageview', {a : 's'});
 			batchingInbox('pageview', {a : 'd'});
 
 			setTimeout(function(){
 				core.batchOff();
-				var expectation = addSystemInfo({ "ev" : [{ "type": "pageview", "page": "/test.html", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "og:description": "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.", "og:url": "http://operaen.no/", "og:title": "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett", "og:site_name": "Operaen.no", "og:type": "website", "a": "s" } }, { "type": "pageview", "page": "/test.html", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "og:description": "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.", "og:url": "http://operaen.no/", "og:title": "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett", "og:site_name": "Operaen.no", "og:type": "website", "a": "d" } }]});
+				var expectation = addSystemInfo({ "ev" : [{ "type": "pageview", "page": "/test.html", "location" : "sadfs", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "og:description": "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.", "og:url": "http://operaen.no/", "og:title": "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett", "og:site_name": "Operaen.no", "og:type": "website", "a": "s" } }, { "type": "pageview", "page": "/test.html", "location" : "sadfs", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "og:description": "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.", "og:url": "http://operaen.no/", "og:title": "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett", "og:site_name": "Operaen.no", "og:type": "website", "a": "d" } }]});
 	
 				expect(lastRequest()).to.eql(expectation);
 				done();

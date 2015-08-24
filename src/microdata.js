@@ -61,6 +61,7 @@ var collectProperties = function (el, item) {
 };
 
 var findTopLevelItems = function (el) {
+	if (!el) return undefined; 
 	var items = [];
 	if (typeof el === 'string') { el = jq('#'+el).get(0); }
 	else if (typeof el === 'object' && typeof el.tagName === 'string') { el = jq(el); }
@@ -84,7 +85,14 @@ var findTopLevelItems = function (el) {
 	};
 
 	processElement(el);
-	return theOneMapper(items);
+
+	for (var i = 0; i < items.length; i++) {
+		items[i] = theOneMapper(items[i]);
+	}
+
+	if (items.length === 0) return {};
+	if (items.length === 1) return items[0];
+	return {'__items' : items};
 };
 
 var extractFromHead = function () {

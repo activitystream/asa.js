@@ -12,7 +12,7 @@
 			pendingEvents = window.asa.q;
 		}
 
-		window.asa = inbox(function(e) {core.submitEvent(e);});
+		window.asa = inbox(core.submitEvent);
 
 		// features.defineExperiment(features.MINI_AJAX, 10);
 
