@@ -20,6 +20,12 @@ module.exports = function inbox(transport) {
 				debug.setDebugMode(arguments[1]);
 				return;
 			}
+
+			if (arguments[0] == 'transformer') {
+				microdata.setMapper(arguments[1]);
+				return;
+			}
+			
 			
 			transport(event.package.apply(event, arguments));
 		} catch (e) {

@@ -2,6 +2,7 @@ var Cloud = require('./mocha-sauce');
 var cloud = new Cloud('acceptance-test', 'as-builder', 'e5eeb7c4-05f3-42ba-9135-9d09cbd99498', '127.0.0.1', 4444);
 cloud.browser('firefox', '', 'Mac');
 cloud.browser('chrome', '', 'Mac');
+cloud.browser('phantomjs', '', 'Mac');
 // cloud.browser('safari', '', 'Mac');
 // cloud.browser('internet explorer', '9.0', 'windows 7');
 // cloud.browser('internet explorer', '10.0', 'windows 7');

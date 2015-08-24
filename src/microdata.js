@@ -92,11 +92,13 @@ var extractFromHead = function () {
 	jq('head > meta[property^="og:"]').each(function () { var m = jq(this); meta[m.attr('property')] = m.attr('content'); });
 	return theOneMapper(meta);
 };
-var theOneMapper = function(m){return m;};
+var noMapper = function(m) {return m;};
+var theOneMapper = noMapper;
 module.exports = {
 	extract: findTopLevelItems,
 	extractFromHead: extractFromHead,
 	setMapper : function(mapper){
 		theOneMapper = mapper;
-	}
+	},
+	noMapper : noMapper
 };
