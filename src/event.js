@@ -1,6 +1,7 @@
 var microdata = require('./microdata');
 var session = require('./session');
 var info = require('./version');
+var user = require('./user');
 var _ = require('./utils');
 
 var DOMMeta = function (o) {
@@ -46,6 +47,7 @@ var gatherMetaInfo = function gatherMetaInfo(a) {
 var gatherSystemInfo = function (e) {
 	e.t = 1 * new Date();
 	e.session = session.getSessionId();
+	e.uid = user.getUserId();
 	var partnerId = window.sessionStorage.getItem('__as.partner_id');
 	var partnerSId = window.sessionStorage.getItem('__as.partner_sid');
 	if (partnerId) {

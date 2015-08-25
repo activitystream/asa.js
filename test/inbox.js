@@ -12,6 +12,7 @@ describe('inbox', function () {
 		for (var i = 0; i < request.ev.length; i++) {
 			var element = request.ev[i];
 			delete element.session;
+			delete element.uid;
 			delete element.t;
 		}
 		delete request.t;
