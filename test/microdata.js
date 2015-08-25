@@ -20,7 +20,7 @@ describe('microdata', function () {
 			});
 			var data = m.extractFromHead();
 			expect(data).to.deep.equal({ "c" : "d" });	
-		})
+		});
 		it('should be able to convert metadata', function(){
 			
 			m.setMapper(function(meta){
@@ -28,10 +28,25 @@ describe('microdata', function () {
 			});
 			var data = m.extractFromHead();
 			expect(data).to.deep.equal({ "c" : "d", "d" : "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud." });	
-		})
+		});
 		it('should be "transparent" mappig using the noMapper', function(){
 			expect(m.noMapper('dfd')).to.equal('dfd');
-		})
+		});
+		it('should provide metadata and DOM tree root element it was extracted from', function(done){
+			m.setMapper(function(meta, el){
+				expect(el.attr('id')).to.equal('offer1');
+				expect(el.attr('data-event-id')).to.equal('123');
+				done();
+			});
+			m.extract('offer1');
+		});
+		it('should provide only metadata and no DOM tree root element when extracting from HEAD', function(done){
+			m.setMapper(function(meta, el){
+				expect(el).to.be.undefined;
+				done();
+			});
+			m.extractFromHead();
+		});
 	});
 	
 })

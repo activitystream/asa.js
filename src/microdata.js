@@ -69,13 +69,13 @@ var findTopLevelItems = function (el) {
 
 	var processElement = function (e) {
 		var el = jq(e);
-		var scope = el.attr('itemscope');
-		var prop = el.attr('itemprop');
-		if (typeof scope !== 'undefined') {
-			if (typeof prop !== 'undefined') {
+		var itemScope = el.attr('itemscope');
+		var itemProp = el.attr('itemprop');
+		if (typeof itemScope !== 'undefined') {
+			if (typeof itemProp !== 'undefined') {
 				return;
 			} else {
-				items.push(collectComplexProperty(el));
+				items.push(theOneMapper(collectComplexProperty(el), el));
 			}
 		} else {
 			el.children().each(function (_, c) {
@@ -85,10 +85,6 @@ var findTopLevelItems = function (el) {
 	};
 
 	processElement(el);
-
-	for (var i = 0; i < items.length; i++) {
-		items[i] = theOneMapper(items[i]);
-	}
 
 	if (items.length === 0) return {};
 	if (items.length === 1) return items[0];
