@@ -55,6 +55,13 @@ describe('microdata', function () {
 			});
 			m.extractFromHead();
 		});
+		it('should handle mapper failure', function(){
+			m.setMapper(function(meta, el){
+				dasdf.asdfasdf = 5;
+			});
+			var headerMeta = m.extractFromHead();		
+			expect(headerMeta).to.deep.equal({ "og:description": "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.", "og:url": "http://operaen.no/", "og:title": "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett", "og:site_name": "Operaen.no", "og:type": "website" });
+		})
 	});
 	
 })

@@ -98,11 +98,20 @@ var extractFromHead = function () {
 };
 var noMapper = function(m) {return m;};
 var theOneMapper = noMapper;
+var callbackWrapper = function callbackWrapper(cb){
+	return function(meta, el){
+		try{
+			return cb(meta, el);
+		} catch(e){
+			return meta;
+		}
+	}
+}
 module.exports = {
 	extract: findTopLevelItems,
 	extractFromHead: extractFromHead,
 	setMapper : function(mapper){
-		theOneMapper = mapper;
+		theOneMapper = callbackWrapper(mapper);
 	},
 	noMapper : noMapper
 };
