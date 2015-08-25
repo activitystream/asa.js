@@ -2,9 +2,17 @@ var m = require('microdata');
 var expect = require('chai').expect;
 
 describe('microdata', function () {
-	it('should extract microdata from DOM element', function () {
+	it('should extract microdata from DOM element with a single metadata root', function () {
 		var data = m.extract('offer1');
 		expect(data).to.deep.equal({ "type": "http://schema.org/Offer", "properties": { "name": "Blend-O-Matic", "price": "$19.95", "reviews": { "type": "http://schema.org/AggregateRating", "properties": { "ratingValue": "4", "bestRating": "5", "ratingCount": "25" } } } });
+	});
+
+	it('should extract microdata from DOM element with multiple metadata roots', function () {
+		var data = m.extract('multiple_meta_items');
+		expect(data).to.deep.equal({ '__items' : [
+			{ "type": "http://schema.org/Offer", "properties": { "name": "Blend-O-Matic1", "price": "$19.95", "reviews": { "type": "http://schema.org/AggregateRating", "properties": { "ratingValue": "4", "bestRating": "5", "ratingCount": "25" } } } },			
+			{ "type": "http://schema.org/Offer", "properties": { "name": "Blend-O-Matic2", "price": "$19.95", "reviews": { "type": "http://schema.org/AggregateRating", "properties": { "ratingValue": "4", "bestRating": "5", "ratingCount": "25" } } } }			
+		]});
 	});
 
 	it('should extract microdata from document HEAD', function () {
