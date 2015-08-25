@@ -26,7 +26,6 @@ module.exports = function inbox(transport) {
 				return;
 			}
 			
-			
 			transport(event.package.apply(event, arguments));
 		} catch (e) {
 			debug.forceLog('inbox exception:', e);
