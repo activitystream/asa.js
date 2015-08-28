@@ -11,8 +11,6 @@ $ gulp pack
 For development mode run
 
 ```
-$ sudo gulp serve
+$ gulp serve
 ```
-
-Sudo is necessary since the webserver delivering the script is running on both port 80 and 443 which require high privilege
 
