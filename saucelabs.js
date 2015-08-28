@@ -1,8 +1,8 @@
 var Cloud = require('./mocha-sauce');
-var cloud = new Cloud('acceptance-test', 'as-builder', 'e5eeb7c4-05f3-42ba-9135-9d09cbd99498', '127.0.0.1', 4444);
+var cloud = new Cloud('acceptance-test', 'as-builder', 'e5eeb7c4-05f3-42ba-9135-9d09cbd99498', 'selenium', 4444);
 cloud.browser('firefox', '', 'Mac');
-cloud.browser('chrome', '', 'Mac');
-cloud.browser('phantomjs', '', 'Mac');
+// cloud.browser('chrome', '', 'Mac');
+// cloud.browser('phantomjs', '', 'Mac');
 // cloud.browser('safari', '', 'Mac');
 // cloud.browser('internet explorer', '9.0', 'windows 7');
 // cloud.browser('internet explorer', '10.0', 'windows 7');
@@ -10,7 +10,7 @@ cloud.browser('phantomjs', '', 'Mac');
 // cloud.browser('', '9.0', 'Mac', 'iPad Simulator');
 // cloud.browser('', '8.0', 'Mac', 'iPad Simulator');
 // cloud.browser('', '7.0', 'Mac', 'iPad Simulator');
-cloud.url('http://localhost:8080/test.html');
+cloud.url('http://web:8080/test.html');
  
 cloud.on('init', function(browser){
   console.log('  init : %s %s', browser.id(), browser.version);

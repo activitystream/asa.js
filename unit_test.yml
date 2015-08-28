@@ -1,0 +1,14 @@
+testserver:
+    image: asa.js
+    command: ./node_modules/.bin/gulp serve
+
+seleniumfirefox:
+    image: selenium/standalone-firefox
+    links:
+        - testserver:web
+
+testdriver:
+    image: asa.js
+    command: node saucelabs.js
+    links:
+        - seleniumfirefox:selenium
