@@ -1,29 +1,18 @@
 var r = require('superagent');
 var debug = require('./debug');
+var ajax = require('./ajax');
 var features = require('./features');
 
 var pendingSubmission = [], done = true;
 var batchIntervalHandler;
 
 var postalAddress = '//inbox.activitystream.com/asa';
+// postalAddress = '//localhost:8070/asa';
 
 var post = function (packet, callback) {
-	var request = new XMLHttpRequest();
-	request.open('POST', postalAddress, true);
-	request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
-	request.onload = function () {
-		if (request.status >= 200 && request.status < 400) {
-			callback(null, request.status);
-		} else {
-			callback(request.status, null);
-		}
-	};
-
-	request.onerror = function () {
-		callback(1000, null);
-	};
+    var request = ajax.post(postalAddress, 'POST', callback);
+	request.setRequestHeader('Content-Type', 'text/plain; charset=UTF-8');
 	request.send(JSON.stringify(packet));
-
 };
 var submitNow = function (ev) {
 	if (!(ev instanceof Array)) ev = [ev];
