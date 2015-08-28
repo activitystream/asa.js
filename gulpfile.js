@@ -26,7 +26,7 @@ gulp.task('pages', function(){
 gulp.task('webserver', function() {
     return gulp.src(['dist','.tmp'])
         .pipe($.webserver({
-            host: 'localhost', //change to 'localhost' to disable outside connections
+            host: '0.0.0.0', //change to 'localhost' to disable outside connections
             livereload: false,
             port: 8080,
             https: false,
