@@ -13,6 +13,7 @@ seleniumfirefox:
         - sitea:sitea.com
         - siteb:siteb.com
         - inbox:inbox.activitystream.com
+        - cdn:cdn.activitystream.com
 
 e2etest:
     build: tests
