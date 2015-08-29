@@ -1,0 +1,23 @@
+inbox:
+    build: inbox
+cdn:
+    build: cdn
+sitea:
+    build: siteA
+siteb:
+    build: siteB
+
+seleniumfirefox:
+    image: selenium/standalone-firefox-debug
+    links:
+        - sitea:sitea.com
+        - siteb:siteb.com
+        - inbox:inbox.activitystream.com
+
+e2etest:
+    build: tests
+    links:
+        - seleniumfirefox:seleniumtestdriver
+        - inbox:inbox
+    environment:
+        - HOST=seleniumtestdriver
