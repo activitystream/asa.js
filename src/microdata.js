@@ -94,6 +94,7 @@ var findTopLevelItems = function (el) {
 var extractFromHead = function () {
 	var meta = {};
 	jq('head > meta[property^="og:"]').each(function () { var m = jq(this); meta[m.attr('property')] = m.attr('content'); });
+	jq('head > meta[name="keywords"]').each(function () { var m = jq(this); meta["keywords"] = m.attr('content'); });
 	return theOneMapper(meta);
 };
 var noMapper = function(m) {return m;};
