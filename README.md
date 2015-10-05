@@ -1,4 +1,4 @@
-# Activitystream Analytics browser script
+# Activity Stream Analytics browser script
 
 This is the javascript our clients can use on their web sites to allow for easy collecting of customer behaviour.
 
