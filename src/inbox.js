@@ -25,6 +25,10 @@ module.exports = function inbox(transport) {
 				microdata.setMapper(arguments[1]);
 				return;
 			}
+			if (arguments[0] == 'session') {
+				session.customSession(arguments[1], arguments[2])
+				return;
+			}
 			
 			transport(event.package.apply(event, arguments));
 		} catch (e) {

@@ -1,3 +1,4 @@
+/* global sinon */
 var inbox = require('inbox');
 var expect = require('chai').expect;
 var core = require('server');
@@ -7,11 +8,11 @@ var features = require('features');
 describe('inbox', function () {
     var requests = [];
 	var xhr;
-	var lastRequest = function () {
+	var lastRequest = function (keepSession) {
 		var request = JSON.parse(requests[0].requestBody);
 		for (var i = 0; i < request.ev.length; i++) {
 			var element = request.ev[i];
-			delete element.session;
+			if (!keepSession) delete element.session;
 			delete element.uid;
 			delete element.t;
 			delete element.location;
@@ -143,5 +144,14 @@ describe('inbox', function () {
 		})
 
 	});
+    
+    describe('custom session management', function(){
+        it('should allow devs to provide their own session', function(){
+            var asa = inbox(core.submitEvent);
+            asa('session', function() {return 'my_session';});
+            asa('pageview');
+            expect(lastRequest(true).ev[0].session).to.equal('my_session');            
+        })
+    })
 
 })

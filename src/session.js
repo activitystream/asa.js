@@ -29,7 +29,7 @@ var store = {
 };
 
 var sessionStore = store;
-module.exports = {
+var ourSessionManager = {
 	extendSession: function () {
 		if (!sessionStore.hasItem(SESSION_COOKIE_NAME)) {
 			debug.log('starting session');
@@ -41,5 +41,30 @@ module.exports = {
 
 	getSessionId: function () {
 		return sessionStore.getItem(SESSION_COOKIE_NAME);
+	}
+    
+};
+var providedSessionManager = function(getSessionId, extendSession){
+    return {
+        extendSession: function () {
+            if (extendSession) extendSession();
+        },
+    
+        getSessionId: function () {
+            return getSessionId();
+        }    
+    };
+};
+var sessionManager = ourSessionManager;
+module.exports = {
+	extendSession: function () {
+        sessionManager.extendSession();
 	},
+
+	getSessionId: function () {
+		return sessionManager.getSessionId();
+	},
+    customSession : function(getSession, extendSession){
+        sessionManager = providedSessionManager(getSession, extendSession);
+    }
 };
