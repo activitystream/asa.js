@@ -21,6 +21,10 @@ server.post('/asa', function(req, res){
     if (req.is('text/plain')){
         event = JSON.parse(req.body);
     }
+    event.server_time = 1 * new Date();
+    event.useragent = req.header('user-agent');
+    event.referrer = req.header('referer');
+    event.client_ip = req.connection.remoteAddress;
     
 	console.log('event:',event);
     eventLog.push(event);

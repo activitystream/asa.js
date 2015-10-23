@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "restify": "^3.0.3",
+    "restify": "^4.0.3",
     "restify-cookies": "^0.1.2"
   }
 }

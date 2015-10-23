@@ -14,11 +14,24 @@ seleniumfirefox:
         - siteb:siteb.com
         - inbox:inbox.activitystream.com
         - cdn:cdn.activitystream.com
+        
+saucelabs:
+    image: ustwo/docker-sauce-connect
+    links:
+        - sitea:sitea.com
+        - siteb:siteb.com
+        - inbox:inbox.activitystream.com
+        - cdn:cdn.activitystream.com
+    environment:
+        - SAUCE_USERNAME=pshomov
+        - SAUCE_ACCESS_KEY
 
 e2etest:
     build: tests
     links:
-        - seleniumfirefox:seleniumtestdriver
+        - saucelabs:seleniumtestdriver
         - inbox:inbox
     environment:
         - HOST=seleniumtestdriver
+        - PORT=8000
+        - SAUCE_ACCESS_KEY

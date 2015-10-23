@@ -9,10 +9,17 @@ var host = process.env.HOST || 'localhost';
 var port = process.env.PORT || 4444;
 var options = {
   desiredCapabilities: {
-    browserName: 'firefox'
+    browserName: 'firefox',
+    version: '',
+    platform: 'linux',
+    // device: conf.deviceName,
+    
   },
   host: host,
   port: port,
+  user: 'pshomov',
+  key: process.env.SAUCE_ACCESS_KEY,
+  
   logLevel: 'silent'
 };
 
@@ -29,9 +36,8 @@ function retry(done) {
   socket.connect(port, host);
 }
 
-function getLogs(logs){
+function getLogs(){
   return function(){
-      return q.delay(3000).then(function(){
         var deferred = q.defer();
         superagent
         .get('http://inbox/log')
@@ -44,10 +50,22 @@ function getLogs(logs){
           }
         });
         return deferred.promise; 
-      });
   }
 }
 
+function wipeLogs(){
+        var deferred = q.defer();
+        superagent
+        .del('http://inbox/log')
+        .end(function (err, res) {
+          if (!err) {
+            deferred.resolve(res.body);
+          } else {
+            deferred.reject(err);
+          }
+        });
+        return deferred.promise; 
+};
 // before(function() {
     // var chaiAsPromised = require('chai-as-promised');
  
@@ -62,7 +80,7 @@ describe('test 1', function () {
     retry(function () {
       browser = webdriverio
         .remote(options)
-        .init();
+        .init().then(wipeLogs);
       done();
     });
 
@@ -75,7 +93,7 @@ describe('test 1', function () {
   it('should send pageview', function (done) {
     browser
       .url('http://sitea.com')
-      .then(getLogs(done))
+      .then(getLogs())
       .then(function(eventLogs){
         expect(eventLogs.length).to.equal(1);
       }).call(done);
