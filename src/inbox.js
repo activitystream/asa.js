@@ -7,7 +7,11 @@ var event = require('./event');
 module.exports = function inbox(transport) {
 	return function () {
 		try {
-			session.extendSession();
+			if (arguments[0] == 'session') {
+				session.customSession(arguments[1], arguments[2])
+				return;
+			}
+
 			if (arguments[0] == 'connectedPartners') {
 				autoTrack.links(arguments[1]);
 				return;
@@ -25,10 +29,8 @@ module.exports = function inbox(transport) {
 				microdata.setMapper(arguments[1]);
 				return;
 			}
-			if (arguments[0] == 'session') {
-				session.customSession(arguments[1], arguments[2])
-				return;
-			}
+
+			session.extendSession();
 			
 			transport(event.package.apply(event, arguments));
 		} catch (e) {
