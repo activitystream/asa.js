@@ -71,6 +71,47 @@ describe('inbox', function () {
 		})
 
 	});
+    
+    xdescribe('commerce events catalog', function(){
+        var entity = function(){};
+        var item = function(){};
+        var location = function(){};
+        var rel = function(){};
+        var role = function(){};
+        var commerce = function(){};
+    
+       it('should send item carted event', function(){
+
+           // variant 1
+           asa('as.cart.item.added', { aspects : [
+                commerce(
+                    item()
+                        .involves('CARTED', entity('EvenDate/123123123')
+                            .relations(
+                                rel().link(HOSTED_AT, entity('Venue/Operaen').aspects(location('12323,34553434'))),
+                                rel().link(PART_OF, 'Event/Mads Langer'),
+                                rel().link(MANUFACTURED_BY, 'Performer/Mads Langer')
+                            )
+                        )
+                        .itemCount(2)
+                        .itemPrice(123.5)
+                        .currency('DKK')
+                )
+           ]});
+
+           // variant 2
+           asa('as.cart.item.added', {
+               item : 'EventDate/23423423', 
+               venue: 'Venue/Operaen', 
+               producedBy: 'Producer/Operaen', 
+               hostedAt : 'Venue/Operaen', 
+               count : 2, 
+               title: 'Mads Langer', 
+               price : 123.5, 
+               currency : 'DKK'
+           });
+       }) 
+    });
 
 	describe('custom events', function () {
 		it('should send no metadata when none specified', function () {
