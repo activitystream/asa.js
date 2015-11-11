@@ -1,4 +1,6 @@
 (function () {
+    // var DNT = navigator.doNotTrack || navigator.msDoNotTrack || window.doNotTrack;
+    // if (DNT && (DNT === 'yes' || DNT.charAt(0) === '1')) return;
 	var partner = require('./partner');
 	var autoTrack = require('./auto_track');
 	var debug = require('./debug');
