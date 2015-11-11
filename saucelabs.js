@@ -1,5 +1,5 @@
 var Cloud = require('./mocha-sauce');
-var cloud = new Cloud('acceptance-test', 'as-builder', 'e5eeb7c4-05f3-42ba-9135-9d09cbd99498', 'selenium', 4444);
+var cloud = new Cloud('acceptance-test', 'as-builder', 'e5eeb7c4-05f3-42ba-9135-9d09cbd99498', 'selenium', process.env.PORT);
 cloud.browser('firefox', '', 'Linux');
 // cloud.browser('chrome', '', 'Mac');
 // cloud.browser('phantomjs', '', 'Mac');
