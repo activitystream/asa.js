@@ -6,9 +6,18 @@ seleniumfirefox:
     image: selenium/standalone-firefox
     links:
         - testserver:web
+saucelabs:
+    image: ustwo/docker-sauce-connect
+    links:
+        - testserver:web
+    environment:
+        - SAUCE_USERNAME=pshomov
+        - SAUCE_ACCESS_KEY
 
 testdriver:
     image: asa.js
     command: node saucelabs.js
+    environment:
+        - PORT=4443
     links:
         - seleniumfirefox:selenium
