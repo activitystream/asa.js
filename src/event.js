@@ -3,6 +3,7 @@ var session = require('./session');
 var info = require('./version');
 var user = require('./user');
 var _ = require('./utils');
+var formatting = require('./formatting');
 
 var DOMMeta = function (o) {
     if (o.length < 2) return false;
@@ -44,32 +45,9 @@ var gatherMetaInfo = function gatherMetaInfo(a) {
     throw new Error('Upsi! There is something wrong with this event:', a);
 };
 
-var formatDateTime = function (time) {
-    function pad(number) {
-        if (number < 10) {
-            return '0' + number;
-        }
-        return number;
-    }
-    function timezone(time) {
-        var hours = pad(Math.abs(Math.floor(time / 60)));
-        var minutes = pad(Math.abs(time % 60));
-        var sign = time > 0 ? '-' : '+';
-        return sign + hours + ':' + minutes;
-    }
-
-    return '' + time.getFullYear() +
-        '-' + pad(time.getMonth() + 1) +
-        '-' + pad(time.getDate()) +
-        'T' + pad(time.getHours()) +
-        ':' + pad(time.getMinutes()) +
-        ':' + pad(time.getSeconds()) +
-        '.' + (time.getMilliseconds() / 1000).toFixed(3).slice(2, 5) +
-        timezone(time.getTimezoneOffset());
-}
 
 var gatherSystemInfo = function (e) {
-    e.t = formatDateTime(new Date());
+    e.t = formatting.formatDateTime(new Date());
     e.session = session.getSessionId();
     e.uid = user.getUserId();
     var partnerId = window.sessionStorage.getItem('__as.partner_id');
@@ -86,7 +64,6 @@ var gatherSystemInfo = function (e) {
 };
 
 module.exports = {
-    formatDateTime: formatDateTime,
     package: function (eventname, domElement, extra) {
 
         var event = gatherMetaInfo(arguments);

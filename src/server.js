@@ -2,6 +2,7 @@ var r = require('superagent');
 var debug = require('./debug');
 var ajax = require('./ajax');
 var features = require('./features');
+var formatting = require('./formatting');
 
 var pendingSubmission = [], done = true;
 var batchIntervalHandler;
@@ -18,7 +19,7 @@ var submitNow = function (ev) {
 	if (!(ev instanceof Array)) ev = [ev];
 	var packet = {
 		ev: ev,
-		t: 1 * new Date()
+		t: formatting.formatDateTime(new Date())
 	};
 
 	debug.log('submitting event: ', ev);
@@ -50,7 +51,7 @@ var submitNow2 = function (ev) {
 	if (!(ev instanceof Array)) ev = [ev];
 	var packet = {
 		ev: ev,
-		t: 1 * new Date()
+		t: formatting.formatDateTime(new Date())
 	};
 	debug.log('submitting event: ', ev);
 	r
