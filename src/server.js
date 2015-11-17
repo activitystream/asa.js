@@ -15,8 +15,8 @@ var post = function (packet, callback) {
 	request.setRequestHeader('Content-Type', 'text/plain; charset=UTF-8');
 	request.send(JSON.stringify(packet));
 };
-var submitNow = function (ev) {
-	if (!(ev instanceof Array)) ev = [ev];
+
+var submitEvent = function(ev, callback){
 	var packet = {
 		ev: ev,
 		t: formatting.formatDateTime(new Date())
@@ -24,12 +24,16 @@ var submitNow = function (ev) {
 
 	debug.log('submitting event: ', ev);
 	if (features.isExperiment(features.MINI_AJAX)) {
-		post(packet, function (err, _) {
-			if (err) {
-				debug.log('error on server', err);
-			} else {
-				debug.log('server got it');
-			}
+		post(packet, function (err, res) {
+            if (callback) {
+                callback(err, res);
+            } else {
+                if (err) {
+                    debug.log('error on server', err);
+                } else {
+                    debug.log('server got it');
+                }
+            }
 		});
 
 	} else {
@@ -38,35 +42,39 @@ var submitNow = function (ev) {
 			.set('Content-Type', 'application/json')
 			.send(packet)
 			.end(function (err, res) {
-				if (err) {
-					debug.log('error on server', err);
-				} else {
-					debug.log('server got it');
-				}
+                if (callback) {
+                    callback(err, res);
+                } else {
+                    if (err) {
+                        debug.log('error on server', err);
+                    } else {
+                        debug.log('server got it');
+                    }
+                }
 			});
-	}
+	}    
+}
+var submitNow = function (ev) {
+	if (ev instanceof Array){
+        for (var i = 0; i < ev.length; i++){
+            submitEvent(ev[i]);
+        }        
+    } else {
+        submitEvent(ev);
+    }
 };
+
 var submitNow2 = function (ev) {
 	done = false;
-	if (!(ev instanceof Array)) ev = [ev];
-	var packet = {
-		ev: ev,
-		t: formatting.formatDateTime(new Date())
-	};
-	debug.log('submitting event: ', ev);
-	r
-		.post(postalAddress)
-		.set('Content-Type', 'application/json')
-		.send(packet)
-		.end(function (err, res) {
-			if (err) {
-				debug.log('error on server', err);
-			} else {
-				pendingSubmission.splice(0, ev.length);
-				debug.log('server got it');
-			}
-			done = true;
-		});
+    submitEvent(ev, function(err, res){
+        if (err) {
+            debug.log('error on server', err);
+        } else {
+            pendingSubmission.splice(0, ev.length);
+            debug.log('server got it');
+        }
+        done = true;        
+    });
 };
 module.exports = {
 	submitEvent: submitNow,
