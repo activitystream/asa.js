@@ -19,6 +19,6 @@ module.exports = {
 		return hash(window.location.host);
 	},
 	getUserHash: function () {
-		return parseInt(getUserId().split('.')[1], 10);
+		return parseInt(getUserId().split('.')[1], 16);
 	}
 };
