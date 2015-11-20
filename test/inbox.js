@@ -179,7 +179,6 @@ describe('inbox', function () {
 				var lastExpectation = adjustSystemInfo({"ev" : { "type": "pageview", "page": "/test.html", "location": "sadfs", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "og:description": "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.", "og:url": "http://operaen.no/", "og:title": "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett", "og:site_name": "Operaen.no", "og:type": "website", "keywords": "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter", "a": "d" } }});
 
                 var lr = lastRequest();
-                debugger;
 				expect(lastRequest()).to.eql(lastExpectation);
 				// expect(secondLastRequest()).to.eql(secondLastExpectation);
 				done();
