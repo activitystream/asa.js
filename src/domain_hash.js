@@ -1,8 +1,6 @@
 // this hashing algorithm is as found in some version of Google Analytics
 /* jshint ignore:start */
 
-module.exports = require('./sha1'); 
-
 function hash(d) {
     var a = 1, c = 0, h, o;
     if (d) {
@@ -16,4 +14,7 @@ function hash(d) {
     }
     return a
 };
+
+module.exports = hash; 
+
 /* jshint ignore:end */

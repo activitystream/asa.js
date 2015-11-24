@@ -3,6 +3,7 @@ var session = require('./session');
 var info = require('./version');
 var user = require('./user');
 var _ = require('./utils');
+var Cookies = require('cookies-js');
 var formatting = require('./formatting');
 
 var DOMMeta = function (o) {
@@ -50,6 +51,7 @@ var gatherSystemInfo = function (e) {
     e.t = formatting.formatDateTime(new Date());
     e.session = session.getSessionId();
     e.uid = user.getUserId();
+    e.cookiesEnabled = Cookies.enabled;
     var partnerId = window.sessionStorage.getItem('__as.partner_id');
     var partnerSId = window.sessionStorage.getItem('__as.partner_sid');
     if (partnerId) {

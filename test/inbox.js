@@ -13,6 +13,7 @@ describe('inbox', function () {
 		var request = JSON.parse(requests[0].requestBody);
         var element = request.ev;
         if (!keepSession) delete element.session;
+        delete element.cookiesEnabled;
         delete element.uid;
         delete element.t;
         delete element.location;
