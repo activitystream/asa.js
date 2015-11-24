@@ -3,6 +3,7 @@ var microdata = require('./microdata');
 var autoTrack = require('./auto_track');
 var debug = require('./debug');
 var event = require('./event');
+var server = require('./server');
 var Cookies = require('cookies-js');
 
 
@@ -39,6 +40,7 @@ module.exports = function inbox(transport) {
 			transport(event.package.apply(event, arguments));
 		} catch (e) {
 			debug.forceLog('inbox exception:', e);
+            server.submitError(e);
 		}
 	};
 };

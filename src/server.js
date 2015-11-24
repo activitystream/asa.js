@@ -7,22 +7,23 @@ var formatting = require('./formatting');
 var pendingSubmission = [], done = true;
 var batchIntervalHandler;
 
-var postalAddress = '//inbox.activitystream.com/asa';
-// postalAddress = '//localhost:8070/asa';
+var eventPostAddress = '//inbox.activitystream.com/asa';
+var errorPostAddress = '//inbox.activitystream.com/asa/error';
 
 var post = function (packet, callback) {
-    var request = ajax.post(postalAddress, 'POST', callback);
+    var request = ajax.post(eventPostAddress, 'POST', callback);
 	request.setRequestHeader('Content-Type', 'text/plain; charset=UTF-8');
 	request.send(JSON.stringify(packet));
 };
 
-var submitEvent = function(ev, callback){
+var submitData = function(data, opts, callback){
+    opts = opts || {url : eventPostAddress};
 	var packet = {
-		ev: ev,
+		ev: data,
 		t: formatting.formatDateTime(new Date())
 	};
 
-	debug.log('submitting event: ', ev);
+	debug.log('submitting data: ', data);
 	if (features.isExperiment(features.MINI_AJAX)) {
 		post(packet, function (err, res) {
             if (callback) {
@@ -38,7 +39,7 @@ var submitEvent = function(ev, callback){
 
 	} else {
 		r
-			.post(postalAddress)
+			.post(opts.url)
 			.set('Content-Type', 'application/json')
 			.send(packet)
 			.end(function (err, res) {
@@ -54,6 +55,15 @@ var submitEvent = function(ev, callback){
 			});
 	}    
 }
+
+var submitEvent = function(ev, callback){
+    submitData(ev, {url : eventPostAddress}, callback);
+}
+
+var submitError = function(err, callback){
+    submitData(err, {url : errorPostAddress}, callback);
+}
+
 var submitNow = function (ev) {
 	if (ev instanceof Array){
         for (var i = 0; i < ev.length; i++){
@@ -77,6 +87,7 @@ var submitNow2 = function (ev) {
     });
 };
 module.exports = {
+    submitError: submitError,
 	submitEvent: submitNow,
 	batchEvent: function (e) {
 		pendingSubmission.push(e);

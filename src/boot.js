@@ -5,7 +5,7 @@ module.exports = function(){
 	var autoTrack = require('./auto_track');
 	var debug = require('./debug');
 	var inbox = require('./inbox');	
-	var core = require('./server');
+	var server = require('./server');
 	var features = require('./features');
 
 	try {
@@ -14,7 +14,7 @@ module.exports = function(){
 			pendingEvents = window.asa.q;
 		}
 
-		window.asa = inbox(core.submitEvent);
+		window.asa = inbox(server.submitEvent);
 
 		// features.defineExperiment(features.MINI_AJAX, 10);
 
@@ -26,5 +26,6 @@ module.exports = function(){
 		autoTrack.sections();
 	} catch (e) {
 		debug.forceLog('exception during init: ', e);
+        server.submitError(e);
 	}    
 }
