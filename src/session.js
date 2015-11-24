@@ -1,7 +1,7 @@
 var debug = require('./debug');
 var user = require('./user');
 var randomness = require('./randomness');
-var hash = require('./domain_hash');
+var hash = require('./domain_hash').sessionHash;
 
 
 var SESSION_EXPIRE_TIMEOUT = 30 * 60;

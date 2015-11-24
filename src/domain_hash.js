@@ -1,6 +1,6 @@
 // this hashing algorithm is as found in some version of Google Analytics
 /* jshint ignore:start */
-
+var sha = require('./sha1');
 function hash(d) {
     var a = 1, c = 0, h, o;
     if (d) {
@@ -15,6 +15,10 @@ function hash(d) {
     return a
 };
 
-module.exports = hash; 
+module.exports = {
+    domainHash : hash,
+    sessionHash : sha,
+    userHash : sha
+}; 
 
 /* jshint ignore:end */

@@ -3,10 +3,14 @@ var microdata = require('./microdata');
 var autoTrack = require('./auto_track');
 var debug = require('./debug');
 var event = require('./event');
+var Cookies = require('cookies-js');
+
 
 module.exports = function inbox(transport) {
 	return function () {
 		try {
+            if (!Cookies.enabled) return; // let's avoid browsers without cookies for now
+            
 			if (arguments[0] == 'session') {
 				session.customSession(arguments[1], arguments[2])
 				return;
