@@ -61,6 +61,7 @@ var submitEvent = function(ev, callback){
 }
 
 var submitError = function(err, callback){
+    if (err && (err.code === 22 || err.code === 18)) return;// skipping error 22 and 18 - related to quota storage. it seems related to people browsing in private mode
     submitData(err, {url : errorPostAddress}, callback);
 }
 
