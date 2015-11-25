@@ -8,22 +8,39 @@ var SESSION_EXPIRE_TIMEOUT = 30 * 60;
 // SESSION_EXPIRE_TIMEOUT = 30 * 60;
 var SESSION_COOKIE_NAME = '__asa_session';
 
+var persistence = {
+    get : function(id){
+        try {
+            return window.sessionStorage.getItem(id);
+        } catch(e){
+            throw new Error('Error while trying to get item from session storage:'+e.name+'/'+e.message);
+        }
+    },
+    set : function(id, value){
+        try{
+            return window.sessionStorage.setItem(id, value);
+        } catch(e){
+            throw new Error('Error while trying to set item from session storage:'+e.name+'/'+e.message);
+        }
+    }
+}
+
 var store = {
 	hasItem: function (name) {
-		var item = window.sessionStorage.getItem(name);
+		var item = persistence.get(name);
 		return item && JSON.parse(item).t > (1 * new Date());
 	},
 	getItem: function (name) {
-		return JSON.parse(window.sessionStorage.getItem(name)).v;
+		return JSON.parse(persistence.get(name)).v;
 	},
 	setItem: function (name, value, timeout) {
-		window.sessionStorage.setItem(name, JSON.stringify({
+		persistence.set(name, JSON.stringify({
 			v: value,
 			t: (1 * new Date()) + (1000 * timeout)
 		}));
 	},
 	updateTimeout: function (name, timeout) {
-		var item = JSON.parse(window.sessionStorage.getItem(name));
+		var item = JSON.parse(persistence.get(name));
 		store.setItem(name, item.v, timeout);
 	}
 };

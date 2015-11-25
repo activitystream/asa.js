@@ -23,9 +23,9 @@ module.exports = function(){
 		}
 
 		partner.setPartnerInfo();
-		autoTrack.sections();
+		// autoTrack.sections();
 	} catch (e) {
 		debug.forceLog('exception during init: ', e);
-        server.submitError(e);
+        server.submitError(e, {location : 'boot script'});
 	}    
 }
