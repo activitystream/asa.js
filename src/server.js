@@ -3,6 +3,7 @@ var debug = require('./debug');
 var ajax = require('./ajax');
 var features = require('./features');
 var formatting = require('./formatting');
+var info = require('./version');
 
 var pendingSubmission = [], done = true;
 var batchIntervalHandler;
@@ -62,7 +63,7 @@ var submitEvent = function(ev, callback){
 
 var submitError = function(err, callback){
     if (err && (err.code === 22 || err.code === 18)) return;// skipping error 22 and 18 - related to quota storage. it seems related to people browsing in private mode
-    submitData(err, {url : errorPostAddress}, callback);
+    submitData({err : err, v : info.version()}, {url : errorPostAddress}, callback);
 }
 
 var submitNow = function (ev) {
