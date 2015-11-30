@@ -1,4 +1,4 @@
-var cookies = require('./cookies');
+// var cookies = require('./cookies');
 var Cookies = require('cookies-js');
 var domainHash = require('./domain_hash').domainHash;
 var userHash = require('./domain_hash').userHash;
@@ -11,22 +11,22 @@ var generateUserId = function () {
 
 var setUserId = function() {
     var userId = generateUserId();
-    cookies.setItem(USER_ID_COOKIE, userId, Infinity, '/');
+    Cookies.set(USER_ID_COOKIE, userId, {expires: Infinity, path : '/'});
     return userId;    
 }
 
 var getUserId = function () {
-	if (!cookies.hasItem(USER_ID_COOKIE)) {
+	if (!Cookies.get(USER_ID_COOKIE)) {
         return setUserId();
 	}
 
-    var userId = cookies.getItem(USER_ID_COOKIE);
+    var userId = Cookies.get(USER_ID_COOKIE);
     if (userId.length > 70 || userId.length < 40) {
         // we need proper migrations here
         return setUserId(); 
     }
 
-	return cookies.getItem(USER_ID_COOKIE);
+	return Cookies.get(USER_ID_COOKIE);
 };
 
 module.exports = {
