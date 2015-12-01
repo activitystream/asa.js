@@ -2,6 +2,9 @@ var user = require('./user');
 var experiments = {};
 module.exports = {
 	defineExperiment : function(name, percentage){
+        if (typeof percentage === 'boolean'){
+            if (percentage) experiments[name] = percentage;    
+        } else 
 		experiments[name] = (user.getUserHash() % 100) <= percentage;
 	},
 	isExperiment : function(name){
