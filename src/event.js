@@ -50,6 +50,7 @@ var gatherMetaInfo = function gatherMetaInfo(a) {
 var gatherSystemInfo = function (e) {
     e.t = formatting.formatDateTime(new Date());
     e.session = session.getSessionId();
+    e.referrer = document.referrer;
     e.uid = user.getUserId();
     e.cookiesEnabled = Cookies.enabled;
     var partnerId = window.sessionStorage.getItem('__as.partner_id');

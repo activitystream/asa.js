@@ -12,21 +12,22 @@ var generateUserId = function () {
 var setUserId = function() {
     var userId = generateUserId();
     Cookies.set(USER_ID_COOKIE, userId, {expires: Infinity, path : '/'});
-    return userId;    
+    // return userId;    
 }
 
 var getUserId = function () {
 	if (!Cookies.get(USER_ID_COOKIE)) {
-        return setUserId();
+        setUserId();
 	}
 
     var userId = Cookies.get(USER_ID_COOKIE);
     if (userId.length > 70 || userId.length < 40) {
         // we need proper migrations here
-        return setUserId(); 
+        setUserId();
+        userId = Cookies.get(USER_ID_COOKIE);
     }
 
-	return Cookies.get(USER_ID_COOKIE);
+	return userId;
 };
 
 module.exports = {
