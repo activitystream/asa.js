@@ -15,6 +15,7 @@ describe('inbox', function () {
         if (!keepSession) delete element.session;
         delete element.cookiesEnabled;
         delete element.uid;
+        delete element.referrer;
         delete element.t;
         delete element.location;
 		delete request.t;
