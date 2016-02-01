@@ -2,25 +2,22 @@ var debug = require('./debug');
 var user = require('./user');
 var randomness = require('./randomness');
 var hash = require('./domain_hash').sessionHash;
+var Cookies = require('./cookies');
 
-
-var SESSION_EXPIRE_TIMEOUT = 30 * 60;
-// SESSION_EXPIRE_TIMEOUT = 30 * 60;
-var SESSION_COOKIE_NAME = '__asa_session';
 
 var persistence = {
     get : function(id){
         try {
-            return window.sessionStorage.getItem(id);
+            return Cookies.getItem(id);
         } catch(e){
-            throw new Error('Error while trying to get item from session storage:'+e.name+'/'+e.message);
+            throw new Error('Error while trying to get item from session cookie:'+id);
         }
     },
     set : function(id, value){
         try{
-            return window.sessionStorage.setItem(id, value);
+            return Cookies.setItem(id, value, false, '/');
         } catch(e){
-            throw new Error('Error while trying to set item from session storage:'+e.name+'/'+e.message);
+            throw new Error('Error while trying to set item to session cookie: "'+id+'" <- '+value);
         }
     }
 }
@@ -28,16 +25,13 @@ var persistence = {
 var store = {
 	hasItem: function (name) {
 		var item = persistence.get(name);
-		return item && JSON.parse(item).t > (1 * new Date());
+		return item;
 	},
 	getItem: function (name) {
-		return JSON.parse(persistence.get(name)).v;
+		return persistence.get(name);
 	},
 	setItem: function (name, value, timeout) {
-		persistence.set(name, JSON.stringify({
-			v: value,
-			t: (1 * new Date()) + (1000 * timeout)
-		}));
+		persistence.set(name, value);
 	},
 	updateTimeout: function (name, timeout) {
 		var item = JSON.parse(persistence.get(name));
@@ -46,7 +40,10 @@ var store = {
 };
 
 var sessionStore = store;
-var ourSessionManager = {
+var SESSION_EXPIRE_TIMEOUT = 30 * 60;
+// SESSION_EXPIRE_TIMEOUT = 30 * 60;
+var SESSION_COOKIE_NAME = '__asa_session';
+var builtinSessionManager = {
 	extendSession: function () {
 		if (!sessionStore.hasItem(SESSION_COOKIE_NAME)) {
 			debug.log('starting session');
@@ -72,7 +69,7 @@ var providedSessionManager = function(getSessionId, extendSession){
         }    
     };
 };
-var sessionManager = ourSessionManager;
+var sessionManager = builtinSessionManager;
 module.exports = {
 	extendSession: function () {
         sessionManager.extendSession();
