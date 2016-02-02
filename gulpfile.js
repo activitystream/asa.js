@@ -75,6 +75,14 @@ gulp.task('serve', function() {
     gulp.watch(['test/*.html'], ['pages']);
 });
 
+gulp.task('just-pack', function () {
+    $.livereload({ start: true });
+    runSequence(['clean:dist', 'clean:dev'], ['pack', 'pages']);
+
+    gulp.watch(['src/**/*.js', 'test/**/*.js'], ['pack']);
+    gulp.watch(['test/*.html'], ['pages']);
+});
+
 gulp.task('clean', function(){
     runSequence(['clean:dist', 'clean:dev']);    
 })
