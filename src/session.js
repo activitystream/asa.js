@@ -34,8 +34,8 @@ var store = {
 		persistence.set(name, value);
 	},
 	updateTimeout: function (name, timeout) {
-		var item = JSON.parse(persistence.get(name));
-		store.setItem(name, item.v, timeout);
+		var item = persistence.get(name);
+		store.setItem(name, item, timeout);
 	}
 };
 

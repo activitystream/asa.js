@@ -1,7 +1,7 @@
 var features = require('./features');
 var major = 1,
 	minor = 1,
-	build = 38;
+	build = 40;
 module.exports = {
 	major : major,
 	minor: minor,
