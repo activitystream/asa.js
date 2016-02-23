@@ -22,9 +22,11 @@ module.exports = {
 			if (href) {
 				var destination = parseUri(href);
 				if (domainsTracked.indexOf(destination.authority) > -1) {
-					var alreadyHasParams = ev.target.href.indexOf('?') !== -1;
-					href = href + (alreadyHasParams ? '&' : '?') + '__asa_partner_id=' + encodeURIComponent(window.asaId) + '&__asa_partner_sid=' + encodeURIComponent(session.getSessionId());
-					ev.target.href = href;
+                    if (!destination.queryKey['__asa']){
+                        var alreadyHasParams = ev.target.href.indexOf('?') !== -1;
+                        href = href + (alreadyHasParams ? '&' : '?') + '__asa=' + encodeURIComponent(window.asaId+'|'+session.getSessionId());
+                        ev.target.href = href;
+                    }
 				}
 			}
 		};
