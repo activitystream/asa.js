@@ -24,7 +24,10 @@ var sectionentered = function (section, page) {
 };
 
 var custom = function (event) {
-    return { type: 'custom', event: event };
+    var baseEvent = pageview();
+    baseEvent.type = 'custom';
+    baseEvent.event = event;
+    return baseEvent;
 };
 
 var gatherMetaInfo = function gatherMetaInfo(a) {
