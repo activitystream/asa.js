@@ -20,8 +20,7 @@ describe('inbox', function () {
         delete element.cookiesEnabled;
         delete element.uid;
         delete element.referrer;
-        if (!options.keepPageAndTitle){
-            delete element.page;
+        if (!options.keepTitle){
             delete element.title;
         }
         delete element.t;
@@ -61,9 +60,9 @@ describe('inbox', function () {
 		})
 		it('should be a POST with data describing the event', function () {
 			asa('pageview');
-			var expectation = adjustSystemInfo({ "ev": { "type": "custom", "event" : "sessionStarted", "page": "/test.html", "location": "sadfs", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "og:description": "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.", "og:url": "http://operaen.no/", "og:title": "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett", "og:site_name": "Operaen.no", "og:type": "website", "keywords": "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter" } } });
+			var expectation = adjustSystemInfo({ "ev": { "type": "custom", "event" : "sessionStarted", "location": "sadfs", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "og:description": "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.", "og:url": "http://operaen.no/", "og:title": "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett", "og:site_name": "Operaen.no", "og:type": "website", "keywords": "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter" } } });
 
-            var request = lastRequest({keepSessionEvents: true, keepPageAndTitle: true});
+            var request = lastRequest({keepSessionEvents: true, keepTitle: true});
 			expect(request).to.eql(expectation);
 		})
 	})
@@ -73,9 +72,9 @@ describe('inbox', function () {
 
 			asa('pageview', { a: 's' });
 
-			var expectation = adjustSystemInfo({ "ev": { "type": "custom", "event" : "sessionStarted", "page": "/test.html", "location": "sadfs", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "og:description": "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.", "og:url": "http://operaen.no/", "og:title": "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett", "og:site_name": "Operaen.no", "og:type": "website", "keywords": "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter", "a" :"s" } } });
+			var expectation = adjustSystemInfo({ "ev": { "type": "custom", "event" : "sessionStarted", "location": "sadfs", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "og:description": "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.", "og:url": "http://operaen.no/", "og:title": "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett", "og:site_name": "Operaen.no", "og:type": "website", "keywords": "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter", "a" :"s" } } });
 
-            var request = lastRequest({keepSessionEvents: true, keepPageAndTitle: true});
+            var request = lastRequest({keepSessionEvents: true, keepTitle: true});
 			expect(request).to.eql(expectation);
 		})
 
@@ -182,9 +181,9 @@ describe('inbox', function () {
 			features.defineExperiment(features.MINI_AJAX, 100);
 			asa('pageview');
 
-			var expectation = adjustSystemInfo({ "ev": { "type": "custom", "event": "sessionStarted", "page": "/test.html", "location": "sadfs", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "og:description": "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.", "og:url": "http://operaen.no/", "og:title": "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett", "og:site_name": "Operaen.no", "og:type": "website", "keywords": "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter" } } });
+			var expectation = adjustSystemInfo({ "ev": { "type": "custom", "event": "sessionStarted", "location": "sadfs", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "og:description": "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.", "og:url": "http://operaen.no/", "og:title": "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett", "og:site_name": "Operaen.no", "og:type": "website", "keywords": "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter" } } });
 
-			expect(lastRequest({keepPageAndTitle: true, keepSessionEvents: true})).to.eql(expectation);
+			expect(lastRequest({keepTitle: true, keepSessionEvents: true})).to.eql(expectation);
 		})
 
 	});

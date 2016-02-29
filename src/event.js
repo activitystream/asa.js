@@ -15,12 +15,10 @@ var DOMMeta = function (o) {
 var pageview = function () {
     var title = document.title;
     var location = window.location.protocol + '//' + window.location.host + window.location.pathname + window.location.hash + window.location.search;
-    var page = window.location.pathname;
-    return { type: 'pageview', page: page, location: location, title: title };
+    return { type: 'pageview', location: location, title: title };
 };
 
 var sectionentered = function (section, page) {
-    page = page || window.location.pathname + window.location.hash + window.location.search;
     return { type: 'section_entered', section: section };
 };
 
@@ -80,7 +78,6 @@ var gatherSystemInfo = function (e) {
     var campaign = getCampaign(e.location, e.referrer);
     if (campaign) e.campaign = campaign;
     e.uid = user.getUserId();
-    e.cookiesEnabled = Cookies.enabled;
     var partnerId = window.sessionStorage.getItem('__as.partner_id');
     var partnerSId = window.sessionStorage.getItem('__as.partner_sid');
     if (partnerId) {
