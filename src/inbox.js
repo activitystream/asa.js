@@ -42,7 +42,6 @@ module.exports = function inbox(transport) {
 			
 			transport(event.package.apply(event, arguments));
 		} catch (e) {
-            debugger;
 			debug.forceLog('inbox exception:', e);
             server.submitError(e, {location : 'processing inbox message', arguments : arguments});
 		}
