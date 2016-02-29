@@ -58,7 +58,7 @@ var submitData = function(data, opts, callback){
 }
 
 var submitEvent = function(ev, callback){
-    submitData(ev, {url : eventPostAddress}, callback);
+    if (ev) submitData(ev, {url : eventPostAddress}, callback);
 }
 
 var submitError = function(err, context, callback){

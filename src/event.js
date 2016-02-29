@@ -100,7 +100,9 @@ module.exports = {
         var event = gatherMetaInfo(arguments);
         event = gatherSystemInfo(event);
         if (arguments[0] == 'pageview') {
-            // return;
+            return null;
+        } else
+        if (arguments[0] == 'sessionStarted') {
             event.meta = microdata.extractFromHead();
             if (typeof arguments[1] === 'object') {
                 event.meta = _.override(event.meta, arguments[1]);
