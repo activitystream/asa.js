@@ -11,6 +11,7 @@ describe('inbox', function () {
     var asa;
 	var lastRequest = function (keepSession, skipPageAndTitle) {
 		var request = JSON.parse(requests[0].requestBody);
+        if (request.ev.event && request.ev.event === 'sessionStarted') request = JSON.parse(requests[1].requestBody); 
         var element = request.ev;
         if (!keepSession) delete element.session;
         delete element.cookiesEnabled;
@@ -25,6 +26,7 @@ describe('inbox', function () {
 		delete request.t;
 		return request;
 	};
+    
 
 	var adjustSystemInfo = function (ev) {
         var element = ev.ev;
@@ -49,10 +51,10 @@ describe('inbox', function () {
 	});
 
 	describe('default pageview', function () {
-		it('should sent only one event', function () {
+		it('should sent two events: session started + pageview', function () {
 			asa('pageview');
 
-			expect(requests.length).to.equal(1);
+			expect(requests.length).to.equal(2);
 		})
 		it('should be a POST with data describing the event', function () {
 			asa('pageview');
@@ -194,7 +196,7 @@ describe('inbox', function () {
     
     describe('custom session management', function(){
         it('should allow devs to provide their own session id', function(){
-            asa('session', function() {return 'my_session';});
+            asa('session', function() {return true;}, function() {return 'my_session';}, null);
             asa('pageview');
             expect(lastRequest(true).ev.session).to.equal('my_session');            
         })

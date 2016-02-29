@@ -52,21 +52,33 @@ var builtinSessionManager = {
 			sessionStore.updateTimeout(SESSION_COOKIE_NAME, SESSION_EXPIRE_TIMEOUT);
 		}
 	},
+    
+    hasSession: function(){
+        return sessionStore.hasItem(SESSION_COOKIE_NAME);
+    },
+    
+    createSession: function(){
+        sessionStore.setItem(SESSION_COOKIE_NAME, user.getDomainId() + '.' + hash(user.getUserId() + '.' + randomness.getNumber()), SESSION_EXPIRE_TIMEOUT);
+    },
 
 	getSessionId: function () {
 		return sessionStore.getItem(SESSION_COOKIE_NAME);
 	}
     
 };
-var providedSessionManager = function(getSessionId, extendSession){
+var providedSessionManager = function(hasSessions, getSession, createSession){
     return {
-        extendSession: function () {
-            if (extendSession) extendSession();
+        hasSession: function(){
+            return hasSessions();
         },
-    
+        
+        createSession: function(){
+            createSession();
+        },
+
         getSessionId: function () {
-            return getSessionId();
-        }    
+            return getSession();
+        }
     };
 };
 var sessionManager = builtinSessionManager;
@@ -78,7 +90,13 @@ module.exports = {
 	getSessionId: function () {
 		return sessionManager.getSessionId();
 	},
-    customSession : function(getSession, extendSession){
-        sessionManager = providedSessionManager(getSession, extendSession);
+    hasSession: function(){
+        return sessionManager.hasSession();
+    },
+    createSession: function(){
+        sessionManager.createSession();
+    },
+    customSession : function(hasSessions, getSession, createSession){
+        sessionManager = providedSessionManager(hasSessions, getSession, createSession);
     }
 };

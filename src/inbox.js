@@ -13,7 +13,7 @@ module.exports = function inbox(transport) {
             if (!Cookies.enabled) return; // let's avoid browsers without cookies for now
             
 			if (arguments[0] == 'session') {
-				session.customSession(arguments[1], arguments[2])
+				session.customSession(arguments[1], arguments[2], arguments[3])
 				return;
 			}
 
@@ -34,11 +34,15 @@ module.exports = function inbox(transport) {
 				microdata.setMapper(arguments[1]);
 				return;
 			}
-
-			session.extendSession();
+            
+            if (!session.hasSession()){
+                session.createSession();
+                transport(event.package('sessionStarted'));
+            }
 			
 			transport(event.package.apply(event, arguments));
 		} catch (e) {
+            debugger;
 			debug.forceLog('inbox exception:', e);
             server.submitError(e, {location : 'processing inbox message', arguments : arguments});
 		}
