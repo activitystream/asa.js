@@ -14,13 +14,13 @@ var DOMMeta = function (o) {
 var pageview = function () {
     var title = document.title;
     var location = window.location.protocol + '//' + window.location.host + window.location.pathname + window.location.hash + window.location.search;
-    var page = window.location.pathname + window.location.search;
+    var page = window.location.pathname;
     return { type: 'pageview', page: page, location: location, title: title };
 };
 
 var sectionentered = function (section, page) {
     page = page || window.location.pathname + window.location.hash + window.location.search;
-    return { type: 'section_entered', page: page, section: section };
+    return { type: 'section_entered', section: section };
 };
 
 var custom = function (event) {
