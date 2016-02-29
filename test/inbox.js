@@ -9,13 +9,17 @@ describe('inbox', function () {
     var requests = [];
 	var xhr;
     var asa;
-	var lastRequest = function (keepSession) {
+	var lastRequest = function (keepSession, skipPageAndTitle) {
 		var request = JSON.parse(requests[0].requestBody);
         var element = request.ev;
         if (!keepSession) delete element.session;
         delete element.cookiesEnabled;
         delete element.uid;
         delete element.referrer;
+        if (skipPageAndTitle){
+            delete element.page;
+            delete element.title;
+        }
         delete element.t;
         delete element.location;
 		delete request.t;
@@ -117,42 +121,41 @@ describe('inbox', function () {
 
 			var expectation = adjustSystemInfo({ "ev": { "type": "custom", "event": "custom_one" } });
 
-			expect(lastRequest()).to.eql(expectation);
+			expect(lastRequest(false, true)).to.eql(expectation);
 		});
 		it('should send metadata when client id specified as string', function () {
 			asa('custom_one', 'offer1');
 
 			var expectation = adjustSystemInfo({ "ev": { "type": "custom", "event": "custom_one", "meta": { "type": "http://schema.org/Offer", "properties": { "name": "Blend-O-Matic", "price": "$19.95", "reviews": { "type": "http://schema.org/AggregateRating", "properties": { "ratingValue": "4", "bestRating": "5", "ratingCount": "25" } } } } } });
 
-			expect(lastRequest()).to.eql(expectation);
+			expect(lastRequest(false, true)).to.eql(expectation);
 		});
 		it('should send metadata when specified as DOM element', function () {
 			asa('custom_one', document.getElementById('offer1'));
 
 			var expectation = adjustSystemInfo({ "ev": { "type": "custom", "event": "custom_one", "meta": { "type": "http://schema.org/Offer", "properties": { "name": "Blend-O-Matic", "price": "$19.95", "reviews": { "type": "http://schema.org/AggregateRating", "properties": { "ratingValue": "4", "bestRating": "5", "ratingCount": "25" } } } } } });
 
-			expect(lastRequest()).to.eql(expectation);
+			expect(lastRequest(false, true)).to.eql(expectation);
 		});
 		it('should send metadata when specified as explicit extra one', function () {
 			asa('custom_one', { 'a': 's' });
 
 			var expectation = adjustSystemInfo({ "ev": { "type": "custom", "event": "custom_one", "meta": { 'a': 's' } } });
-
-			expect(lastRequest()).to.eql(expectation);
+			expect(lastRequest(false, true)).to.eql(expectation);
 		});
 		it('should send metadata when specified as DOM element and extra metadata', function () {
 			asa('custom_one', document.getElementById('offer1'), { a: 's' });
 
 			var expectation = adjustSystemInfo({ "ev": { "type": "custom", "event": "custom_one", "meta": { "a": "s", "type": "http://schema.org/Offer", "properties": { "name": "Blend-O-Matic", "price": "$19.95", "reviews": { "type": "http://schema.org/AggregateRating", "properties": { "ratingValue": "4", "bestRating": "5", "ratingCount": "25" } } } } } });
 
-			expect(lastRequest()).to.eql(expectation);
+			expect(lastRequest(false, true)).to.eql(expectation);
 		});
 		it('should send metadata when specified as DOM element ID and extra metadata', function () {
 			asa('custom_one', 'offer1', { a: 's' });
 
 			var expectation = adjustSystemInfo({ "ev": { "type": "custom", "event": "custom_one", "meta": { "a": "s", "type": "http://schema.org/Offer", "properties": { "name": "Blend-O-Matic", "price": "$19.95", "reviews": { "type": "http://schema.org/AggregateRating", "properties": { "ratingValue": "4", "bestRating": "5", "ratingCount": "25" } } } } } });
 
-			expect(lastRequest()).to.eql(expectation);
+			expect(lastRequest(false, true)).to.eql(expectation);
 		});
 	})
 
