@@ -164,12 +164,12 @@ describe('inbox', function () {
 	})
 
     describe('campaign info', function () {
-        xit('should be present when session starts', function () {
+        it('should be present when session starts', function () {
             // for this test to work we should modify the url like this for now: /test.html?utm_campaign=testCampaign
             asa('pageview');
-			var expectation = adjustSystemInfo({ "ev": { "type": "pageview", "page": "/test.html", "location": "sadfs", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "og:description": "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.", "og:url": "http://operaen.no/", "og:title": "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett", "og:site_name": "Operaen.no", "og:type": "website", "keywords": "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter" } } });
+			var expectation = adjustSystemInfo({ "ev": { "type": "pageview", "campaign" : {"campaign" : "testCampaign", "source": "testSource"}, "location": "sadfs", "meta": { "og:description": "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.", "og:url": "http://operaen.no/", "og:title": "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett", "og:site_name": "Operaen.no", "og:type": "website", "keywords": "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter" } } });
 
-			expect(lastRequest(false, false, true)).to.eql(expectation);
+			expect(lastRequest({keepCampaign: true})).to.eql(expectation);
             
         })
     })
