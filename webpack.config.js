@@ -1,5 +1,5 @@
 var webpack = require('webpack'),
-  package = require('./package.json'),
+  p = require('./package.json'),
   glob = require('glob'),
   path = require('path');
 
@@ -15,7 +15,7 @@ module.exports = function(){
     plugins: [
     ],
     resolve: {
-      alias: package.browser,
+      alias: p.browser,
       root: [
         path.join(__dirname, 'src'),
         path.join(__dirname, 'test'),
