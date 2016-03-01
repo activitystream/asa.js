@@ -37,7 +37,9 @@ module.exports = function inbox(transport) {
             
             if (!session.hasSession()){
                 session.createSession();
-                transport(event.package('sessionStarted'));
+                transport(event.package('sessionStarted'));                
+            } else {
+                
             }
 			
 			transport(event.package.apply(event, arguments));
