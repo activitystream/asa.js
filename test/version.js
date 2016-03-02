@@ -1,6 +1,6 @@
 var expect = require('chai').expect;
-var info = require('version');
-var features = require('features');
+var info = require('../src/version');
+var features = require('../src/features');
 
 describe('script version', function(){
 	it('should be same as major.minor.build-feature1.feature2 format', function(){

@@ -1,4 +1,4 @@
-var m = require('microdata');
+var m = require('../src/microdata');
 var expect = require('chai').expect;
 
 describe('microdata', function () {

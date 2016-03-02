@@ -1,4 +1,4 @@
-var features = require('features');
+var features = require('../src/features');
 var expect = require('chai').expect;
 
 describe('feature flippers', function(){

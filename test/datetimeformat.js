@@ -1,4 +1,4 @@
-var event = require('event');
+var event = require('../src/event');
 var expect = require('chai').expect;
 var moment = require('moment');
 

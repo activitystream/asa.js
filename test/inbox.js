@@ -1,9 +1,9 @@
 /* global sinon */
-var inbox = require('inbox');
+var inbox = require('../src/inbox');
 var expect = require('chai').expect;
-var core = require('server');
-var info = require('version');
-var features = require('features');
+var core = require('../src/server');
+var info = require('../src/version');
+var features = require('../src/features');
 
 describe('inbox', function () {
     var requests = [];
