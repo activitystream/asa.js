@@ -6,18 +6,48 @@ seleniumfirefox:
     image: selenium/standalone-firefox
     links:
         - testserver:web
-saucelabs:
-    image: ustwo/docker-sauce-connect
+
+seleniumchrome:
+    image: selenium/standalone-chrome
     links:
         - testserver:web
+        
+saucelabs:
+    image: ustwo/sauce-connect
+    links:
+        - testserver:web
+    expose:
+        - "8000"
     environment:
         - SAUCE_USERNAME=pshomov
         - SAUCE_ACCESS_KEY
+    command: -P 8000
 
-testdriver:
+testfirefox:
     image: asa.js
     command: node saucelabs.js
     environment:
-        - PORT=4443
+        - TEST_BROWSER=firefox
     links:
-        - seleniumfirefox:selenium
+        - seleniumfirefox:selenium        
+
+testchrome:
+    image: asa.js
+    command: node saucelabs.js
+    environment:
+        - TEST_BROWSER=chrome
+    links:
+        - seleniumchrome:selenium        
+
+testie11:
+    image: asa.js
+    command: node saucelabs.js
+    environment:
+        - SAUCE_USERNAME=pshomov
+        - SAUCE_ACCESS_KEY
+        - TEST_BROWSER=internet explorer
+        - TEST_BROWSER_VER=11.0
+        - TEST_OS=windows 7
+        - PORT=8000
+    links:
+        - saucelabs:selenium

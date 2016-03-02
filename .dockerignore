@@ -2,3 +2,5 @@ node_modules/
 logs/
 dist/
 .tmp/
+typings/
+acceptance_test/

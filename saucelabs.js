@@ -1,19 +1,15 @@
 var Cloud = require('./mocha-sauce');
-var cloud = new Cloud('acceptance-test', 'as-builder', 'e5eeb7c4-05f3-42ba-9135-9d09cbd99498', 'selenium', process.env.PORT);
-cloud.browser('firefox', '', 'Linux');
-// cloud.browser('chrome', '', 'Mac');
-// cloud.browser('phantomjs', '', 'Mac');
-// cloud.browser('safari', '', 'Mac');
-// cloud.browser('internet explorer', '9.0', 'windows 7');
-// cloud.browser('internet explorer', '10.0', 'windows 7');
-// cloud.browser('internet explorer', '11.0', 'windows 7');
-// cloud.browser('', '9.0', 'Mac', 'iPad Simulator');
-// cloud.browser('', '8.0', 'Mac', 'iPad Simulator');
-// cloud.browser('', '7.0', 'Mac', 'iPad Simulator');
-cloud.url('http://web:8080/test.html');
+var cloud = new Cloud('acceptance-test', process.env.SAUCE_USERNAME, process.env.SAUCE_ACCESS_KEY, 'selenium', process.env.PORT);
+
+var browser = process.env.TEST_BROWSER || 'firefox';
+var browserVer = process.env.TEST_BROWSER_VER || '';
+var os = process.env.TEST_OS || 'linux';
+cloud.browser(browser, browserVer, os);
+
+cloud.url('http://web:8080/test.html?utm_campaign=testCampaign&utm_source=testSource');
  
 cloud.on('init', function(browser){
-  console.log('  init : %s %s', browser.id(), browser.version);
+  console.log('  init : ', JSON.stringify(browser));
 });
  
 cloud.on('start', function(browser){
