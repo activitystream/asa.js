@@ -8,6 +8,8 @@ var Cookies = require('cookies-js');
 var parseuri = require('./parseuri');
 
 module.exports = function inbox(transport) {
+    var serviceProviders = [];
+    var sessionReset = false;
     return function () {
         try {
             if (!Cookies.enabled) return; // let's avoid browsers without cookies for now
@@ -19,6 +21,10 @@ module.exports = function inbox(transport) {
 
             if (arguments[0] == 'connectedPartners') {
                 autoTrack.links(arguments[1]);
+                return;
+            }
+            if (arguments[0] == 'serviceProviders') {
+                serviceProviders = arguments[1];
                 return;
             }
             if (arguments[0] == 'tenantId') {
@@ -36,13 +42,17 @@ module.exports = function inbox(transport) {
             }
 
             if (!session.hasSession()) {
+                debug.log('no session, starting a new one');
                 session.createSession();
+                sessionReset = true;
                 transport(event.package('sessionStarted'));
             } else {
-                if (document.referrer && document.referrer.length > 0) {
-                    var referrerAuth = parseuri(document.referrer);
-                    var currentAuth = parseuri(document.location);
-                    if (referrerAuth != currentAuth) {
+                if (!sessionReset && document.referrer && document.referrer.length > 0) {
+                    var referrerAuth = parseuri(document.referrer).authority;
+                    var currentAuth = parseuri(document.location).authority;
+                    if (referrerAuth != currentAuth && serviceProviders.indexOf(referrerAuth) === -1) {
+                        debug.log('starting a new session since we are coming from an external referrer');
+                        sessionReset = true;
                         session.createSession();
                         transport(event.package('sessionStarted'));
                     }
