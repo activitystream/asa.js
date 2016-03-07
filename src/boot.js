@@ -1,4 +1,12 @@
-module.exports = function(){
+var runBootSequence = function(bootSequence){
+    bootSequence = bootSequence || [];
+    if (!(bootSequence instanceof Array)) bootSequence = [bootSequence];
+
+    for (var i = 0; i < bootSequence.length; i++) {
+        window.asa.apply(null, bootSequence[i]);
+    }
+}
+module.exports = function(bootSequence){
     // var DNT = navigator.doNotTrack || navigator.msDoNotTrack || window.doNotTrack;
     // if (DNT && (DNT === 'yes' || DNT.charAt(0) === '1')) return;
 	var partner = require('./partner');
@@ -17,6 +25,8 @@ module.exports = function(){
 		window.asa = inbox(server.submitEvent);
 
 		// features.defineExperiment(features.MINI_AJAX, 10);
+        
+        runBootSequence(bootSequence);
 
 		for (var i = 0; i < pendingEvents.length; i++) {
 			window.asa.apply(null, pendingEvents[i]);
