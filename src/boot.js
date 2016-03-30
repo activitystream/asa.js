@@ -7,6 +7,8 @@ var runBootSequence = function(bootSequence){
     }
 };
 
+require('./polyfills')();
+
 module.exports = function(bootSequence){
     // var DNT = navigator.doNotTrack || navigator.msDoNotTrack || window.doNotTrack;
     // if (DNT && (DNT === 'yes' || DNT.charAt(0) === '1')) return;
