@@ -9,6 +9,8 @@ var generateUserId = function () {
 	return domainHash(window.location.host) + '.' + userHash('' + randomness.getNumber());
 };
 
+var userCreated = false;
+
 var setUserId = function() {
     var userId = generateUserId();
     Cookies.set(USER_ID_COOKIE, userId, {expires: Infinity, path : '/'});
@@ -17,6 +19,7 @@ var setUserId = function() {
 
 var getUserId = function () {
 	if (!Cookies.get(USER_ID_COOKIE)) {
+        userCreated = true;
         setUserId();
 	}
 
@@ -37,5 +40,13 @@ module.exports = {
 	},
 	getUserHash: function () {
 		return domainHash(getUserId().split('.')[1]);
-	}
+	},
+    getAndResetNewUserStatus : () => {
+        if (userCreated) {
+            userCreated = false;
+            return true;
+        } else 
+            return false;
+    }
+    
 };

@@ -56,7 +56,7 @@ describe('inbox', function () {
 		it('should sent session started', function () {
 			asa('pageview');
 
-			expect(requests.length).to.equal(1);
+			expect(requests.length).to.equal(2);
 		})
 		it('should be a POST with data describing the event', function () {
 			asa('pageview');

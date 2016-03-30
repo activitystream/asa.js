@@ -6,10 +6,12 @@ var event = require('./event');
 var server = require('./server');
 var Cookies = require('cookies-js');
 var parseuri = require('./parseuri');
+var user = require('./user');
+var getCampaign = require('./campaign');
 
 module.exports = function inbox(transport) {
     var serviceProviders = [];
-    var sessionReset = false;
+    var sessionResumed = false;
     return function () {
         try {
             if (!Cookies.enabled) return; // let's avoid browsers without cookies for now
@@ -44,17 +46,17 @@ module.exports = function inbox(transport) {
             if (!session.hasSession()) {
                 debug.log('no session, starting a new one');
                 session.createSession();
-                sessionReset = true;
-                transport(event.package('sessionStarted'));
+                sessionResumed = true;
+                transport(event.package('sessionStarted', {newBrowser : user.getAndResetNewUserStatus()}));
             } else {
-                if (!sessionReset && document.referrer && document.referrer.length > 0) {
+                var campaign = getCampaign(document.location, document.referrer);
+                if (!sessionResumed && ((document.referrer && document.referrer.length > 0) || campaign)) {
                     var referrerAuth = parseuri(document.referrer).authority;
                     var currentAuth = parseuri(document.location).authority;
-                    if (referrerAuth != currentAuth && serviceProviders.indexOf(referrerAuth) === -1) {
-                        debug.log('starting a new session since we are coming from an external referrer');
-                        sessionReset = true;
-                        session.createSession();
-                        transport(event.package('sessionStarted'));
+                    if ((referrerAuth != currentAuth && serviceProviders.indexOf(referrerAuth) === -1) || campaign) {
+                        debug.log('session resumed');
+                        sessionResumed = true;
+                        transport(event.package('sessionResumed'));
                     }
                 }
             }
