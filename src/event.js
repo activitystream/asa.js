@@ -6,6 +6,7 @@ var _ = require('./utils');
 var parseUri = require('./parseuri');
 var Cookies = require('cookies-js');
 var formatting = require('./formatting');
+var getCampaign = require('./campaign');
 
 var DOMMeta = function (o) {
     if (o.length < 2) return false;
@@ -48,28 +49,6 @@ var gatherMetaInfo = function gatherMetaInfo(a) {
     throw new Error('Upsi! There is something wrong with this event:', a);
 };
 
-function getCampaign(location, referrer) {
-    var campaignKeys;
-    referrer = parseUri(referrer);
-    location = parseUri(location);
-    if (referrer.queryKey && referrer.queryKey['utm_campaign'])
-        campaignKeys = campaignKeys || referrer.queryKey;
-
-    if (location.queryKey && location.queryKey['utm_campaign'])
-        campaignKeys = campaignKeys || location.queryKey;
-
-    if (campaignKeys) {
-        var campaign = {};
-        if (campaignKeys.utm_campaign) campaign.campaign = campaignKeys.utm_campaign;
-        if (campaignKeys.utm_source) campaign.source = campaignKeys.utm_source;
-        if (campaignKeys.utm_medium) campaign.medium = campaignKeys.utm_medium;
-        if (campaignKeys.utm_term) campaign.term = campaignKeys.utm_term;
-        if (campaignKeys.utm_content) campaign.content = campaignKeys.utm_content;
-        return campaign;
-    }
-    return null;
-}
-
 
 var gatherSystemInfo = function (e) {
     e.t = formatting.formatDateTime(new Date());
@@ -96,9 +75,9 @@ module.exports = {
 
         var event = gatherMetaInfo(arguments);
         event = gatherSystemInfo(event);
-        if (arguments[0] == 'pageview') {
-            return null;
-        } else
+        // if (arguments[0] == 'pageview') {
+        //     return null;
+        // } else
         if (arguments[0] == 'sessionStarted') {
             event.meta = microdata.extractFromHead();
             if (typeof arguments[1] === 'object') {
