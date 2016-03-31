@@ -24,7 +24,7 @@ module.exports = {
 				if (domainsTracked.indexOf(destination.authority) > -1) {
                     if (!destination.queryKey['__asa']){
                         var alreadyHasParams = ev.target.href.indexOf('?') !== -1;
-                        href = href + (alreadyHasParams ? '&' : '?') + '__asa=' + encodeURIComponent(window.asaId+'|'+session.getSessionId());
+                        href = href + (alreadyHasParams ? '&' : '?') + '__asa=' + encodeURIComponent(window.asaId+'|'+session.getSession().id);
                         ev.target.href = href;
                     }
 				}

@@ -52,7 +52,7 @@ var gatherMetaInfo = function gatherMetaInfo(a) {
 
 var gatherSystemInfo = function (e) {
     e.t = formatting.formatDateTime(new Date());
-    e.session = session.getSessionId();
+    e.session = session.getSession().id;
     e.referrer = document.referrer;
     var campaign = getCampaign(e.location, e.referrer);
     if (campaign) e.campaign = campaign;

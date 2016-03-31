@@ -212,7 +212,7 @@ describe('inbox', function () {
     
     describe('custom session management', function(){
         it('should allow devs to provide their own session id', function(){
-            asa('session', function() {return false;}, function() {return 'my_session';}, function(){});
+            asa('session', function() {return false;}, function() {return {id : 'my_session'};}, function(){});
             asa('pageview');
             
             expect(lastRequest({keepSession: true, keepSessionEvents: true}).ev.session).to.equal('my_session');            

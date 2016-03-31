@@ -30,30 +30,27 @@ var store = {
 	getItem: function (name) {
 		return persistence.get(name);
 	},
-	setItem: function (name, value, timeout) {
+	setItem: function (name, value) {
 		persistence.set(name, value);
 	},
-	updateTimeout: function (name, timeout) {
-		var item = persistence.get(name);
-		store.setItem(name, item, timeout);
-	}
 };
 
 var sessionStore = store;
-var SESSION_EXPIRE_TIMEOUT = 30 * 60;
+var SESSION_EXPIRE_TIMEOUT = 30 * 60 * 1000;
 // SESSION_EXPIRE_TIMEOUT = 30 * 60;
 var SESSION_COOKIE_NAME = '__asa_session';
 var builtinSessionManager = {    
     hasSession: function(){
-        return sessionStore.hasItem(SESSION_COOKIE_NAME);
+        var item = sessionStore.hasItem(SESSION_COOKIE_NAME);
+        return item && JSON.parse(item).t > (1 * new Date());
     },
     
     createSession: function(){
-        sessionStore.setItem(SESSION_COOKIE_NAME, user.getDomainId() + '.' + hash(user.getUserId() + '.' + randomness.getNumber()), SESSION_EXPIRE_TIMEOUT);
+        sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify({ id : user.getDomainId() + '.' + hash(user.getUserId() + '.' + randomness.getNumber()), t : (1*new Date() + SESSION_EXPIRE_TIMEOUT)}));
     },
 
-	getSessionId: function () {
-		return sessionStore.getItem(SESSION_COOKIE_NAME);
+	getSession: function () {
+		return JSON.parse(sessionStore.getItem(SESSION_COOKIE_NAME));
 	}
     
 };
@@ -74,8 +71,8 @@ var providedSessionManager = function(hasSessions, getSession, createSession){
 };
 var sessionManager = builtinSessionManager;
 module.exports = {
-	getSessionId: function () {
-		return sessionManager.getSessionId();
+	getSession: function () {
+		return sessionManager.getSession();
 	},
     hasSession: function(){
         return sessionManager.hasSession();
@@ -85,11 +82,5 @@ module.exports = {
     },
     customSession : function(hasSessions, getSession, createSession){
         sessionManager = providedSessionManager(hasSessions, getSession, createSession);
-    },
-    saveInSession: function(name, value){
-        store.setItem(name, value);
-    },
-    getFromSession: function(name){
-        return store.getItem(name)
     }
 };
