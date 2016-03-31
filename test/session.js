@@ -17,9 +17,15 @@ describe('session', function () {
     })
 
     describe('store stuff in session', () => {
-        it('should store data in session and give it back', () => {
+        it('should store data in session and give it back',  function (){
             session.createSession({fle : 'flo'});
             expect(session.getSession().fle).to.equals('flo');
+        })
+        
+        it('should update data in session', function(){
+            session.createSession({fle : 'flo'});
+            session.updateTimeout({fle : 'fle'})
+            expect(session.getSession().fle).to.equals('fle');            
         })
     });
     

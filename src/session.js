@@ -55,9 +55,13 @@ var builtinSessionManager = {
         return JSON.parse(sessionStore.getItem(SESSION_COOKIE_NAME));
     },
     
-    updateTimeout: function updateTimeout(){
+    updateTimeout: function updateTimeout(sessionData){
         var session = this.getSession();
+        var sessionId = session.id;
+        session = _.override(session, sessionData);
         session.t = ((1 * new Date()) + SESSION_EXPIRE_TIMEOUT);
+        session.id = sessionId;
+        
         sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(session));
     }
 
@@ -94,7 +98,7 @@ module.exports = {
     resetSessionMgmt: function resetSessionMgmt() {
         sessionManager = builtinSessionManager;
     },
-    updateTimeout: function updateTimeout(){
-        sessionManager.updateTimeout();
+    updateTimeout: function updateTimeout(sessionData){
+        sessionManager.updateTimeout(sessionData);
     }
 };
