@@ -1,5 +1,7 @@
 var session = require('./session');
 var parseUri = require('./parseuri');
+var window = require('./browser').window;
+var document = require('./browser').document;
 module.exports = {
 	sections: function () {
 		var locationHashChanged = function (oldHash, newHash) {

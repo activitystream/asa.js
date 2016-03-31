@@ -1,4 +1,6 @@
 	var parseUri = require('./parseuri');
+    var window = require('./browser').window;
+    var document = require('./browser').document;
 	var updatePartnerInfo = function (){
 		var partnerIdKey = '__as.partner_id';
 		var partnerSIdKey = '__as.partner_sid';

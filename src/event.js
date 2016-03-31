@@ -7,6 +7,8 @@ var parseUri = require('./parseuri');
 var Cookies = require('cookies-js');
 var formatting = require('./formatting');
 var getCampaign = require('./campaign');
+var window = require('./browser').window;
+var document = require('./browser').document;
 
 var DOMMeta = function (o) {
     if (o.length < 2) return false;

@@ -4,6 +4,8 @@ var domainHash = require('./domain_hash').domainHash;
 var userHash = require('./domain_hash').userHash;
 var randomness = require('./randomness');
 var USER_ID_COOKIE = '__as_user';
+var window = require('./browser').window;
+var document = require('./browser').document;
 
 var generateUserId = function () {
 	return domainHash(window.location.host) + '.' + userHash('' + randomness.getNumber());
