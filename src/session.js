@@ -64,7 +64,7 @@ var providedSessionManager = function(hasSessions, getSession, createSession) {
             createSession();
         },
 
-        getSessionId: function() {
+        getSession: function() {
             return getSession();
         }
     };
