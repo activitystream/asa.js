@@ -16,7 +16,7 @@ var persistence = {
     },
     set: function(id, value) {
         try {
-            return Cookies.setItem(id, value, false, '/');
+            return Cookies.setItem(id, value, Infinity, '/');
         } catch (e) {
             throw new Error('Error while trying to set item to session cookie: "' + id + '" <- ' + value);
         }
@@ -48,7 +48,7 @@ var builtinSessionManager = {
     },
 
     createSession: function(sessionData) {
-        sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(_.override({ id: user.getDomainId() + '.' + hash(user.getUserId() + '.' + randomness.getNumber()), t: ((1 * new Date()) + SESSION_EXPIRE_TIMEOUT) }, sessionData)));
+        sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(_.override(sessionData, { id: user.getDomainId() + '.' + hash(user.getUserId() + '.' + randomness.getNumber()), t: ((1 * new Date()) + SESSION_EXPIRE_TIMEOUT) })));
     },
 
     getSession: function() {
