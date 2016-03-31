@@ -3,6 +3,7 @@ var user = require('./user');
 var randomness = require('./randomness');
 var hash = require('./domain_hash').sessionHash;
 var Cookies = require('./cookies');
+var _ = require('./utils');
 
 
 var persistence = {
@@ -45,8 +46,8 @@ var builtinSessionManager = {
         return item && JSON.parse(item).t > (1 * new Date());
     },
 
-    createSession: function() {
-        sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify({ id: user.getDomainId() + '.' + hash(user.getUserId() + '.' + randomness.getNumber()), t: (1 * new Date() + SESSION_EXPIRE_TIMEOUT) }));
+    createSession: function(sessionData) {
+        sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(_.override({ id: user.getDomainId() + '.' + hash(user.getUserId() + '.' + randomness.getNumber()), t: ((1 * new Date()) + SESSION_EXPIRE_TIMEOUT) }, sessionData)));
     },
 
     getSession: function() {
@@ -75,12 +76,15 @@ module.exports = {
         return sessionManager.getSession();
     },
     hasSession: function() {
-        return sessionManager.hasSession();
+        return !!(sessionManager.hasSession());
     },
-    createSession: function() {
-        sessionManager.createSession();
+    createSession: function(sessionData) {
+        sessionManager.createSession(sessionData);
     },
     customSession: function(hasSessions, getSession, createSession) {
         sessionManager = providedSessionManager(hasSessions, getSession, createSession);
+    },
+    resetSessionMgmt : function resetSessionMgmt() {
+        sessionManager = builtinSessionManager;
     }
 };
