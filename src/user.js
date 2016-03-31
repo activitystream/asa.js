@@ -41,7 +41,7 @@ module.exports = {
 	getUserHash: function () {
 		return domainHash(getUserId().split('.')[1]);
 	},
-    getAndResetNewUserStatus : () => {
+    getAndResetNewUserStatus : function(){
         if (userCreated) {
             userCreated = false;
             return true;

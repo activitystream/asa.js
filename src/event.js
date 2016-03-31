@@ -51,10 +51,11 @@ var gatherMetaInfo = function gatherMetaInfo(a) {
 
 
 var gatherSystemInfo = function (e) {
+    var sess = session.getSession();
     e.t = formatting.formatDateTime(new Date());
-    e.session = session.getSession().id;
-    e.referrer = document.referrer;
-    var campaign = getCampaign(e.location, e.referrer);
+    e.session = sess.id;
+    e.referrer = sess.referrer || '';
+    var campaign = sess.campaign;
     if (campaign) e.campaign = campaign;
     e.uid = user.getUserId();
     var partnerId = window.sessionStorage.getItem('__as.partner_id');

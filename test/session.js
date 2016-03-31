@@ -16,7 +16,7 @@ describe('session', function () {
         })
     })
 
-    describe('store stuff in session', () => {
+    describe('store stuff in session', function() {
         it('should store data in session and give it back',  function (){
             session.createSession({fle : 'flo'});
             expect(session.getSession().fle).to.equals('flo');
@@ -29,15 +29,15 @@ describe('session', function () {
         })
     });
     
-    describe('session id', () => {
-        it('should generate one', () => {
+    describe('session id', function() {
+        it('should generate one', function() {
             session.createSession();
             expect(session.getSession().id).to.be.a('string');
         });
     })
     
-    describe('update session timeout', () => {
-        it('should update expiry time', done => {
+    describe('update session timeout', function() {
+        it('should update expiry time', function(done) {
             session.createSession();
             var timeout1 = session.getSession().t;
             setTimeout(function(){

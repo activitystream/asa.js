@@ -8,6 +8,7 @@ var Cookies = require('cookies-js');
 var parseuri = require('./parseuri');
 var user = require('./user');
 var getCampaign = require('./campaign');
+var getReferrer = require('./referrer');
 
 module.exports = function inbox(transport) {
     var serviceProviders = [];
@@ -42,14 +43,18 @@ module.exports = function inbox(transport) {
                 microdata.setMapper(arguments[1]);
                 return;
             }
-
+            
             if (!session.hasSession()) {
                 debug.log('no session, starting a new one');
-                session.createSession();
+                var campaign = getCampaign(document.location, document.referrer);
+                var referrer = getReferrer(document.location, document.referrer, serviceProviders); 
+                session.createSession({campaign : campaign, referrer : referrer});
                 sessionResumed = true;
                 transport(event.package('sessionStarted', {newBrowser : user.getAndResetNewUserStatus()}));
             } else {
                 var campaign = getCampaign(document.location, document.referrer);
+                var referrer = getReferrer(document.location, document.referrer, serviceProviders); 
+                session.updateTimeout({campaign : campaign, referrer : referrer});
                 if (!sessionResumed && ((document.referrer && document.referrer.length > 0) || campaign)) {
                     var referrerAuth = parseuri(document.referrer).authority;
                     var currentAuth = parseuri(document.location).authority;

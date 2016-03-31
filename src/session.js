@@ -44,7 +44,11 @@ var SESSION_COOKIE_NAME = '__asa_session';
 var builtinSessionManager = {
     hasSession: function() {
         var item = sessionStore.hasItem(SESSION_COOKIE_NAME);
-        return item && JSON.parse(item).t > (1 * new Date());
+        try{
+            return item && JSON.parse(item).t > (1 * new Date());            
+        } catch(e) {
+            return false;
+        }
     },
 
     createSession: function(sessionData) {
