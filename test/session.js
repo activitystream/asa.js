@@ -29,4 +29,21 @@ describe('session', function () {
             expect(session.getSession().id).to.be.a('string');
         });
     })
+    
+    describe('update session timeout', () => {
+        it('should update expiry time', done => {
+            session.createSession();
+            var timeout1 = session.getSession().t;
+            setTimeout(function(){
+                try {
+                    session.updateTimeout();
+                    var timeout2 = session.getSession().t;
+                    expect(timeout1).to.be.not.equals(timeout2);
+                    done();                    
+                } catch(e){
+                    done(e);
+                }                
+            }, 10);
+        })
+    })
 })

@@ -37,9 +37,10 @@ var store = {
 };
 
 var sessionStore = store;
+
 var SESSION_EXPIRE_TIMEOUT = 30 * 60 * 1000;
-// SESSION_EXPIRE_TIMEOUT = 30 * 60;
 var SESSION_COOKIE_NAME = '__asa_session';
+
 var builtinSessionManager = {
     hasSession: function() {
         var item = sessionStore.hasItem(SESSION_COOKIE_NAME);
@@ -52,6 +53,12 @@ var builtinSessionManager = {
 
     getSession: function() {
         return JSON.parse(sessionStore.getItem(SESSION_COOKIE_NAME));
+    },
+    
+    updateTimeout: function updateTimeout(){
+        var session = this.getSession();
+        session.t = ((1 * new Date()) + SESSION_EXPIRE_TIMEOUT);
+        sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(session));
     }
 
 };
@@ -86,5 +93,8 @@ module.exports = {
     },
     resetSessionMgmt: function resetSessionMgmt() {
         sessionManager = builtinSessionManager;
+    },
+    updateTimeout: function updateTimeout(){
+        sessionManager.updateTimeout();
     }
 };
