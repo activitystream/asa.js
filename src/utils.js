@@ -1,6 +1,6 @@
 var copyProps = function copyProps(o1, o2){
 	for (var key in o2) {
-		if (o2.hasOwnProperty(key)) {
+		if (o2.hasOwnProperty(key) && o2[key] !== null && o2[key] !== undefined) {
 			o1[key] = o2[key];
 		}
 	}
