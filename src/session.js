@@ -84,7 +84,7 @@ module.exports = {
     customSession: function(hasSessions, getSession, createSession) {
         sessionManager = providedSessionManager(hasSessions, getSession, createSession);
     },
-    resetSessionMgmt : function resetSessionMgmt() {
+    resetSessionMgmt: function resetSessionMgmt() {
         sessionManager = builtinSessionManager;
     }
 };
