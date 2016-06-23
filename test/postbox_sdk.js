@@ -25,6 +25,8 @@ describe('Postbox SDK', function () {
         if (element.user.did) element.user.did = 'device_id'; 
         if (element.user.sid) element.user.sid = 'session_id'; 
         if (element.occurred) element.occurred = 'time'; 
+        if (element.v) delete element.v; 
+        if (element.tenant) delete element.tenant; 
         return ev;
     };
 

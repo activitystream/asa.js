@@ -10,13 +10,15 @@ var user = require('./user');
 var getCampaign = require('./campaign');
 var getReferrer = require('./referrer');
 
+var postboxMessages = ['product.viewed', 'product.interest', 'customer.account.provided', 'order.reviewed', 'order.delivery.selected', 'purchase.completed', 'payment.failed', 'product.carted', 'product.uncarted', 'product.unavailable', 'product.searched'];
+
 module.exports = function inbox(transport) {
     var serviceProviders = [];
     var sessionResumed = false;
     return function () {
         try {
             if (!Cookies.enabled) return; // let's avoid browsers without cookies for now
-            
+
             if (arguments[0] == 'session') {
                 session.customSession(arguments[1], arguments[2], arguments[3])
                 return;
@@ -43,18 +45,18 @@ module.exports = function inbox(transport) {
                 microdata.setMapper(arguments[1]);
                 return;
             }
-            
+
             if (!session.hasSession()) {
                 debug.log('no session, starting a new one');
                 var campaign = getCampaign(document.location, document.referrer);
-                var referrer = getReferrer(document.location, document.referrer, serviceProviders); 
-                session.createSession({campaign : campaign, referrer : referrer});
+                var referrer = getReferrer(document.location, document.referrer, serviceProviders);
+                session.createSession({ campaign: campaign, referrer: referrer });
                 sessionResumed = true;
-                transport(event.package('sessionStarted', {newBrowser : user.getAndResetNewUserStatus()}));
+                transport(event.package('sessionStarted', { newBrowser: user.getAndResetNewUserStatus() }));
             } else {
                 var campaign = getCampaign(document.location, document.referrer);
-                var referrer = getReferrer(document.location, document.referrer, serviceProviders); 
-                session.updateTimeout({campaign : campaign, referrer : referrer});
+                var referrer = getReferrer(document.location, document.referrer, serviceProviders);
+                session.updateTimeout({ campaign: campaign, referrer: referrer });
                 if (!sessionResumed && ((document.referrer && document.referrer.length > 0) || campaign)) {
                     var referrerAuth = parseuri(document.referrer).authority;
                     var currentAuth = parseuri(document.location).authority;
@@ -65,11 +67,11 @@ module.exports = function inbox(transport) {
                     }
                 }
             }
-
-            if (['product.viewed'].indexOf(arguments[0]) !== -1) {
+            
+            if (postboxMessages.indexOf(arguments[0]) !== -1) {
                 transport(event.newpackage.apply(event, arguments));
             } else
-            transport(event.package.apply(event, arguments));
+                transport(event.package.apply(event, arguments));
         } catch (e) {
             debug.forceLog('inbox exception:', e);
             server.submitError(e, { location: 'processing inbox message', arguments: arguments });

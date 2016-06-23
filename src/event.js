@@ -85,9 +85,11 @@ var postboxEvents = function(type, e, meta){
         "page" : {
             "url" : window.location.protocol + '//' + window.location.host + window.location.pathname + window.location.hash + window.location.search,
             "referrer" : meta.referrer
-        }
+        },
+        "v" : meta.v,
+        "tenant" : meta.tenant_id
     };
-    return _.override(e, defaultEventInfo);
+    return _.override(defaultEventInfo, e);
 }
 module.exports = {
     newpackage: function newpackages(eventname, domElement, extra) {
