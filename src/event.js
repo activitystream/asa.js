@@ -73,7 +73,28 @@ var gatherSystemInfo = function (e) {
     return e;
 };
 
+var postboxEvents = function(type, e, meta){
+    var defaultEventInfo = {
+        "type" : type,
+        "occurred" : meta.t,  
+        "origin" : window.location.host,
+        "user" : {
+            "did" : meta.uid,
+            "sid" : meta.session
+        },
+        "page" : {
+            "url" : window.location.protocol + '//' + window.location.host + window.location.pathname + window.location.hash + window.location.search,
+            "referrer" : meta.referrer
+        }
+    };
+    return _.override(e, defaultEventInfo);
+}
 module.exports = {
+    newpackage: function newpackages(eventname, domElement, extra) {
+        var meta = gatherMetaInfo(arguments);
+        meta = gatherSystemInfo(meta);
+        return postboxEvents(arguments[0], arguments[1], meta);
+    },
     package: function (eventname, domElement, extra) {
 
         var event = gatherMetaInfo(arguments);
@@ -87,23 +108,23 @@ module.exports = {
                 event.meta = _.override(event.meta, arguments[1]);
             }
         } else
-            if (arguments[0] == 'itemview') {
-                event.meta = DOMMeta(arguments) || microdata.extract(arguments[1]);
-            } else
-                if (arguments[0] == 'sectionentered') {
+                if (arguments[0] == 'itemview') {
                     event.meta = DOMMeta(arguments) || microdata.extract(arguments[1]);
-                } else {
-                    var meta = undefined;
-                    if (typeof domElement === 'string' || (typeof domElement === 'object' && typeof domElement.tagName !== 'undefined')) {
-                        meta = microdata.extract(domElement);
-                    } else
-                        if (typeof extra === 'undefined' && typeof domElement === 'object') {
-                            extra = domElement;
-                            domElement = null;
-                        }
-                    meta = _.override(meta, extra);
-                    if (meta !== undefined) event.meta = meta;
-                }
+                } else
+                    if (arguments[0] == 'sectionentered') {
+                        event.meta = DOMMeta(arguments) || microdata.extract(arguments[1]);
+                    } else {
+                        var meta = undefined;
+                        if (typeof domElement === 'string' || (typeof domElement === 'object' && typeof domElement.tagName !== 'undefined')) {
+                            meta = microdata.extract(domElement);
+                        } else
+                            if (typeof extra === 'undefined' && typeof domElement === 'object') {
+                                extra = domElement;
+                                domElement = null;
+                            }
+                        meta = _.override(meta, extra);
+                        if (meta !== undefined) event.meta = meta;
+                    }
         return event;
     }
 };

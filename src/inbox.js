@@ -66,6 +66,9 @@ module.exports = function inbox(transport) {
                 }
             }
 
+            if (['product.viewed'].indexOf(arguments[0]) !== -1) {
+                transport(event.newpackage.apply(event, arguments));
+            } else
             transport(event.package.apply(event, arguments));
         } catch (e) {
             debug.forceLog('inbox exception:', e);
