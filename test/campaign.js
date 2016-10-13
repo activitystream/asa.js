@@ -18,8 +18,8 @@ describe('New events', function(){
         browser.document = originalDocument;
         browser.window = originalWindow;    
     })
-    
-    it('should have campaign', function(){
+
+    it('should have campaign info', function(){
         var events = []
         asa = inbox(ev => events.push(ev));
         browser.document = {
