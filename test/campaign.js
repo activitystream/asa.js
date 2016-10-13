@@ -11,8 +11,10 @@ describe('Campaigns', function () {
     var events = [];
 
     function getNewTab() {
-        return inbox(ev => events.push(ev)); 
+        return inbox(function(ev){events.push(ev)}); 
     }
+    
+    function findEvent(ev) { return _.find(events, function(e) { return e.type === ev;});};
 
     function emptyEvents() {
         while(events.length > 0) events.pop();
@@ -37,7 +39,7 @@ describe('Campaigns', function () {
         };
         asa('pageview');
         asa('product.interest', {});
-        var event = _.find(events, e => e.type === 'product.interest');
+        var event = findEvent('product.interest');
         expect(event).to.be.ok;
         expect(event.campaign.campaign).to.equals('testCampaign');
         expect(event.campaign.source).to.equals('testSource');
@@ -60,7 +62,7 @@ describe('Campaigns', function () {
             var tab2 = getNewTab();
             tab2('pageview');
             tab2('product.interest', {});
-            var event = _.find(events, e => e.type === 'product.interest');
+            var event = findEvent('product.interest');
 
             expect(event).to.be.ok;
             expect(event.campaign.campaign).to.equals('testCampaign1');
@@ -85,7 +87,7 @@ describe('Campaigns', function () {
             tab2('pageview');
             tab2('product.interest', {});
             
-            var event = _.find(events, e => e.type === 'product.interest');
+            var event = findEvent('product.interest');
             expect(event).to.be.ok;
             expect(event.campaign).to.be.undefined;
             expect(event.page.referrer).to.equals('');
@@ -108,7 +110,7 @@ describe('Campaigns', function () {
             asa('pageview');
             asa('product.interest', {});
             
-            var event = _.find(events, e => e.type === 'product.interest');
+            var event = findEvent('product.interest');
             expect(event).to.be.ok;
             expect(event.campaign.campaign).to.equals('testCampaign');
             expect(event.campaign.source).to.equals('testSource');
@@ -142,7 +144,7 @@ describe('Campaigns', function () {
             asa('pageview');
             asa('product.interest', {});
 
-            var event = _.find(events, e => e.type === 'product.interest');
+            var event = findEvent('product.interest');
             expect(event).to.be.ok;
             expect(event.campaign.campaign).to.equals('testCampaign');
             expect(event.campaign.source).to.equals('testSource');
