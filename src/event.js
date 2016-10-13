@@ -86,6 +86,7 @@ var postboxEvents = function(type, e, meta){
             "referrer" : meta.referrer
         },
         "v" : meta.v,
+        "campaign" : meta.campaign,
         "tenant" : meta.tenant_id
     };
     return _.override(defaultEventInfo, e);
