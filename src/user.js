@@ -4,11 +4,10 @@ var domainHash = require('./domain_hash').domainHash;
 var userHash = require('./domain_hash').userHash;
 var randomness = require('./randomness');
 var USER_ID_COOKIE = '__as_user';
-var window = require('./browser').window;
-var document = require('./browser').document;
+var browser = require('./browser');
 
 var generateUserId = function () {
-	return domainHash(window.location.host) + '.' + userHash('' + randomness.getNumber());
+	return domainHash(browser.window.location.host) + '.' + userHash('' + randomness.getNumber());
 };
 
 var userCreated = false;
@@ -38,7 +37,7 @@ var getUserId = function () {
 module.exports = {
 	getUserId: getUserId,
 	getDomainId: function () {
-		return domainHash(window.location.host);
+		return domainHash(browser.window.location.host);
 	},
 	getUserHash: function () {
 		return domainHash(getUserId().split('.')[1]);

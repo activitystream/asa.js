@@ -7,8 +7,7 @@ var parseUri = require('./parseuri');
 var Cookies = require('cookies-js');
 var formatting = require('./formatting');
 var getCampaign = require('./campaign');
-var window = require('./browser').window;
-var document = require('./browser').document;
+var browser = require('./browser');
 
 var DOMMeta = function (o) {
     if (o.length < 2) return false;
@@ -16,8 +15,8 @@ var DOMMeta = function (o) {
 };
 
 var pageview = function () {
-    var title = document.title;
-    var location = window.location.protocol + '//' + window.location.host + window.location.pathname + window.location.hash + window.location.search;
+    var title = browser.document.title;
+    var location = browser.window.location.protocol + '//' + browser.window.location.host + browser.window.location.pathname + browser.window.location.hash + browser.window.location.search;
     return { type: 'pageview', location: location, title: title };
 };
 
@@ -60,15 +59,15 @@ var gatherSystemInfo = function (e) {
     var campaign = sess.campaign;
     if (campaign) e.campaign = campaign;
     e.uid = user.getUserId();
-    var partnerId = window.sessionStorage.getItem('__as.partner_id');
-    var partnerSId = window.sessionStorage.getItem('__as.partner_sid');
+    var partnerId = browser.window.sessionStorage.getItem('__as.partner_id');
+    var partnerSId = browser.window.sessionStorage.getItem('__as.partner_sid');
     if (partnerId) {
         e.partner_id = partnerId;
     }
     if (partnerSId) {
         e.partner_sid = partnerSId;
     }
-    e.tenant_id = window.asaId;
+    e.tenant_id = browser.window.asaId;
     e.v = info.version();
     return e;
 };
@@ -77,13 +76,13 @@ var postboxEvents = function(type, e, meta){
     var defaultEventInfo = {
         "type" : type,
         "occurred" : meta.t,  
-        "origin" : window.location.host,
+        "origin" : browser.window.location.host,
         "user" : {
             "did" : meta.uid,
             "sid" : meta.session
         },
         "page" : {
-            "url" : window.location.protocol + '//' + window.location.host + window.location.pathname + window.location.hash + window.location.search,
+            "url" : browser.window.location.protocol + '//' + browser.window.location.host + browser.window.location.pathname + browser.window.location.hash + browser.window.location.search,
             "referrer" : meta.referrer
         },
         "v" : meta.v,
@@ -92,10 +91,10 @@ var postboxEvents = function(type, e, meta){
     return _.override(defaultEventInfo, e);
 }
 module.exports = {
-    newpackage: function newpackages(eventname, domElement, extra) {
+    newpackage: function newpackages(eventName, eventInfo, extra) {
         var meta = gatherMetaInfo(arguments);
         meta = gatherSystemInfo(meta);
-        return postboxEvents(arguments[0], arguments[1], meta);
+        return postboxEvents(eventName, eventInfo, meta);
     },
     package: function (eventname, domElement, extra) {
 

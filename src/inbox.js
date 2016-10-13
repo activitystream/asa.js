@@ -9,6 +9,7 @@ var parseuri = require('./parseuri');
 var user = require('./user');
 var getCampaign = require('./campaign');
 var getReferrer = require('./referrer');
+var browser = require('./browser');
 
 var postboxMessages = ['product.viewed', 'product.interest', 'customer.account.provided', 'order.reviewed', 'order.delivery.selected', 'purchase.completed', 'payment.failed', 'product.carted', 'product.uncarted', 'product.unavailable', 'product.searched'];
 
@@ -33,7 +34,7 @@ module.exports = function inbox(transport) {
                 return;
             }
             if (arguments[0] == 'tenantId') {
-                window.asaId = arguments[1];
+                browser.window.asaId = arguments[1];
                 return;
             }
             if (arguments[0] == 'debug') {
@@ -48,18 +49,18 @@ module.exports = function inbox(transport) {
 
             if (!session.hasSession()) {
                 debug.log('no session, starting a new one');
-                var campaign = getCampaign(document.location, document.referrer);
-                var referrer = getReferrer(document.location, document.referrer, serviceProviders);
+                var campaign = getCampaign(browser.document.location, browser.document.referrer);
+                var referrer = getReferrer(browser.document.location, browser.document.referrer, serviceProviders);
                 session.createSession({ campaign: campaign, referrer: referrer });
                 sessionResumed = true;
                 transport(event.package('sessionStarted', { newBrowser: user.getAndResetNewUserStatus() }));
             } else {
-                var campaign = getCampaign(document.location, document.referrer);
-                var referrer = getReferrer(document.location, document.referrer, serviceProviders);
+                var campaign = getCampaign(browser.document.location, browser.document.referrer);
+                var referrer = getReferrer(browser.document.location, browser.document.referrer, serviceProviders);
                 session.updateTimeout({ campaign: campaign, referrer: referrer });
-                if (!sessionResumed && ((document.referrer && document.referrer.length > 0) || campaign)) {
-                    var referrerAuth = parseuri(document.referrer).authority;
-                    var currentAuth = parseuri(document.location).authority;
+                if (!sessionResumed && ((browser.document.referrer && browser.document.referrer.length > 0) || campaign)) {
+                    var referrerAuth = parseuri(browser.document.referrer).authority;
+                    var currentAuth = parseuri(browser.document.location).authority;
                     if ((referrerAuth != currentAuth && serviceProviders.indexOf(referrerAuth) === -1) || campaign) {
                         debug.log('session resumed');
                         sessionResumed = true;
