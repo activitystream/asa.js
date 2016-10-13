@@ -47,26 +47,22 @@ module.exports = function inbox(transport) {
                 return;
             }
 
+            var campaign = getCampaign(browser.document.location, browser.document.referrer);
+            var referrer = getReferrer(browser.document.location, browser.document.referrer, serviceProviders);
             if (!session.hasSession()) {
                 debug.log('no session, starting a new one');
-                var campaign = getCampaign(browser.document.location, browser.document.referrer);
-                var referrer = getReferrer(browser.document.location, browser.document.referrer, serviceProviders);
                 session.createSession({ campaign: campaign, referrer: referrer });
                 sessionResumed = true;
                 transport(event.package('sessionStarted', { newBrowser: user.getAndResetNewUserStatus() }));
             } else {
-                var campaign = getCampaign(browser.document.location, browser.document.referrer);
-                var referrer = getReferrer(browser.document.location, browser.document.referrer, serviceProviders);
-                session.updateTimeout({ campaign: campaign, referrer: referrer });
-                if (!sessionResumed && ((browser.document.referrer && browser.document.referrer.length > 0) || campaign)) {
-                    var referrerAuth = parseuri(browser.document.referrer).authority;
-                    var currentAuth = parseuri(browser.document.location).authority;
-                    if ((referrerAuth != currentAuth && serviceProviders.indexOf(referrerAuth) === -1) || campaign) {
+                var referrerAuth = parseuri(browser.document.referrer).authority;
+                var currentAuth = parseuri(browser.document.location).authority;
+                    if ((referrerAuth != currentAuth && serviceProviders.indexOf(referrerAuth) === -1)) {
+                        session.updateTimeout({ campaign: campaign, referrer: referrer });
                         debug.log('session resumed');
                         sessionResumed = true;
                         transport(event.package('sessionResumed'));
                     }
-                }
             }
             
             if (postboxMessages.indexOf(arguments[0]) !== -1) {

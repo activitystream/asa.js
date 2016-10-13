@@ -6,9 +6,9 @@ describe('Utils', function () {
         it('should override with values of later objects', function () {
             expect(u.override({a: 'a'}, {a : 'b'})).to.be.eql({a : 'b'});
         })
-        it('should not override with null value', function () {
-            expect(u.override({a: 'a'}, {a : null})).to.be.eql({a : 'a'});
-            expect(u.override({}, {a : null})).to.be.eql({});
+        it('should override with null value', function () {
+            expect(u.override({a: 'a'}, {a : null})).to.be.eql({a : null});
+            expect(u.override({}, {a : null})).to.be.eql({a : null});
         })
         it('should not override with undefined value', function () {
             expect(u.override({a: 'a'}, {a : undefined})).to.be.eql({a : 'a'});

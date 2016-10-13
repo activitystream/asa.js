@@ -57,7 +57,7 @@ describe('Campaigns', function () {
                 referrer: 'http://flipflop.dk',
             };            
             emptyEvents();
-            tab2 = getNewTab();
+            var tab2 = getNewTab();
             tab2('pageview');
             tab2('product.interest', {});
             var event = _.find(events, e => e.type === 'product.interest');
@@ -67,5 +67,88 @@ describe('Campaigns', function () {
             expect(event.campaign.source).to.equals('testSource1');
             expect(event.page.referrer).to.equals('http://flipflop.dk');
         })
+
+        it('opening a tab from a campaign should not affect opening a tab with no campaign', function () {
+            browser.document = {
+                location: 'http://fle.com/place?utm_campaign=testCampaign&utm_source=testSource',
+                referrer: 'http://smashbangpow.dk',
+            };
+            asa('pageview');
+            asa('product.interest', {});
+
+            browser.document = {
+                location: 'http://flo.com/place',
+                referrer: '',
+            };            
+            emptyEvents();
+            var tab2 = getNewTab();
+            tab2('pageview');
+            tab2('product.interest', {});
+            
+            var event = _.find(events, e => e.type === 'product.interest');
+            expect(event).to.be.ok;
+            expect(event.campaign).to.be.undefined;
+            expect(event.page.referrer).to.equals('');
+        })
+
+        it('campaign info should persist through following steps on a site', function () {
+            browser.document = {
+                location: 'http://fle.com/place?utm_campaign=testCampaign&utm_source=testSource',
+                referrer: 'http://smashbangpow.dk',
+            };
+            asa('serviceProviders', 'http://paymentgw.gw');
+            asa('pageview');
+            asa('product.interest', {});
+
+            browser.document = {
+                location: 'http://fle.com/place2',
+                referrer: 'http://fle.com/place',
+            };            
+            emptyEvents();
+            asa('pageview');
+            asa('product.interest', {});
+            
+            var event = _.find(events, e => e.type === 'product.interest');
+            expect(event).to.be.ok;
+            expect(event.campaign.campaign).to.equals('testCampaign');
+            expect(event.campaign.source).to.equals('testSource');
+            expect(event.page.referrer).to.equals('http://smashbangpow.dk');
+        })
+
+        it('campaign info should persist through jumps over service provider', function () {
+            browser.document = {
+                location: 'http://fle.com/place?utm_campaign=testCampaign&utm_source=testSource',
+                referrer: 'http://smashbangpow.dk',
+            };
+            asa('serviceProviders', 'http://paymentgw.gw');
+            asa('pageview');
+            asa('product.interest', {});
+
+            browser.document = {
+                location: 'http://fle.com/place2',
+                referrer: 'http://fle.com/place',
+            };            
+            asa('serviceProviders', 'http://paymentgw.gw');
+            asa('pageview');
+            asa('product.interest', {});
+            
+            browser.document = {
+                location: 'http://fle.com/place3',
+                referrer: 'http://paymentgw.gw',
+            };            
+
+            emptyEvents();
+            asa('serviceProviders', 'http://paymentgw.gw');
+            asa('pageview');
+            asa('product.interest', {});
+
+            var event = _.find(events, e => e.type === 'product.interest');
+            expect(event).to.be.ok;
+            expect(event.campaign.campaign).to.equals('testCampaign');
+            expect(event.campaign.source).to.equals('testSource');
+            expect(event.page.referrer).to.equals('http://smashbangpow.dk');
+
+        })
+
     })
 })
