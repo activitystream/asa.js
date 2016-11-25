@@ -1,4 +1,4 @@
-FROM mhart/alpine-node
+FROM mhart/alpine-node:4
 # FROM mhart/alpine-node-base:0.10
 # FROM mhart/alpine-iojs-base
 # FROM mhart/alpine-node
@@ -15,4 +15,4 @@ ADD . .
 # If you had native dependencies you can now remove build tools
 # RUN apk del make gcc g++ python && \
 #   rm -rf /tmp/* /root/.npm /root/.node-gyp
-CMD ./node_modules/.bin/mocha specs/ --recursive -t 20000 
+CMD ./node_modules/.bin/mocha specs/ --recursive -t 20000

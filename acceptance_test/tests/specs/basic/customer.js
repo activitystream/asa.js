@@ -13,7 +13,7 @@ var options = {
     version: '',
     platform: 'linux',
     // device: conf.deviceName,
-    
+
   },
   host: host,
   port: port,
@@ -49,7 +49,7 @@ function getLogs(){
             deferred.reject(err);
           }
         });
-        return deferred.promise; 
+        return deferred.promise;
   }
 }
 
@@ -64,11 +64,11 @@ function wipeLogs(){
             deferred.reject(err);
           }
         });
-        return deferred.promise; 
+        return deferred.promise;
 };
 // before(function() {
     // var chaiAsPromised = require('chai-as-promised');
- 
+
     // chai.Should();
     // chai.use(chaiAsPromised);
     // chaiAsPromised.transferPromiseness = client.transferPromiseness;

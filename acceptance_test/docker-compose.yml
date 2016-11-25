@@ -14,7 +14,11 @@ seleniumfirefox:
         - siteb:siteb.com
         - inbox:inbox.activitystream.com
         - cdn:cdn.activitystream.com
-        
+    ports:
+        - 8000:8000
+        - 5900:5900
+        - 4444:4444
+
 saucelabs:
     image: ustwo/docker-sauce-connect
     links:
@@ -29,9 +33,9 @@ saucelabs:
 e2etest:
     build: tests
     links:
-        - saucelabs:seleniumtestdriver
+        - seleniumfirefox:seleniumtestdriver
         - inbox:inbox
     environment:
         - HOST=seleniumtestdriver
-        - PORT=8000
+        - PORT=4444
         - SAUCE_ACCESS_KEY

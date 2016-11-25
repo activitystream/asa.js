@@ -1,4 +1,4 @@
-FROM mhart/alpine-node
+FROM mhart/alpine-node:4
 # FROM mhart/alpine-node-base:0.10
 # FROM mhart/alpine-iojs-base
 # FROM mhart/alpine-node
