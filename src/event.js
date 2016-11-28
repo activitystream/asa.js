@@ -75,7 +75,7 @@ var gatherSystemInfo = function (e) {
 var postboxEvents = function(type, e, meta){
     var defaultEventInfo = {
         "type" : type,
-        "occurred" : meta.t,  
+        "occurred" : meta.t,
         "origin" : browser.window.location.host,
         "user" : {
             "did" : meta.uid,
@@ -89,6 +89,8 @@ var postboxEvents = function(type, e, meta){
         "campaign" : meta.campaign,
         "tenant" : meta.tenant_id
     };
+    if (meta.partner_id) defaultEventInfo.partnerId = meta.partner_id;
+    if (meta.partner_sid) defaultEventInfo.partnerSId = meta.partner_sid;
     return _.override(defaultEventInfo, e);
 }
 module.exports = {
