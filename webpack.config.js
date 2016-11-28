@@ -3,11 +3,11 @@ var webpack = require('webpack'),
   glob = require('glob'),
   path = require('path');
 
-module.exports = function(){ 
+module.exports = function(){
   return {
     cache: true,
     devtool: '#source-map',
-    entry: { asa: './src/index.js', vp: './private/vp.js', tests: glob.sync('./test/*.js') },
+    entry: { asa: './src/index.js', tests: glob.sync('./test/*.js') },
     output: {
       path: path.join(__dirname, "/dist"),
       filename: "[name].js",
