@@ -209,6 +209,7 @@ describe('test 4', function () {
         .then(getLogs())
         .then(debugLog, debugLog)
         .then(function(eventLogs){
+          eventLogs.filter(function(d){ return d.ev.partnerSId; }).forEach(function (d) {console.log(d.ev.partnerSId);});
           expect(eventLogs.length).to.equal(4);
       }).call(done);
     });
@@ -221,7 +222,12 @@ describe('test 4', function () {
         .then(getLogs())
         .then(debugLog, debugLog)
         .then(function(eventLogs){
-          expect(eventLogs.length).to.equal(4);
+            var pageViewSiteB = eventLogs.filter(function(d) {
+                return d.ev.type === 'pageview' && d.ev.referrer === 'http://sitea.com';
+            })[0];
+            expect(pageViewSiteB.ev.partner_id).to.equal('AS-E2EAUTOTEST-A');
+            expect(pageViewSiteB.ev.partner_sid).to.equal('52770730.abfdc0d8fd225af89cd711e4c209fa36b037af0a');
+            expect(eventLogs.length).to.equal(4);
       }).call(done);
     });
 });
