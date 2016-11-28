@@ -3,9 +3,9 @@ inbox:
 cdn:
     build: cdn
 sitea:
-    build: siteA
+    build: sitea
 siteb:
-    build: siteB
+    build: siteb
 
 seleniumfirefox:
     image: selenium/standalone-firefox-debug

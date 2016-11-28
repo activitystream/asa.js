@@ -17,8 +17,9 @@
 
     <script>
         (function(i,s,o,g,r,a,m){i['ActivitystreamAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//cdn.activitystream.com/asa.js','asa');
-        
+
         asa('tenantId', 'AS-E2EAUTOTEST');
+        asa('connectedPartners', ['siteb.com']);
         asa('pageview');
     </script>
 
@@ -26,13 +27,13 @@
 
 <body>
 	<p>
-		<a href="http://testbilletportalen:8086/buy">Ordinary link, no params</a>
+		<a id="_link_no_param" href="http://siteb.com/buy">Ordinary link, no params</a>
 	</p>
 	<p>
-		<a href="http://testbilletportalen:8086/buy?sendmeover">Ordinary link, with params</a>
+		<a id="_link_with_param" href="http://siteb.com/buy?sendmeover">Ordinary link, with params</a>
 	</p>
 	<p>
-		<a href="http://twitter.com/pshomov">Twitter link, should not be tracked</a>
+		<a id="_twitter" href="http://twitter.com/pshomov">Twitter link, should not be tracked</a>
 	</p>
 	<p>
 		<div> <a href="#" onclick="dataLayer.push({event : 'verycustomeevent', params : 'sdfasd'})">Push in data layer (triggers Google analytics page view)</a>
@@ -41,9 +42,9 @@
 		<a href="#" onclick="dataLayer.push({event : 'viewedsection', section_id : 'section123'})">Push in data layer (triggers ASA sectionview)</a>
 	</p>
 	<p>
-		<a href="#" onclick="asa('itemview', 'offer1')">Scrape metadata</a>
+		<a id="_offer1" href="#" onclick="asa('itemview', 'offer1')">Scrape metadata</a>
 	</p>
-	<form action="http://testbilletportalen:8086/buy" method="post">
+	<form id="_form_" action="http://siteb.com/buy" method="post">
 		<input name="__asa_partner_id" value="123" hidden="true">
 		<input name="__asa_partner_sid" value="555" hidden="true">
 		<button type="submit">Buy</button>
