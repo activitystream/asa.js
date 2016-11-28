@@ -2,7 +2,7 @@
 
 This is the javascript our clients can use on their web sites to allow for easy collecting of customer behaviour.
 
-To build the bundle run 
+To build the bundle run
 
 ```
 $ gulp package
@@ -17,3 +17,8 @@ $ gulp serve
 ```
 
 and open http://localhost:8080/test.html to see some tests running. Changing the source code will re-run the tests, nice to have while writing your code.  
+
+Acceptance test
+```
+docker-compose rm -f && docker-compose build && docker-compose up -d inbox cdn sitea siteb seleniumfirefox && docker-compose up e2etest
+```
