@@ -16,7 +16,7 @@ module.exports = function(bootSequence){
 	var partner = require('./partner');
 	var autoTrack = require('./auto_track');
 	var debug = require('./debug');
-	var inbox = require('./inbox');	
+	var inbox = require('./inbox');
 	var server = require('./server');
 	var features = require('./features');
 
@@ -29,17 +29,16 @@ module.exports = function(bootSequence){
 		browser.window.asa = inbox(server.submitEvent);
 
 		// features.defineExperiment(features.MINI_AJAX, 10);
-        
+        partner.setPartnerInfo();
         runBootSequence(bootSequence);
 
 		for (var i = 0; i < pendingEvents.length; i++) {
 			browser.window.asa.apply(null, pendingEvents[i]);
 		}
 
-		partner.setPartnerInfo();
 		// autoTrack.sections();
 	} catch (e) {
 		debug.forceLog('exception during init: ', e);
         server.submitError(e, {location : 'boot script'});
-	}    
+	}
 }
