@@ -30,7 +30,6 @@ module.exports = {
 	setPartnerInfo : function(){
 		var referrer = parseUri(browser.document.referrer).authority;
 		var currentHost = parseUri(browser.window.location.origin).authority;
-		console.log(referrer, currentHost);
 		if (referrer != currentHost){
 			updatePartnerInfo();
 		}
