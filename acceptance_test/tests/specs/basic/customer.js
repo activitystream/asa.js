@@ -68,9 +68,11 @@ function wipeLogs(){
 };
 
 var debugLog  = function debugLog(log) {
-    console.log(`Log contains ${JSON.stringify(log, null, 4)}`)
+    if (options.logLevel !== 'silent') {
+        console.log(`Log contains ${JSON.stringify(log, null, 4)}`);
+    }
     return log;
-}
+};
 // before(function() {
     // var chaiAsPromised = require('chai-as-promised');
 
@@ -79,7 +81,7 @@ var debugLog  = function debugLog(log) {
     // chaiAsPromised.transferPromiseness = client.transferPromiseness;
 // });
 
-describe('test 1', function () {
+describe('Check if sites exist', function () {
   var browser;
   beforeEach(function (done) {
     retry(function () {
@@ -104,23 +106,6 @@ describe('test 1', function () {
         expect(eventLogs.length).to.equal(2);
       }).call(done);
   });
-});
-
-describe('test 2', function () {
-  var browser;
-  beforeEach(function (done) {
-    retry(function () {
-      browser = webdriverio
-        .remote(options)
-        .init().then(wipeLogs);
-      done();
-    });
-
-  });
-
-  afterEach(function () {
-    browser.end();
-  });
 
   it('should send pageview siteb', function (done) {
     browser
@@ -133,7 +118,7 @@ describe('test 2', function () {
   });
 });
 
-describe('test 3', function () {
+describe('Testing sitea', function () {
     var browser;
     beforeEach(function (done) {
       retry(function () {
@@ -160,24 +145,6 @@ describe('test 3', function () {
       }).call(done);
     });
 
-});
-
-describe('test 4', function () {
-    var browser;
-    beforeEach(function (done) {
-      retry(function () {
-        browser = webdriverio
-          .remote(options)
-          .init().then(wipeLogs);
-        done();
-      });
-
-    });
-
-    afterEach(function () {
-      browser.end();
-    });
-
     it('sitea click offer1', function (done) {
       browser
         .url('http://sitea.com')
@@ -201,7 +168,7 @@ describe('test 4', function () {
       }).call(done);
     });
 
-    it.only('sitea click link with no param', function (done) {
+    it('sitea click link with no param', function (done) {
       browser
         .url('http://sitea.com')
         .click('#_link_no_param')
@@ -209,8 +176,11 @@ describe('test 4', function () {
         .then(getLogs())
         .then(debugLog, debugLog)
         .then(function(eventLogs){
-          eventLogs.filter(function(d){ return d.ev.partnerSId; }).forEach(function (d) {console.log(d.ev.partnerSId);});
-          expect(eventLogs.length).to.equal(4);
+            var pageViewSiteB = eventLogs.filter(function(d) {
+                return d && d.ev && (d.ev.type === 'pageview' && d.ev.tenant_id === 'AS-E2EAUTOTEST-B');
+            });
+            expect(pageViewSiteB.length && pageViewSiteB[0].ev.partner_id).to.equal('AS-E2EAUTOTEST-A');
+            expect(eventLogs.length).to.equal(4);
       }).call(done);
     });
 
@@ -223,10 +193,9 @@ describe('test 4', function () {
         .then(debugLog, debugLog)
         .then(function(eventLogs){
             var pageViewSiteB = eventLogs.filter(function(d) {
-                return d.ev.type === 'pageview' && d.ev.referrer === 'http://sitea.com';
-            })[0];
-            expect(pageViewSiteB.ev.partner_id).to.equal('AS-E2EAUTOTEST-A');
-            expect(pageViewSiteB.ev.partner_sid).to.equal('52770730.abfdc0d8fd225af89cd711e4c209fa36b037af0a');
+                return d && d.ev && (d.ev.type === 'pageview' && d.ev.tenant_id === 'AS-E2EAUTOTEST-B');
+            });
+            expect(pageViewSiteB.length && pageViewSiteB[0].ev.partner_id).to.equal('AS-E2EAUTOTEST-A');
             expect(eventLogs.length).to.equal(4);
       }).call(done);
     });
