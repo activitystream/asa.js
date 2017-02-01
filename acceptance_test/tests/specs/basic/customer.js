@@ -197,6 +197,44 @@ describe('Testing sitea', function () {
             });
             expect(pageViewSiteB.length && pageViewSiteB[0].ev.partner_id).to.equal('AS-E2EAUTOTEST-A');
             expect(eventLogs.length).to.equal(4);
+            expect(pageViewSiteB[0].ev.location.indexOf('sendmeover'));
       }).call(done);
     });
+
+    it('Newsletter -> sitea click link no param', function (done) {
+      browser
+        .url('http://sitea.com?utm_medium=Email&utm_source=Newsletter&utm_campaign=My_Newsletter&utm_content=Free&utm_term=February2017')
+        .click('#_link_with_param')
+        .waitForExist('#site_b')
+        .then(getLogs())
+        .then(debugLog, debugLog)
+        .then(function(eventLogs){
+            eventLogs.forEach(function(d) {
+                expect(d.ev.campaign.campaign).to.equal('My_Newsletter');
+                expect(d.ev.campaign.source).to.equal('Newsletter');
+                expect(d.ev.campaign.medium).to.equal('Email');
+                expect(d.ev.campaign.term).to.equal('February2017');
+            });
+      }).call(done);
+    });
+
+    it('Newsletter -> sitea -> read more -> siteb click link no param', function (done) {
+      browser
+        .url('http://sitea.com?utm_medium=Email&utm_source=Newsletter&utm_campaign=My_Newsletter&utm_content=Free&utm_term=February2017')
+        .click('#_read_more')
+        .waitForExist('#site_a_read_more')
+        .click('#_link_no_param')
+        .waitForExist('#site_b')
+        .then(getLogs())
+        .then(debugLog, debugLog)
+        .then(function(eventLogs){
+            // eventLogs.forEach(function(d) {
+            //     expect(d.ev.campaign.campaign).to.equal('My_Newsletter');
+            //     expect(d.ev.campaign.source).to.equal('Newsletter');
+            //     expect(d.ev.campaign.medium).to.equal('Email');
+            //     expect(d.ev.campaign.term).to.equal('February2017');
+            // });
+            console.log(JSON.stringify(eventLogs, null, '\t'));
+      }).call(done);
+  });
 });
