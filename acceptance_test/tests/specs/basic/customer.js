@@ -100,6 +100,7 @@ describe('Check if sites exist', function () {
   it('should send pageview sitea', function (done) {
     browser
       .url('http://sitea.com')
+      .waitForExist('#site_a', 2000)
       .then(getLogs())
       .then(debugLog, debugLog)
       .then(function(eventLogs){
@@ -110,6 +111,7 @@ describe('Check if sites exist', function () {
   it('should send pageview siteb', function (done) {
     browser
       .url('http://siteb.com/buy')
+      .waitForExist('#site_b', 2000)
       .then(getLogs())
       .then(debugLog, debugLog)
       .then(function(eventLogs){
@@ -137,6 +139,7 @@ describe('Testing sitea', function () {
     it('sitea submitForm', function (done) {
       browser
         .url('http://sitea.com')
+        .waitForExist('#site_a', 2000)
         .submitForm('#_form_')
         .then(getLogs())
         .then(debugLog, debugLog)
@@ -148,6 +151,7 @@ describe('Testing sitea', function () {
     it('sitea click offer1', function (done) {
       browser
         .url('http://sitea.com')
+        .waitForExist('#site_a', 2000)
         .click('#_offer1')
         .then(getLogs())
         .then(debugLog, debugLog)
@@ -160,6 +164,7 @@ describe('Testing sitea', function () {
     it('sitea click twitter', function (done) {
       browser
         .url('http://sitea.com')
+        .waitForExist('#site_a', 2000)
         .click('#_twitter')
         .then(getLogs())
         .then(debugLog, debugLog)
@@ -171,8 +176,9 @@ describe('Testing sitea', function () {
     it('sitea click link with no param', function (done) {
       browser
         .url('http://sitea.com')
+        .waitForExist('#site_a', 2000)
         .click('#_link_no_param')
-        .waitForExist('#site_b')
+        .waitForExist('#site_b', 2000)
         .then(getLogs())
         .then(debugLog, debugLog)
         .then(function(eventLogs){
@@ -187,8 +193,9 @@ describe('Testing sitea', function () {
     it('sitea click link with param', function (done) {
       browser
         .url('http://sitea.com')
+        .waitForExist('#site_a', 2000)
         .click('#_link_with_param')
-        .waitForExist('#site_b')
+        .waitForExist('#site_b', 2000)
         .then(getLogs())
         .then(debugLog, debugLog)
         .then(function(eventLogs){
@@ -201,11 +208,12 @@ describe('Testing sitea', function () {
       }).call(done);
     });
 
-    it('Newsletter -> sitea click link no param', function (done) {
+    it('Newsletter -> sitea click link with param', function (done) {
       browser
         .url('http://sitea.com?utm_medium=Email&utm_source=Newsletter&utm_campaign=My_Newsletter&utm_content=Free&utm_term=February2017')
+        .waitForExist('#site_a', 2000)
         .click('#_link_with_param')
-        .waitForExist('#site_b')
+        .waitForExist('#site_b', 2000)
         .then(getLogs())
         .then(debugLog, debugLog)
         .then(function(eventLogs){
@@ -221,20 +229,21 @@ describe('Testing sitea', function () {
     it('Newsletter -> sitea -> read more -> siteb click link no param', function (done) {
       browser
         .url('http://sitea.com?utm_medium=Email&utm_source=Newsletter&utm_campaign=My_Newsletter&utm_content=Free&utm_term=February2017')
+        .waitForExist('#site_a', 10000)
         .click('#_read_more')
-        .waitForExist('#site_a_read_more')
-        .click('#_link_no_param')
-        .waitForExist('#site_b')
+        .waitForExist('#site_a_read_more', 10000)
+        .click('#_link_with_param')
+        .waitForExist('#site_b', 10000)
         .then(getLogs())
         .then(debugLog, debugLog)
         .then(function(eventLogs){
-            // eventLogs.forEach(function(d) {
-            //     expect(d.ev.campaign.campaign).to.equal('My_Newsletter');
-            //     expect(d.ev.campaign.source).to.equal('Newsletter');
-            //     expect(d.ev.campaign.medium).to.equal('Email');
-            //     expect(d.ev.campaign.term).to.equal('February2017');
-            // });
-            console.log(JSON.stringify(eventLogs, null, '\t'));
+            eventLogs.forEach(function(d) {
+                expect(d.ev.campaign.campaign).to.equal('My_Newsletter');
+                expect(d.ev.campaign.source).to.equal('Newsletter');
+                expect(d.ev.campaign.medium).to.equal('Email');
+                expect(d.ev.campaign.term).to.equal('February2017');
+            });
+            expect(eventLogs.length).to.equal(5);
       }).call(done);
   });
 });
