@@ -2,6 +2,8 @@ inbox:
     build: inbox
 cdn:
     build: cdn
+    ports:
+        - 80:80
 sitea:
     build: sitea
 siteb:
