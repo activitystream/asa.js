@@ -1,5 +1,1 @@
-module.exports = {
-	getNumber : function(){
-		return Math.round(Math.random() * new Date());
-	}
-};
+export const getNumber = () => Math.round(Math.random() * Date.now());
