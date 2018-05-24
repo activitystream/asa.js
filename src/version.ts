@@ -1,13 +1,8 @@
-var features = require('./features');
-var major = 1,
-	minor = 1,
-	build = 77;
-module.exports = {
-	major : major,
-	minor: minor,
-	build: build,
-	version : function(){
-		var experiments = '-'+features.experimentsLive();
-		if (experiments === '-') experiments = '';
-		return [major, minor, build].join('.') + experiments;}
-};
+import * as features from "./features";
+
+export const major = 1;
+export const minor = 1;
+export const build = 77;
+export const version = () =>
+  [major, minor, build].join(".") +
+  (features.experimentsLive() ? `-${features.experimentsLive()}` : "");

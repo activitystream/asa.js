@@ -1,20 +1,15 @@
 // old ie
-if (typeof console === 'undefined') {
-	window.console = {};
-}
-if (typeof console.log === 'undefined'){
-	window.console.log = function(){};
+if (!console.log) {
+  window.console.log = () => {};
 }
 
-var noLog = function noLog() { };
-var doLog = function doLog() {
-	[].unshift.call(arguments, 'asa.js:');
-	console.log.apply(console, arguments);
+const noLog = (...args) => {};
+const doLog = console.log.bind(console, "asa.js");
+
+let _log = noLog;
+
+export const log = (...args) => _log(...args);
+export const setDebugMode = on => {
+  _log = on ? doLog : noLog;
 };
-var me = module.exports = {
-	log: noLog,
-	setDebugMode: function (on) {
-		me.log = on ? doLog : noLog;
-	},
-	forceLog:doLog
-};
+export const forceLog = doLog;
