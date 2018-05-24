@@ -1,132 +1,86 @@
-var r = require('superagent');
-var debug = require('./debug');
-var ajax = require('./ajax');
-var features = require('./features');
-var formatting = require('./formatting');
-var info = require('./version');
+import * as debug from "./debug";
+import * as features from "./features";
+import * as formatting from "./formatting";
+import * as info from "./version";
 
-var pendingSubmission = [], done = true;
-var batchIntervalHandler;
+const POST = (url, data) =>
+  fetch(url, {
+    method: "POST",
+    body: JSON.stringify(data),
+    headers: {
+      "Content-Type": "text/plain; charset=UTF-8"
+    }
+  });
 
-var eventPostAddress = '//inbox.activitystream.com/asa';
-var errorPostAddress = '//inbox.activitystream.com/asa/error';
+export const EVENT = data => POST("//inbox.activitystream.com/asa", data);
+export const ERROR = data => POST("//inbox.activitystream.com/asa/error", data);
 
-var post = function(packet, callback) {
-    var request = ajax.post(eventPostAddress, 'POST', callback);
-    request.setRequestHeader('Content-Type', 'text/plain; charset=UTF-8');
-    request.send(JSON.stringify(packet));
-};
+const submitEvent = ev =>
+  EVENT({
+    ev,
+    t: formatting.formatDateTime(new Date())
+  });
 
-var submitData = function(data, opts, callback) {
-    opts = opts || { url: eventPostAddress };
-    var packet = {
-        ev: data,
-        t: formatting.formatDateTime(new Date())
-    };
+const submitError = (err, context?) =>
+  (err && (err.code === 22 || err.code === 18)) ||
+  ERROR({ err, context, v: info.version() });
 
-    debug.log('submitting data: ', data);
-    if (features.isExperiment(features.MINI_AJAX)) {
-        post(packet, function(err, res) {
-            if (callback) {
-                callback(err, res);
-            } else {
-                if (err) {
-                    debug.log('error on server', err);
-                } else {
-                    debug.log('server got it');
-                }
-            }
-        });
+class Server {
+  private _dispatchEvent = submitEvent;
+  private _dispatchError = submitError;
+  private pendingSubmission = [];
+  private batchIntervalHandler;
+  private done = true;
 
+  public batchEvent(e) {
+    this.pendingSubmission.push(e);
+  }
+
+  public get submitEvent() {
+    return this._dispatchEvent;
+  }
+
+  public get submitError() {
+    return this._dispatchError;
+  }
+
+  public batchOn() {
+    this.batchIntervalHandler = setInterval(() => {
+      try {
+        if (this.pendingSubmission.length > 0 && this.done) {
+          const batchSize = Math.min(this.pendingSubmission.length, 10);
+          const event = this.pendingSubmission.slice(0, batchSize);
+          this.done = false;
+          submitEvent(event)
+            .then(() => this.pendingSubmission.splice(0, event.length))
+            .catch(debug.log);
+        }
+      } catch (e) {
+        debug.log("exception submitting", e);
+      }
+    }, 400);
+  }
+
+  public batchOff() {
+    if (!this.batchIntervalHandler) {
+      debug.log("cannot batch off, it is not on");
     } else {
-        r
-            .post(opts.url)
-            .set('Content-Type', 'application/json')
-            .send(packet)
-            .end(function(err, res) {
-                if (callback) {
-                    callback(err, res);
-                } else {
-                    if (err) {
-                        debug.log('error on server', err);
-                    } else {
-                        debug.log('server got it');
-                    }
-                }
-            });
+      clearInterval(this.batchIntervalHandler);
     }
+  }
+
+  public override(
+    eventDispatcher = this._dispatchEvent,
+    errorDispatcher = this._dispatchError
+  ) {
+    this._dispatchError = errorDispatcher;
+    this._dispatchEvent = eventDispatcher;
+  }
+
+  public reset() {
+    this._dispatchError = submitError;
+    this._dispatchEvent = submitEvent;
+  }
 }
 
-var submitEvent = function(ev, callback) {
-    if (ev) submitData(ev, { url: eventPostAddress }, callback);
-}
-
-var submitError = function(err, context, callback) {
-    if (typeof context === 'function') {
-        callback = context;
-        context = {};
-    }
-    if (err && (err.code === 22 || err.code === 18)) return;// skipping error 22 and 18 - related to quota storage. it seems related to people browsing in private mode
-    submitData({ err: err, context: context, v: info.version() }, { url: errorPostAddress }, callback);
-}
-
-var submitNow = function(ev) {
-    if (ev instanceof Array) {
-        for (var i = 0; i < ev.length; i++) {
-            submitEvent(ev[i]);
-        }
-    } else {
-        submitEvent(ev);
-    }
-};
-
-var submitNow2 = function(ev) {
-    done = false;
-    submitEvent(ev, function(err, res) {
-        if (err) {
-            debug.log('error on server', err);
-        } else {
-            pendingSubmission.splice(0, ev.length);
-            debug.log('server got it');
-        }
-        done = true;
-    });
-};
-var errorSubmitter;
-var eventSubmitter;
-var setDefaultSubmitters = function() {
-    errorSubmitter = submitError;
-    eventSubmitter = submitNow;
-}
-setDefaultSubmitters();
-module.exports = {
-    submitError: errorSubmitter,
-    submitEvent: eventSubmitter,
-    batchEvent: function(e) {
-        pendingSubmission.push(e);
-    },
-    batchOn: function() {
-        batchIntervalHandler = setInterval(function batchProcessor() {
-            try {
-                if (pendingSubmission.length > 0 && done) {
-                    var batchSize = Math.min(pendingSubmission.length, 10);
-                    submitNow2(pendingSubmission.slice(0, batchSize));
-                }
-            } catch (e) {
-                debug.log('exception submitting', e);
-            }
-        }, 400);
-    },
-    batchOff: function() {
-        if (!batchIntervalHandler) {
-            debug.log('cannot batch off, it is not on');
-        } else {
-            clearInterval(batchIntervalHandler);
-        }
-    },
-    override: function overrideSubmits(submitEv, submitErr) {
-        errorSubmitter = submitErr || errorSubmitter;
-        eventSubmitter = submitEv || eventSubmitter;
-    },
-    reset: setDefaultSubmitters
-};
+export default new Server();
