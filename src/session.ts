@@ -1,108 +1,118 @@
-var debug = require('./debug');
-var user = require('./user');
-var randomness = require('./randomness');
-var hash = require('./domain_hash').sessionHash;
-var Cookies = require('./cookies');
-var _ = require('./utils');
+import * as user from "./user";
+import { getNumber } from "./randomness";
+import { hash } from "./domain_hash";
+import { override } from "./utils";
+import Baker from "./baker";
 
-
-var persistence = {
-    get: function(id) {
-        try {
-            return Cookies.getItem(id);
-        } catch (e) {
-            throw new Error('Error while trying to get item from session cookie:' + id);
-        }
-    },
-    set: function(id, value) {
-        try {
-            return Cookies.setItem(id, value, Infinity, '/');
-        } catch (e) {
-            throw new Error('Error while trying to set item to session cookie: "' + id + '" <- ' + value);
-        }
+const persistence = {
+  get(id) {
+    try {
+      return Baker.getItem(id);
+    } catch (e) {
+      throw new Error(
+        `Error while trying to get item from session cookie:${id}`
+      );
     }
-}
-
-var store = {
-    hasItem: function(name) {
-        var item = persistence.get(name);
-        return item;
-    },
-    getItem: function(name) {
-        return persistence.get(name);
-    },
-    setItem: function(name, value) {
-        persistence.set(name, value);
-    },
-};
-
-var sessionStore = store;
-
-var SESSION_EXPIRE_TIMEOUT = 30 * 60 * 1000;
-var SESSION_COOKIE_NAME = '__asa_session';
-
-var builtinSessionManager = {
-    hasSession: function() {
-        var item = sessionStore.hasItem(SESSION_COOKIE_NAME);
-        try{
-            return item && JSON.parse(item).t > (1 * new Date());            
-        } catch(e) {
-            return false;
-        }
-    },
-
-    createSession: function(sessionData) {
-        sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(_.override(sessionData, { id: user.getDomainId() + '.' + hash(user.getUserId() + '.' + randomness.getNumber()), t: ((1 * new Date()) + SESSION_EXPIRE_TIMEOUT) })));
-    },
-
-    getSession: function() {
-        return JSON.parse(sessionStore.getItem(SESSION_COOKIE_NAME));
-    },
-    
-    updateTimeout: function updateTimeout(sessionData){
-        var session = this.getSession();
-        var sessionId = session.id;
-        session = _.override(session, sessionData);
-        session.t = ((1 * new Date()) + SESSION_EXPIRE_TIMEOUT);
-        session.id = sessionId;
-        
-        sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(session));
+  },
+  set(id, value) {
+    try {
+      return Baker.setItem(id, value, Infinity, "/");
+    } catch (e) {
+      throw new Error(
+        `Error while trying to set item to session cookie: "${id}" <- ${value}`
+      );
     }
-
-};
-var providedSessionManager = function(hasSessions, getSession, createSession) {
-    return {
-        hasSession: function() {
-            return hasSessions();
-        },
-
-        createSession: function() {
-            createSession();
-        },
-
-        getSession: function() {
-            return getSession();
-        }
-    };
-};
-var sessionManager = builtinSessionManager;
-module.exports = {
-    getSession: function() {
-        return sessionManager.getSession();
-    },
-    hasSession: function() {
-        return !!(sessionManager.hasSession());
-    },
-    createSession: function(sessionData) {
-        sessionManager.createSession(sessionData);
-    },
-    customSession: function(hasSessions, getSession, createSession) {
-        sessionManager = providedSessionManager(hasSessions, getSession, createSession);
-    },
-    resetSessionMgmt: function resetSessionMgmt() {
-        sessionManager = builtinSessionManager;
-    },
-    updateTimeout: function updateTimeout(sessionData){
-        sessionManager.updateTimeout(sessionData);
+  },
+  remove: id => {
+    try {
+      Baker.removeItem(id);
+    } catch (e) {
+      throw new Error(
+        `Error while trying to remove item from session cookie: "${id}`
+      );
     }
+  }
 };
+
+const store = {
+  hasItem: persistence.get,
+  getItem: persistence.get,
+  setItem: persistence.set,
+  removeItem: persistence.remove
+};
+
+const sessionStore = store;
+
+const SESSION_EXPIRE_TIMEOUT = 30 * 60 * 1000;
+const SESSION_COOKIE_NAME = "__asa_session";
+
+const builtinSessionManager = {
+  hasSession() {
+    const item = sessionStore.getItem(SESSION_COOKIE_NAME);
+    try {
+      return item && JSON.parse(item).t > new Date();
+    } catch (e) {
+      return false;
+    }
+  },
+
+  createSession(sessionData) {
+    sessionStore.setItem(
+      SESSION_COOKIE_NAME,
+      JSON.stringify(
+        override(sessionData, {
+          id: `${user.getDomain()}.${hash(`${user.getUser()}.${getNumber()}`)}`,
+          t: new Date().getTime() + SESSION_EXPIRE_TIMEOUT
+        })
+      )
+    );
+  },
+
+  destroySession: () => sessionStore.removeItem(SESSION_COOKIE_NAME),
+
+  getSession() {
+    return JSON.parse(sessionStore.getItem(SESSION_COOKIE_NAME));
+  },
+
+  updateTimeout: function updateTimeout(sessionData) {
+    let session = this.getSession();
+    const sessionId = session.id;
+    session = override(session, sessionData);
+    session.t = new Date().getTime() + SESSION_EXPIRE_TIMEOUT;
+    session.id = sessionId;
+
+    sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(session));
+  }
+};
+const providedSessionManager = (
+  hasSession,
+  getSession,
+  createSession,
+  destroySession,
+  updateTimeout
+) => ({
+  hasSession,
+  createSession,
+  getSession,
+  destroySession,
+  updateTimeout
+});
+let sessionManager = builtinSessionManager;
+export const getSession = () => sessionManager.getSession();
+export const hasSession = () => !!sessionManager.hasSession();
+export const createSession = (sessionData?) =>
+  sessionManager.createSession(sessionData);
+export const destroySession = () => sessionManager.destroySession();
+export const customSession = (hasSessions, getSession, createSession) =>
+  (sessionManager = providedSessionManager(
+    hasSessions,
+    getSession,
+    createSession,
+    destroySession,
+    updateTimeout
+  ));
+export const resetSessionMgmt = () => {
+  sessionManager = builtinSessionManager;
+};
+export const updateTimeout = (sessionData?) =>
+  sessionManager.updateTimeout(sessionData);

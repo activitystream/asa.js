@@ -1,24 +1,19 @@
-// this hashing algorithm is as found in some version of Google Analytics
-/* jshint ignore:start */
-var sha = require('./sha1');
-function hash(d) {
-    var a = 1, c = 0, h, o;
-    if (d) {
-        a = 0;
-        for (h = d["length"] - 1; h >= 0; h--) {
-            o = d.charCodeAt(h);
-            a = (a << 6 & 268435455) + o + (o << 14);
-            c = a & 266338304;
-            a = c != 0 ? a ^ c >> 21 : a
-        }
+export * from "./sha1";
+
+export const hash = d => {
+  let a = 1;
+  let c = 0;
+  let h;
+  let o;
+  if (d) {
+    a = 0;
+    for (h = d["length"] - 1; h >= 0; h--) {
+      o = d.charCodeAt(h);
+      a = ((a << 6) & 268435455) + o + (o << 14);
+      c = a & 266338304;
+      a = c != 0 ? a ^ (c >> 21) : a;
     }
-    return a
+  }
+  return a;
 };
-
-module.exports = {
-    domainHash : hash,
-    sessionHash : sha,
-    userHash : sha
-}; 
-
 /* jshint ignore:end */
