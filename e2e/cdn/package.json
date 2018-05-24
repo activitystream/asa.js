@@ -9,7 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "restify": "^4.0.3",
-    "restify-cookies": "^0.1.2"
+    "restify": "^7.2.0",
+    "restify-cookies": "^0.2.5",
+    "@activitystream/asa": "https://github.com/activitystream/asa.js.git#asaV2"
   }
 }

@@ -1,0 +1,41 @@
+{
+  "src_folders": ["build/src"],
+  "output_folder": "reports",
+  "custom_commands_path": "",
+  "custom_assertions_path": "",
+  "page_objects_path": "",
+  "globals_path": "./globals.js",
+
+  "selenium": {
+    "start_process": false
+  },
+
+  "test_settings": {
+    "default": {
+      "launch_url": "www.google.com",
+      "selenium_port": 4444,
+      "selenium_host": "127.0.0.1",
+      "default_path_prefix": "/wd/hub",
+      "silent": true,
+      "screenshots": {
+        "enabled": false,
+        "path": ""
+      },
+      "desiredCapabilities": {
+        "browserName": "chrome"
+      }
+    },
+
+    "chrome": {
+      "desiredCapabilities": {
+        "browserName": "chrome"
+      }
+    },
+
+    "edge": {
+      "desiredCapabilities": {
+        "browserName": "MicrosoftEdge"
+      }
+    }
+  }
+}

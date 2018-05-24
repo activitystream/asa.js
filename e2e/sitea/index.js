@@ -1,22 +1,24 @@
-var CookieParser = require('restify-cookies');
-var p = require('./package.json');
-var restify = require('restify');
+var CookieParser = require("restify-cookies");
+var p = require("./package.json");
+var { plugins, createServer } = require("restify");
 
-var port = process.env.PORT || 8088;
+var port = process.env.PORT || 8086;
 
-var server = restify.createServer();
+var server = createServer();
 
-server.name = p.name + ' server';
-server.use(restify.queryParser());
-server.use(restify.bodyParser());
+server.name = p.name + " server";
+server.use(plugins.queryParser());
+server.use(plugins.bodyParser());
 server.use(CookieParser.parse);
 
-
-server.get(/\/?.*/, restify.serveStatic({
-  directory: './site',
-  default: 'index.html'
-}));
+server.get(
+  "/:(\\.*)",
+  plugins.serveStatic({
+    directory: "./site",
+    default: "index.html"
+  })
+);
 
 server.listen(port, function() {
-    console.log('starting '+ server.name + 'on port '+port);
+  console.log("starting " + server.name + "on port " + port);
 });

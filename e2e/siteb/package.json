@@ -1,5 +1,5 @@
 {
-  "name": "siteB",
+  "name": "site-b",
   "version": "1.0.0",
   "description": "test billetportalen.no server",
   "main": "index.js",
@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "restify": "^3.0.3",
-    "restify-cookies": "^0.1.2"
+    "restify": "^7.2.0",
+    "restify-cookies": "^0.2.5"
   }
 }

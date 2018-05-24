@@ -1,43 +1,66 @@
 inbox:
     build: inbox
+    ports:
+        - 6050:80
+
 cdn:
     build: cdn
     ports:
-        - 80:80
+        - 6053:80
+
 sitea:
     build: sitea
+    ports:
+        - 6051:80
+
 siteb:
     build: siteb
+    ports:
+        - 6052:80
 
-seleniumfirefox:
-    image: selenium/standalone-firefox-debug
+selenium: 
+    image: selenium/standalone-chrome-debug
+    environment:
+        - VNC_NO_PASSWORD=1
     links:
-        - sitea:sitea.com
-        - siteb:siteb.com
-        - inbox:inbox.activitystream.com
-        - cdn:cdn.activitystream.com
+        - "sitea:sitea.com"
+        - "siteb:siteb.com"
+        - "inbox:inbox.activitystream.com"
+        - "cdn:cdn.activitystream.com"
     ports:
         - 8000:8000
         - 5900:5900
         - 4444:4444
 
-saucelabs:
-    image: ustwo/docker-sauce-connect
-    links:
-        - sitea:sitea.com
-        - siteb:siteb.com
-        - inbox:inbox.activitystream.com
-        - cdn:cdn.activitystream.com
-    environment:
-        - SAUCE_USERNAME=pshomov
-        - SAUCE_ACCESS_KEY
+# seleniumfirefox:
+#     image: selenium/standalone-firefox-debug
+#     links:
+#         - sitea:sitea.com
+#         - siteb:siteb.com
+#         - inbox:inbox.activitystream.com
+#         # - cdn:cdn.activitystream.com
+#     ports:
+#         - 8000:8000
+#         - 5900:5900
+#         - 4444:4444
 
-e2etest:
-    build: tests
-    links:
-        - seleniumfirefox:seleniumtestdriver
-        - inbox:inbox
-    environment:
-        - HOST=seleniumtestdriver
-        - PORT=4444
-        - SAUCE_ACCESS_KEY
+# saucelabs:
+#     image: ustwo/docker-sauce-connect
+#     links:
+#         - sitea:sitea.com
+#         - siteb:siteb.com
+#         - inbox:inbox.activitystream.com
+#         - cdn:cdn.activitystream.com
+#     environment:
+#         - SAUCE_USERNAME=pshomov
+#         - SAUCE_ACCESS_KEY
+
+# e2etest:
+#     build: tests
+#     links:
+#         - seleniumfirefox:seleniumtestdriver
+#         - inbox:inbox
+#     environment:
+#         - HOST=seleniumtestdriver
+#         - PORT=4444
+#         - SAUCE_ACCESS_KEY

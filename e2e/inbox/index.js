@@ -1,44 +1,49 @@
-var CookieParser = require('restify-cookies');
-var p = require('./package.json');
-var restify = require('restify');
+const CookieParser = require("restify-cookies");
+const p = require("./package.json");
+const { plugins, createServer } = require("restify");
+const CORS = require("restify-cors-middleware");
 
-var port = process.env.PORT || 6502;
+const port = process.env.PORT || 6502;
 
-var server = restify.createServer();
+const server = createServer();
+const cors = CORS({
+  origins: ["*"]
+});
 
-server.name = p.name + ' server';
-server.use(restify.queryParser());
-server.use(restify.bodyParser());
+server.name = p.name + " server";
+server.use(plugins.queryParser());
+server.use(plugins.bodyParser());
 server.use(CookieParser.parse);
-server.use(restify.CORS());
+server.pre(cors.preflight);
+server.use(cors.actual);
 
-var eventLog = [];
-server.post('/asa', function(req, res){
-    var event;
-    if (req.is('json')) {
-        event = req.params;
-    }
-    if (req.is('text/plain')){
-        event = JSON.parse(req.body);
-    }
-    event.server_time = 1 * new Date();
-    event.useragent = req.header('user-agent');
-    event.referrer = req.header('referer');
-    event.client_ip = req.connection.remoteAddress;
-    
-	console.log('event:',event);
-    eventLog.push(event);
-	res.send(200);
+let store = [];
+server.post("/asa", function(req, res) {
+  let event;
+  if (req.is("json")) {
+    event = req.params;
+  }
+  if (req.is("text/plain")) {
+    event = JSON.parse(req.body);
+  }
+  event.server_time = new Date().getTime();
+  event.useragent = req.header("user-agent");
+  event.referrer = req.header("referer");
+  event.client_ip = req.connection.remoteAddress;
+
+  console.log("event:", event);
+  store.push(event);
+  res.send(200);
 });
 
-server.get('/log', function(req, res){
-	res.send(eventLog);
+server.get("/log", function(req, res) {
+  res.send(store);
 });
-server.del('/log', function(req, res){
-    eventLog = [];
-	res.send(200);
+server.del("/log", function(req, res) {
+  store = [];
+  res.send(200);
 });
 
 server.listen(port, function() {
-    console.log('starting '+ server.name + 'on port '+port);
+  console.log("starting " + server.name + "on port " + port);
 });
