@@ -1,44 +1,40 @@
-var browser = require('./browser');
-var runBootSequence = function(bootSequence){
-    bootSequence = bootSequence || [];
-    if (!(bootSequence instanceof Array)) bootSequence = [bootSequence];
+import * as partner from "./partner";
+import * as autoTrack from "./auto_track";
+import * as debug from "./debug";
+import Inbox from "./inbox";
+import server from "./server";
+import * as features from "./features";
+import { WebEvent } from "./event";
 
-    for (var i = 0; i < bootSequence.length; i++) {
-        browser.window.asa.apply(null, bootSequence[i]);
-    }
+const runBootSequence = (bootSequence: any[]) => {
+  bootSequence = bootSequence || [];
+  if (!(bootSequence instanceof Array)) bootSequence = [bootSequence];
+
+  for (let i = 0; i < bootSequence.length; i++) {
+    window.asa.apply(null, bootSequence[i]);
+  }
 };
 
-require('./polyfills')();
+export default (bootSequence: any[] = []) => {
+  // if (DNT && (DNT === 'yes' || DNT.charAt(0) === '1')) return;
 
-module.exports = function(bootSequence){
-    // var DNT = navigator.doNotTrack || navigator.msDoNotTrack || browser.window.doNotTrack;
-    // if (DNT && (DNT === 'yes' || DNT.charAt(0) === '1')) return;
-	var partner = require('./partner');
-	var autoTrack = require('./auto_track');
-	var debug = require('./debug');
-	var inbox = require('./inbox');
-	var server = require('./server');
-	var features = require('./features');
+  try {
+    const pendingEvents = (window.asa && window.asa.q) || [];
 
-	try {
-		var pendingEvents = [];
-		if ((typeof browser.window.asa !== 'undefined') && (typeof browser.window.asa.q !== 'undefined')) {
-			pendingEvents = browser.window.asa.q;
-		}
+    window.asa = new Inbox();
+    window["WebEvent"] = WebEvent.Type;
 
-		browser.window.asa = inbox(server.submitEvent);
+    // features.defineExperiment(features.MINI_AJAX, 10);
+    partner.setPartnerInfo();
+    runBootSequence(bootSequence);
 
-		// features.defineExperiment(features.MINI_AJAX, 10);
-        partner.setPartnerInfo();
-        runBootSequence(bootSequence);
+    for (let i = 0; i < pendingEvents.length; i++) {
+      window.asa.apply(null, pendingEvents[i]);
+    }
 
-		for (var i = 0; i < pendingEvents.length; i++) {
-			browser.window.asa.apply(null, pendingEvents[i]);
-		}
-
-		// autoTrack.sections();
-	} catch (e) {
-		debug.forceLog('exception during init: ', e);
-        server.submitError(e, {location : 'boot script'});
-	}
-}
+    // autoTrack.sections();
+  } catch (e) {
+    debug.forceLog("exception during init: ", e);
+    server.submitError(e, { location: "boot script" });
+  }
+};
