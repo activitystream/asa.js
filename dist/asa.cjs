@@ -284,6 +284,43 @@ if (!String.prototype.endsWith) {
         return lastIndex !== -1 && lastIndex === position;
     };
 }
+// Safari, in Private Browsing Mode, looks like it supports localStorage and sessionStorage but all calls to setItem
+// throw QuotaExceededError. We're going to detect this and just silently drop any calls to setItem
+// to avoid the entire page breaking, without having to do a check at each usage of Storage.
+if (window.localStorage) {
+    try {
+        localStorage.localStorage = 1;
+        delete localStorage.localStorage;
+    }
+    catch (e) {
+        const storageAPI = () => {
+            const store = {};
+            return {
+                setItem(prop, value) {
+                    store[prop] = value;
+                },
+                getItem(prop) {
+                    return store[prop];
+                },
+                removeItem(prop) {
+                    delete store[prop];
+                }
+            };
+        };
+        const _localStorage = storageAPI();
+        const _sessionStorage = storageAPI();
+        const storage = Object.defineProperties(window, {
+            localStorage: {
+                get: () => _localStorage
+            },
+            sessionStorage: {
+                get: () => _sessionStorage
+            }
+        });
+        console.error(e);
+        console.error("Safari in private mode can not save settings, and some features may not work", "Warning!");
+    }
+}
 
 // parseUri 1.2.2
 // (c) Steven Levithan <stevenlevithan.com>
@@ -557,49 +594,193 @@ var Baker = {
 };
 
 const USER_ID_COOKIE = "__as_user";
-const generateUserId = () => `${hash(Window.location.host)}.${hash(`${getNumber()}`)}`;
-let userCreated = false;
-const setUserId = () => Baker.setItem(USER_ID_COOKIE, generateUserId(), Infinity, "/");
-const getUserId = () => {
-    if (!Baker.getItem(USER_ID_COOKIE)) {
-        userCreated = true;
-        setUserId();
-    }
-    let userId = Baker.getItem(USER_ID_COOKIE);
-    if (userId.length > 70 || userId.length < 40) {
-        // we need proper migrations here
-        setUserId();
-        userId = Baker.getItem(USER_ID_COOKIE);
-    }
-    return userId;
+let isNew = false;
+const generateUser = () => `${hash(Window.location.host)}.${hash(`${getNumber()}`)}`;
+const setUser = () => {
+    const id = generateUser();
+    Baker.setItem(USER_ID_COOKIE, id, Infinity, "/");
+    isNew = true;
+    return id;
 };
-const getDomainId = () => {
-    return hash(Window.location.host);
-};
-const getAndResetNewUserStatus = () => {
-    if (userCreated) {
-        userCreated = false;
-        return true;
+const getUser = () => {
+    let user = Baker.getItem(USER_ID_COOKIE);
+    // migrations
+    if (!user || user.length > 70 || user.length < 40) {
+        user = setUser();
     }
-    else
-        return false;
+    return user;
+};
+const getDomain = () => hash(Window.location.host);
+const isUserNew = () => isNew;
+
+const persistence = {
+    get(id) {
+        try {
+            return Baker.getItem(id);
+        }
+        catch (e) {
+            throw new Error(`Error while trying to get item from session cookie:${id}`);
+        }
+    },
+    set(id, value) {
+        try {
+            return Baker.setItem(id, value, Infinity, "/");
+        }
+        catch (e) {
+            throw new Error(`Error while trying to set item to session cookie: "${id}" <- ${value}`);
+        }
+    },
+    remove: id => {
+        try {
+            Baker.removeItem(id);
+        }
+        catch (e) {
+            throw new Error(`Error while trying to remove item from session cookie: "${id}`);
+        }
+    }
+};
+const store = {
+    hasItem: persistence.get,
+    getItem: persistence.get,
+    setItem: persistence.set,
+    removeItem: persistence.remove
+};
+const sessionStore = store;
+const SESSION_EXPIRE_TIMEOUT = 30 * 60 * 1000;
+const SESSION_COOKIE_NAME = "__asa_session";
+const builtinSessionManager = {
+    hasSession() {
+        const item = sessionStore.getItem(SESSION_COOKIE_NAME);
+        try {
+            return item && JSON.parse(item).t > new Date();
+        }
+        catch (e) {
+            return false;
+        }
+    },
+    createSession(sessionData) {
+        sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(Object.assign({}, sessionData, { id: `${getDomain()}.${hash(`${getUser()}.${getNumber()}`)}`, t: new Date().getTime() + SESSION_EXPIRE_TIMEOUT })));
+    },
+    destroySession: () => sessionStore.removeItem(SESSION_COOKIE_NAME),
+    getSession() {
+        return JSON.parse(sessionStore.getItem(SESSION_COOKIE_NAME));
+    },
+    updateTimeout: function updateTimeout(sessionData) {
+        const session = Object.assign({}, this.getSession(), sessionData, { t: new Date().getTime() + SESSION_EXPIRE_TIMEOUT });
+        sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(session));
+    }
+};
+const providedSessionManager = (hasSession, getSession, createSession, destroySession, updateTimeout) => ({
+    hasSession,
+    createSession,
+    getSession,
+    destroySession,
+    updateTimeout
+});
+let sessionManager = builtinSessionManager;
+const getSession = () => sessionManager.getSession();
+const hasSession = () => !!sessionManager.hasSession();
+const createSession = (sessionData) => sessionManager.createSession(sessionData);
+const destroySession = () => sessionManager.destroySession();
+const customSession = (hasSessions, getSession, createSession) => (sessionManager = providedSessionManager(hasSessions, getSession, createSession, destroySession, updateTimeout));
+const updateTimeout = (sessionData) => sessionManager.updateTimeout(sessionData);
+
+const processElement = el => {
+    if (el.hasAttribute("itemscope")) {
+        let map = Array.prototype.reduce.call(el.children, (acc, curr) => (Object.assign({}, acc, { [curr.getAttribute("itemprop")]: processElement(curr) })), {});
+        if (el.getAttribute("itemtype")) {
+            map = {
+                type: el.getAttribute("itemtype"),
+                properties: map
+            };
+        }
+        return map;
+    }
+    else if (el.hasAttribute("itemprop")) {
+        return el.getAttribute("content") || el.innerText || el.src;
+    }
+    else {
+        return {
+            __items: Array.prototype.map.call(el.children, processElement)
+        };
+    }
+};
+const extractFromHead = () => _mapper(Array.prototype.reduce.call(document.querySelectorAll('head > meta[property^="og:"]'), (acc, curr) => (Object.assign({}, acc, { [curr.getAttribute("property")]: curr.getAttribute("content") })), {
+    keywords: document
+        .querySelector('head > meta[name="keywords"]')
+        .getAttribute("content")
+}));
+const noMapper = (m, n) => m;
+let _mapper = noMapper;
+const setMapper = mapper => {
+    _mapper = (meta, el) => {
+        try {
+            return mapper(meta, el);
+        }
+        catch (e) {
+            return meta;
+        }
+    };
+};
+const extract = selector => {
+    const elements = typeof selector === "string"
+        ? document.querySelectorAll(selector)
+        : selector;
+    const data = Array.prototype.map
+        .call(elements, el => _mapper(processElement(el), el))
+        .filter(d => d);
+    return data.length > 1
+        ? {
+            __items: data
+        }
+        : data.pop();
 };
 
-const formatDateTime = time => {
-    const pad = number => {
-        if (number < 10) {
-            return `0${number}`;
+function links(domains) {
+    const domainsTracked = domains;
+    const tracker = ({ target }) => {
+        let href = target.href;
+        if (href) {
+            const destination = parser.parseURI(href);
+            if (domainsTracked.indexOf(destination.authority) > -1) {
+                if (!destination.queryKey["__asa"]) {
+                    const alreadyHasParams = target.href.indexOf("?") !== -1;
+                    href = `${href +
+                        (alreadyHasParams ? "&" : "?")}__asa=${encodeURIComponent(`${Window.asa.id}|${getSession().id}`)}`;
+                    target.href = href;
+                }
+                const utmKeys = [
+                    "utm_medium",
+                    "utm_source",
+                    "utm_campaign",
+                    "utm_content",
+                    "utm_term"
+                ];
+                const __as__campagin = {};
+                utmKeys.forEach(utm_key => {
+                    const utm_value = Window.sessionStorage.getItem(`__as.${utm_key}`);
+                    if (utm_value) {
+                        __as__campagin[utm_key] = utm_value;
+                    }
+                });
+                if (Object.keys(__as__campagin).length) {
+                    if (!Object.keys(destination.queryKey).some(key => key.indexOf("utm_") !== -1)) {
+                        const hasParams = href.indexOf("?") !== -1;
+                        Object.keys(__as__campagin).forEach((d, i) => {
+                            href = `${href +
+                                (!hasParams && i === 0 ? "?" : "&") +
+                                d}=${encodeURIComponent(__as__campagin[d])}`;
+                        });
+                        target.href = href;
+                    }
+                }
+            }
         }
-        return number;
     };
-    const timezone = time => {
-        const hours = pad(Math.abs(Math.floor(time / 60)));
-        const minutes = pad(Math.abs(time % 60));
-        const sign = time > 0 ? "-" : "+";
-        return `${sign + hours}:${minutes}`;
-    };
-    return `${time.getFullYear()}-${pad(time.getMonth() + 1)}-${pad(time.getDate())}T${pad(time.getHours())}:${pad(time.getMinutes())}:${pad(time.getSeconds())}.${(time.getMilliseconds() / 1000).toFixed(3).slice(2, 5)}${timezone(time.getTimezoneOffset())}`;
-};
+    document.addEventListener("mousedown", tracker);
+    document.addEventListener("keyup", tracker);
+    document.addEventListener("touchstart", tracker);
+}
 
 let experiments = {};
 const experimentsLive = () => {
@@ -618,6 +799,213 @@ const minor = 1;
 const build = 77;
 const version = () => [major, minor, build].join(".") +
     (experimentsLive() ? `-${experimentsLive()}` : "");
+
+const DOMMeta = selector => selector &&
+    (selector instanceof HTMLElement ||
+        selector[0] instanceof HTMLElement ||
+        typeof selector === "string")
+    ? selector
+    : false;
+var WebEvent;
+(function (WebEvent) {
+    let Type;
+    (function (Type) {
+        Type["session.started"] = "session.started";
+        Type["session.resumed"] = "session.resumed";
+        Type["as.web.customer.account.provided"] = "as.web.customer.account.provided";
+        Type["as.web.order.reviewed"] = "as.web.order.reviewed";
+        Type["as.web.product.availability.checked"] = "as.web.product.availability.checked";
+        Type["as.web.product.carted"] = "as.web.product.carted";
+        Type["as.web.product.searched"] = "as.web.product.searched";
+        Type["as.web.product.shipping.selected"] = "as.web.product.shipping.selected";
+        Type["as.web.product.viewed"] = "as.web.product.viewed";
+        Type["as.web.payment.completed"] = "as.web.payment.completed";
+        Type["page.viewed"] = "page.viewed";
+        Type["custom"] = "custom";
+    })(Type = WebEvent.Type || (WebEvent.Type = {}));
+    class Event {
+        constructor(data) {
+            const { id, referrer, campaign } = getSession();
+            const partner_id = getID();
+            const partner_sid = getSID();
+            this.origin = Window.location.origin;
+            this.occurred = new Date();
+            if (campaign)
+                this.campaign = campaign;
+            this.user = {
+                did: getUser(),
+                sid: id
+            };
+            this.page = {
+                url: Window.location.href
+            };
+            if (referrer)
+                this.page.referrer = referrer;
+            if (Window.asa.id)
+                this.tenant_id = Window.asa.id;
+            if (partner_id)
+                this.partner_id = partner_id;
+            if (partner_sid)
+                this.partner_sid = partner_sid;
+            this.v = version();
+            Object.assign(this, data);
+        }
+        toJSON() {
+            return JSON.parse(JSON.stringify(Object.assign({}, this)));
+        }
+        [Symbol.toPrimitive]() {
+            return this.type;
+        }
+    }
+    WebEvent.Event = Event;
+    let page;
+    (function (page) {
+        class viewed extends Event {
+            constructor(...args) {
+                super();
+                this.type = Type["page.viewed"];
+                this.location = Window.location.href;
+                this.title = document.title;
+                if (DOMMeta(args[0])) {
+                    const meta = extract(args[0]);
+                    if (meta)
+                        this.meta = meta;
+                    if (args[1])
+                        this.meta = Object.assign({}, this.meta, args[1]);
+                }
+                else if (args[0]) {
+                    this.meta = Object.assign({}, this.meta, args[0], extractFromHead());
+                }
+                else {
+                    this.meta = extractFromHead();
+                }
+            }
+        }
+        page.viewed = viewed;
+    })(page = WebEvent.page || (WebEvent.page = {}));
+    let session;
+    (function (session) {
+        class started extends page.viewed {
+            constructor() {
+                super(...arguments);
+                this.type = Type["session.started"];
+                this.meta = Object.assign({}, this.meta, extractFromHead());
+            }
+        }
+        session.started = started;
+        class resumed extends Event {
+            constructor() {
+                super(...arguments);
+                this.type = Type["session.resumed"];
+                this.meta = Object.assign({}, this.meta, extractFromHead());
+            }
+        }
+        session.resumed = resumed;
+    })(session = WebEvent.session || (WebEvent.session = {}));
+    let as;
+    (function (as) {
+        let web;
+        (function (web) {
+            let order;
+            (function (order) {
+                class reviewed extends Event {
+                    constructor() {
+                        super(...arguments);
+                        this.type = Type["as.web.order.reviewed"];
+                    }
+                }
+                order.reviewed = reviewed;
+            })(order = web.order || (web.order = {}));
+            let product;
+            (function (product) {
+                let availability;
+                (function (availability) {
+                    class checked extends Event {
+                        constructor() {
+                            super(...arguments);
+                            this.type = Type["as.web.product.availability.checked"];
+                        }
+                    }
+                    availability.checked = checked;
+                })(availability = product.availability || (product.availability = {}));
+                class carted extends Event {
+                    constructor() {
+                        super(...arguments);
+                        this.type = Type["as.web.product.carted"];
+                    }
+                }
+                product.carted = carted;
+                class searched extends Event {
+                    constructor() {
+                        super(...arguments);
+                        this.type = Type["as.web.product.searched"];
+                    }
+                }
+                product.searched = searched;
+                let shipping;
+                (function (shipping) {
+                    class selected extends Event {
+                        constructor() {
+                            super(...arguments);
+                            this.type = Type["as.web.product.shipping.selected"];
+                        }
+                    }
+                    shipping.selected = selected;
+                })(shipping = product.shipping || (product.shipping = {}));
+                class viewed extends Event {
+                    constructor() {
+                        super(...arguments);
+                        this.type = Type["as.web.product.viewed"];
+                    }
+                }
+                product.viewed = viewed;
+            })(product = web.product || (web.product = {}));
+            let payment;
+            (function (payment) {
+                class completed extends Event {
+                    constructor() {
+                        super(...arguments);
+                        this.type = Type["as.web.payment.completed"];
+                    }
+                }
+                payment.completed = completed;
+            })(payment = web.payment || (web.payment = {}));
+        })(web = as.web || (as.web = {}));
+    })(as = WebEvent.as || (WebEvent.as = {}));
+    WebEvent.custom = event => class custom extends Event {
+        constructor(...args) {
+            super();
+            this.type = Type["custom"];
+            this.event = event;
+            if (DOMMeta(args[0])) {
+                const meta = extract(args[0]);
+                if (meta)
+                    this.meta = meta;
+                if (args[1])
+                    this.meta = Object.assign({}, this.meta, args[1]);
+            }
+            else if (args[0]) {
+                this.meta = Object.assign({}, this.meta, args[0]);
+            }
+        }
+    };
+})(WebEvent || (WebEvent = {}));
+
+const formatDateTime = time => {
+    const pad = number => {
+        if (number < 10) {
+            return `0${number}`;
+        }
+        return number;
+    };
+    const timezone = time => {
+        const hours = pad(Math.abs(Math.floor(time / 60)));
+        const minutes = pad(Math.abs(time % 60));
+        const sign = time > 0 ? "-" : "+";
+        return `${sign + hours}:${minutes}`;
+    };
+    return `${time.getFullYear()}-${pad(time.getMonth() + 1)}-${pad(time.getDate())}T${pad(time.getHours())}:${pad(time.getMinutes())}:${pad(time.getSeconds())}.${(time.getMilliseconds() / 1000).toFixed(3).slice(2, 5)}${timezone(time.getTimezoneOffset())}`;
+};
 
 const POST = (url, data) => fetch(url, {
     method: "POST",
@@ -686,323 +1074,6 @@ class Server {
 }
 var server = new Server();
 
-const copyProps = (o1, o2) => {
-    for (const key in o2) {
-        if (o2.hasOwnProperty(key) && o2[key] !== undefined) {
-            o1[key] = o2[key];
-        }
-    }
-};
-const override = (o1, o2) => {
-    if (!o1 && !o2)
-        return undefined;
-    if (!o1 && o2)
-        return o2;
-    if (o1 && !o2)
-        return o1;
-    const result = {};
-    copyProps(result, o1);
-    copyProps(result, o2);
-    return result;
-};
-
-const persistence = {
-    get(id) {
-        try {
-            return Baker.getItem(id);
-        }
-        catch (e) {
-            throw new Error(`Error while trying to get item from session cookie:${id}`);
-        }
-    },
-    set(id, value) {
-        try {
-            return Baker.setItem(id, value, Infinity, "/");
-        }
-        catch (e) {
-            throw new Error(`Error while trying to set item to session cookie: "${id}" <- ${value}`);
-        }
-    },
-    remove: id => {
-        try {
-            Baker.removeItem(id);
-        }
-        catch (e) {
-            throw new Error(`Error while trying to remove item from session cookie: "${id}`);
-        }
-    }
-};
-const store = {
-    hasItem: persistence.get,
-    getItem: persistence.get,
-    setItem: persistence.set,
-    removeItem: persistence.remove
-};
-const sessionStore = store;
-const SESSION_EXPIRE_TIMEOUT = 30 * 60 * 1000;
-const SESSION_COOKIE_NAME = "__asa_session";
-const builtinSessionManager = {
-    hasSession() {
-        const item = sessionStore.hasItem(SESSION_COOKIE_NAME);
-        try {
-            return item && JSON.parse(item).t > new Date();
-        }
-        catch (e) {
-            return false;
-        }
-    },
-    createSession(sessionData) {
-        sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(override(sessionData, {
-            id: `${getDomainId()}.${hash(`${getUserId()}.${getNumber()}`)}`,
-            t: new Date().getTime() + SESSION_EXPIRE_TIMEOUT
-        })));
-    },
-    destroySession: () => sessionStore.removeItem(SESSION_COOKIE_NAME),
-    getSession() {
-        return JSON.parse(sessionStore.getItem(SESSION_COOKIE_NAME));
-    },
-    updateTimeout: function updateTimeout(sessionData) {
-        let session = this.getSession();
-        const sessionId = session.id;
-        session = override(session, sessionData);
-        session.t = new Date().getTime() + SESSION_EXPIRE_TIMEOUT;
-        session.id = sessionId;
-        sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(session));
-    }
-};
-const providedSessionManager = (hasSession, getSession, createSession, destroySession, updateTimeout) => ({
-    hasSession,
-    createSession,
-    getSession,
-    destroySession,
-    updateTimeout
-});
-let sessionManager = builtinSessionManager;
-const getSession = () => sessionManager.getSession();
-const hasSession = () => !!sessionManager.hasSession();
-const createSession = (sessionData) => sessionManager.createSession(sessionData);
-const destroySession = () => sessionManager.destroySession();
-const customSession = (hasSessions, getSession, createSession) => (sessionManager = providedSessionManager(hasSessions, getSession, createSession, destroySession, updateTimeout));
-const updateTimeout = (sessionData) => sessionManager.updateTimeout(sessionData);
-
-function links(domains) {
-    const domainsTracked = domains;
-    const tracker = ({ target }) => {
-        let href = target.href;
-        if (href) {
-            const destination = parser.parseURI(href);
-            if (domainsTracked.indexOf(destination.authority) > -1) {
-                if (!destination.queryKey["__asa"]) {
-                    const alreadyHasParams = target.href.indexOf("?") !== -1;
-                    href = `${href +
-                        (alreadyHasParams ? "&" : "?")}__asa=${encodeURIComponent(`${Window.asa.id}|${getSession().id}`)}`;
-                    target.href = href;
-                }
-                const utmKeys = [
-                    "utm_medium",
-                    "utm_source",
-                    "utm_campaign",
-                    "utm_content",
-                    "utm_term"
-                ];
-                const __as__campagin = {};
-                utmKeys.forEach(utm_key => {
-                    const utm_value = Window.sessionStorage.getItem(`__as.${utm_key}`);
-                    if (utm_value) {
-                        __as__campagin[utm_key] = utm_value;
-                    }
-                });
-                if (Object.keys(__as__campagin).length) {
-                    if (!Object.keys(destination.queryKey).some(key => key.indexOf("utm_") !== -1)) {
-                        const hasParams = href.indexOf("?") !== -1;
-                        Object.keys(__as__campagin).forEach((d, i) => {
-                            href = `${href +
-                                (!hasParams && i === 0 ? "?" : "&") +
-                                d}=${encodeURIComponent(__as__campagin[d])}`;
-                        });
-                        target.href = href;
-                    }
-                }
-            }
-        }
-    };
-    document.addEventListener("mousedown", tracker);
-    document.addEventListener("keyup", tracker);
-    document.addEventListener("touchstart", tracker);
-}
-
-// const pageview = (event = {}) => {
-//   const title = browser.document.title;
-//   const location = browser.window.location.href;
-//   return { type: "pageview", location, title, event };
-// };
-// const sectionentered = section => ({
-//   type: "section_entered",
-//   section
-// });
-// const custom = event => {
-//   const baseEvent: any = pageview();
-//   baseEvent.type = "custom";
-//   baseEvent.event = event;
-//   return baseEvent;
-// };
-// const gatherMetaInfo = function gatherMetaInfo(a) {
-//   const event = a[0];
-//   let eventBody: any = {};
-//   if (event) {
-//     switch (event.trim()) {
-//       case "pageview":
-//         eventBody = pageview(a);
-//         break;
-//       case "sectionentered":
-//         eventBody = sectionentered(a);
-//         break;
-//       default:
-//         eventBody = custom(a);
-//     }
-//     return eventBody;
-//   }
-//   throw new Error(
-//     `Upsi! There is something wrong with this event: ${JSON.stringify(a)}`
-//   );
-// };
-// const gatherSystemInfo = e => {
-//   const sess = session.getSession();
-//   e.t = formatting.formatDateTime(new Date());
-//   e.session = sess.id;
-//   e.referrer = sess.referrer || "";
-//   const campaign = sess.campaign;
-//   if (campaign) e.campaign = campaign;
-//   e.uid = user.getUserId();
-//   const partnerId = browser.window.sessionStorage.getItem("__as.partner_id");
-//   const partnerSId = browser.window.sessionStorage.getItem("__as.partner_sid");
-//   if (partnerId) {
-//     e.partner_id = partnerId;
-//   }
-//   if (partnerSId) {
-//     e.partner_sid = partnerSId;
-//   }
-//   e.tenant_id = browser.window.asa.id;
-//   e.v = info.version();
-//   return e;
-// };
-// export class Event {
-//   public occurred: Date;
-//   public origin: string;
-//   public user: {
-//     did: string;
-//     sid: string;
-//   };
-//   public page: {
-//     url: string;
-//     referrer: string;
-//   };
-//   public v: string;
-//   public campaign: string;
-//   public tenant: string;
-//   public partnerId: string;
-//   public partnerSId: string;
-//   constructor(public type: WebEvent.Type, data?, options?) {
-//     const event = gatherSystemInfo(gatherMetaInfo([type, data, options]));
-//     let meta: any = {};
-//     if (type === WebEvent.Type["session.started"]) {
-//       meta = microdata.extractFromHead();
-//       if (typeof data === "object") {
-//         meta = { ...meta, ...data };
-//       }
-//     } else if (type === WebEvent.Type["as.web.product.viewed"]) {
-//       meta = DOMMeta([type, data, options]) || microdata.extract(data);
-//     } else {
-//       if (data && data.tagName) {
-//         meta = microdata.extract(data);
-//       } else {
-//         meta = { ...meta, ...data };
-//       }
-//       meta = { ...meta, ...options };
-//     }
-//     if (meta) {
-//       event.meta = meta;
-//     }
-//     this.occurred = event.t || meta.t;
-//     this.origin = browser.window.location.host;
-//     this.user = {
-//       did: event.uid || meta.uid,
-//       sid: event.session || meta.session
-//     };
-//     this.page = {
-//       url: `${browser.window.location.protocol}//${
-//         browser.window.location.host
-//       }${browser.window.location.pathname}${browser.window.location.hash}${
-//         browser.window.location.search
-//       }`,
-//       referrer: event.referrer
-//     };
-//     this.v = event.v || meta.v;
-//     this.campaign = event.campaign || meta.campaign;
-//     this.tenant = event.tenant_id || meta.tenant_id;
-//     this.partnerId = event.partner_id || meta.partner_id;
-//     this.partnerSId = event.partner_sid || meta.partner_sid;
-//     Object.assign(this, data);
-//   }
-// }
-var WebEvent;
-(function (WebEvent_1) {
-    let Type;
-    (function (Type) {
-        Type[Type["debug.mode.enabled"] = 0] = "debug.mode.enabled";
-        Type[Type["page.viewed"] = 1] = "page.viewed";
-        Type[Type["session.started"] = 2] = "session.started";
-        Type[Type["session.resumed"] = 3] = "session.resumed";
-        Type[Type["tenant.id.provided"] = 4] = "tenant.id.provided";
-        Type[Type["custom.session.created"] = 5] = "custom.session.created";
-        Type[Type["microdata.transformer.provided"] = 6] = "microdata.transformer.provided";
-        Type[Type["connected.partners.provided"] = 7] = "connected.partners.provided";
-        Type[Type["service.providers.provided"] = 8] = "service.providers.provided";
-        Type[Type["as.web.customer.account.provided"] = 9] = "as.web.customer.account.provided";
-        Type[Type["as.web.order.reviewed"] = 10] = "as.web.order.reviewed";
-        Type[Type["as.web.product.availability.checked"] = 11] = "as.web.product.availability.checked";
-        Type[Type["as.web.product.carted"] = 12] = "as.web.product.carted";
-        Type[Type["as.web.product.searched"] = 13] = "as.web.product.searched";
-        Type[Type["as.web.product.shipping.selected"] = 14] = "as.web.product.shipping.selected";
-        Type[Type["as.web.product.viewed"] = 15] = "as.web.product.viewed";
-        Type[Type["as.web.payment.completed"] = 16] = "as.web.payment.completed";
-    })(Type = WebEvent_1.Type || (WebEvent_1.Type = {}));
-    class WebEvent {
-        constructor(type, data) {
-            const { id, referrer, campaign } = getSession();
-            const partner_id = getID();
-            const partner_sid = getSID();
-            this.origin = Window.location.origin;
-            this.occurred = new Date();
-            if (campaign)
-                this.campaign = campaign;
-            this.user = {
-                did: getUserId(),
-                sid: id
-            };
-            this.page = {
-                url: Window.location.href
-            };
-            if (referrer)
-                this.page.referrer = referrer;
-            this.type = type;
-            this.tenant_id = Window.asa.id;
-            if (partner_id)
-                this.partner_id = partner_id;
-            if (partner_sid)
-                this.partner_sid = partner_sid;
-            this.title = document.title;
-            this.location = Window.location.href;
-            this.v = version();
-            Object.assign(this, data);
-        }
-        toJSON() {
-            return Object.assign({}, this, { type: Type[this.type] });
-        }
-    }
-    WebEvent_1.WebEvent = WebEvent;
-})(WebEvent || (WebEvent = {}));
-
 var getReferrer = (location, referrer, serviceProviders) => {
     if (referrer && referrer.length > 0) {
         const referrerAuth = parser.parseURI(referrer).authority;
@@ -1018,29 +1089,22 @@ var getReferrer = (location, referrer, serviceProviders) => {
 function Asa(tenant) {
     let serviceProviders = [];
     setPartnerInfo();
-    const instance = function Asa(type, data, ...rest) {
+    const LocalEvents = {
+        "custom.session.created": (data, ...rest) => customSession(data, rest[0], rest[1]),
+        "connected.partners.provided": data => links(data),
+        "service.providers.provided": data => {
+            serviceProviders = data;
+        },
+        "tenant.id.provided": data => {
+            Window.asa.id = data;
+        },
+        "debug.mode.enabled": data => setDebugMode(data),
+        "microdata.transformer.provided": data => setMapper(data)
+    };
+    const instance = function Asa(event, data, ...rest) {
         try {
-            if (type === WebEvent.Type["custom.session.created"]) {
-                customSession(data, rest[0], rest[1]);
-                return;
-            }
-            if (type === WebEvent.Type["connected.partners.provided"]) {
-                links(data);
-                return;
-            }
-            if (type === WebEvent.Type["service.providers.provided"]) {
-                serviceProviders = data;
-                return;
-            }
-            if (type === WebEvent.Type["tenant.id.provided"]) {
-                Window.asa.id = data;
-                return;
-            }
-            if (type === WebEvent.Type["debug.mode.enabled"]) {
-                setDebugMode(data);
-                return;
-            }
-            if (type === WebEvent.Type["microdata.transformer.provided"]) {
+            if (typeof event === "string" && event in LocalEvents) {
+                LocalEvents[event](data, ...rest);
                 return;
             }
             const campaign = getCampaign();
@@ -1048,8 +1112,8 @@ function Asa(tenant) {
             if (!hasSession()) {
                 log("no session, starting a new one");
                 createSession({ campaign, referrer });
-                instance.transport(new WebEvent.WebEvent(WebEvent.Type["session.started"], {
-                    newBrowser: getAndResetNewUserStatus()
+                instance.transport(new WebEvent.session.started({
+                    newBrowser: isUserNew()
                 }));
             }
             else {
@@ -1059,16 +1123,16 @@ function Asa(tenant) {
                     serviceProviders.indexOf(referrerAuth) === -1) {
                     updateTimeout({ campaign, referrer });
                     log("session resumed");
-                    instance.transport(new WebEvent.WebEvent(WebEvent.Type["session.resumed"]));
+                    instance.transport(new WebEvent.session.resumed());
                 }
             }
-            instance.transport(new WebEvent.WebEvent(type, data));
+            instance.transport(new event(data, ...rest));
         }
         catch (e) {
             forceLog("inbox exception:", e);
             server.submitError(e, {
                 location: "processing inbox message",
-                arguments: [type, data, ...rest]
+                arguments: [event, data, ...rest]
             });
         }
         return instance;
