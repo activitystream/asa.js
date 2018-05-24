@@ -2,33 +2,77 @@
 // (c) Steven Levithan <stevenlevithan.com>
 // MIT License
 
-function parseUri (str) {
-	var	o   = parseUri.options,
-		m   = o.parser[o.strictMode ? "strict" : "loose"].exec(str),
-		uri = {},
-		i   = 14;
-
-	while (i--) uri[o.key[i]] = m[i] || "";
-
-	uri[o.q.name] = {};
-	uri[o.key[12]].replace(o.q.parser, function ($0, $1, $2) {
-		if ($1) uri[o.q.name][$1] = $2;
-	});
-
-	return uri;
-}
-
-parseUri.options = {
-	strictMode: false,
-	key: ["source","protocol","authority","userInfo","user","password","host","port","relative","path","directory","file","query","anchor"],
-	q:   {
-		name:   "queryKey",
-		parser: /(?:^|&)([^&=]*)=?([^&]*)/g
-	},
-	parser: {
-		strict: /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/,
-		loose:  /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/
-	}
+export const PARSER = {
+  STRICT: /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/,
+  LOOSE: /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/
 };
 
-module.exports = parseUri;
+export const defaults = {
+  strictMode: false,
+  key: [
+    "source",
+    "protocol",
+    "authority",
+    "userInfo",
+    "user",
+    "password",
+    "host",
+    "port",
+    "relative",
+    "path",
+    "directory",
+    "file",
+    "query",
+    "anchor"
+  ],
+  q: {
+    name: "queryKey",
+    parser: /(?:^|&)([^&=]*)=?([^&]*)/g
+  },
+  parser: PARSER.LOOSE
+};
+
+export class Parser {
+  private options = defaults;
+
+  constructor(options = {}) {
+    this.options = { ...this.options, ...options };
+  }
+
+  parseURI(
+    str
+  ): {
+    source?: any;
+    protocol?: any;
+    authority?: any;
+    userInfo?: any;
+    user?: any;
+    password?: any;
+    host?: any;
+    port?: any;
+    relative?: any;
+    path?: any;
+    directory?: any;
+    file?: any;
+    query?: any;
+    anchor?: any;
+    queryKey?: {
+      __asa?: any;
+    };
+  } {
+    const match = this.options.parser.exec(str);
+    const uri = {};
+    let i = 14;
+
+    while (i--) uri[this.options.key[i]] = match[i] || "";
+
+    uri[this.options.q.name] = {};
+    uri[this.options.key[12]].replace(this.options.q.parser, ($0, $1, $2) => {
+      if ($1) uri[this.options.q.name][$1] = $2;
+    });
+
+    return uri;
+  }
+}
+
+export default new Parser();

@@ -1,41 +1,65 @@
-var parseUri = require('./parseuri');
-var browser = require('./browser');
-module.exports = function getCampaign(location, referrer) {
-    var campaignKeys;
-    referrer = parseUri(referrer);
-    location = parseUri(location);
-    if (referrer.queryKey && referrer.queryKey['utm_campaign'])
-        campaignKeys = campaignKeys || referrer.queryKey;
+import parser from "./parseuri";
+import { window, document } from "./browser";
 
-    if (location.queryKey && location.queryKey['utm_campaign'])
-        campaignKeys = campaignKeys || location.queryKey;
+const { sessionStorage } = window;
 
-    if (campaignKeys) {
-        var campaign = {};
-        if (campaignKeys.utm_campaign) campaign.campaign = campaignKeys.utm_campaign;
-        if (campaignKeys.utm_source) campaign.source = campaignKeys.utm_source;
-        if (campaignKeys.utm_medium) campaign.medium = campaignKeys.utm_medium;
-        if (campaignKeys.utm_term) campaign.term = campaignKeys.utm_term;
-        if (campaignKeys.utm_content) campaign.content = campaignKeys.utm_content;
-        return campaign;
-    }
-    var utmKeys = ['utm_medium','utm_source','utm_campaign','utm_content','utm_term'];
+export interface Campaign {
+  campaign?: string;
+  medium?: string;
+  source?: string;
+  content?: string;
+  term?: string;
+}
 
-    var __as__campagin = {};
-    utmKeys.forEach(function (utm_key) {
-        var utm_value = browser.window.sessionStorage.getItem('__as.' +  utm_key);
-        if (utm_value) {
-            __as__campagin[utm_key] = utm_value;
-        }
-    });
-    if (Object.keys(__as__campagin).length) {
-        var asCampaign = {};
-        if (__as__campagin.utm_campaign) asCampaign.campaign = __as__campagin.utm_campaign;
-        if (__as__campagin.utm_source) asCampaign.source = __as__campagin.utm_source;
-        if (__as__campagin.utm_medium) asCampaign.medium = __as__campagin.utm_medium;
-        if (__as__campagin.utm_term) asCampaign.term = __as__campagin.utm_term;
-        if (__as__campagin.utm_content) asCampaign.content = __as__campagin.utm_content;
-        return asCampaign;
-    }
-    return null;
+export class Campaign {
+  constructor(
+    public campaign?: string,
+    public medium?: string,
+    public source?: string,
+    public content?: string,
+    public term?: string
+  ) {}
+}
+
+export const UTM = [
+  "utm_medium",
+  "utm_source",
+  "utm_campaign",
+  "utm_content",
+  "utm_term"
+];
+
+export default () => {
+  let campaignKeys;
+
+  const referrer: any = document.referrer && new URL(document.referrer);
+  const location: any = document.location && new URL(document.location);
+
+  const campaign = UTM.reduce(
+    (acc, curr) => {
+      const value =
+        (referrer && referrer.searchParams.get(curr)) ||
+        (location && location.searchParams.get(curr)) ||
+        sessionStorage.getItem(`__as.${curr}`);
+
+      return value
+        ? {
+            ...acc,
+            [curr]: value
+          }
+        : acc;
+    },
+    null as any
+  );
+
+  return (
+    campaign &&
+    new Campaign(
+      campaign.utm_campaign,
+      campaign.utm_medium,
+      campaign.utm_source,
+      campaign.utm_content,
+      campaign.utm_term
+    )
+  );
 };
