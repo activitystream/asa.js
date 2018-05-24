@@ -1,134 +1,179 @@
-var microdata = require('./microdata');
-var session = require('./session');
-var info = require('./version');
-var user = require('./user');
-var _ = require('./utils');
-var parseUri = require('./parseuri');
-var Cookies = require('cookies-js');
-var formatting = require('./formatting');
-var getCampaign = require('./campaign');
-var browser = require('./browser');
+import * as microdata from "./microdata";
+import { getSession } from "./session";
+import * as info from "./version";
+import * as user from "./user";
+import * as parseUri from "./parseuri";
+import { window } from "./browser";
+import * as partner from "./partner";
 
-var DOMMeta = function (o) {
-    if (o.length < 2) return false;
-    return (typeof o[1] === 'object' && typeof o[1].tagName === 'undefined') ? o[1] : false;
-};
+const DOMMeta = selector =>
+  selector &&
+  (selector instanceof HTMLElement ||
+    selector[0] instanceof HTMLElement ||
+    typeof selector === "string")
+    ? selector
+    : false;
 
-var pageview = function () {
-    var title = browser.document.title;
-    var location = browser.window.location.protocol + '//' + browser.window.location.host + browser.window.location.pathname + browser.window.location.hash + browser.window.location.search;
-    return { type: 'pageview', location: location, title: title };
-};
+export namespace WebEvent {
+  export enum Type {
+    "session.started" = "session.started",
+    "session.resumed" = "session.resumed",
+    "as.web.customer.account.provided" = "as.web.customer.account.provided",
+    "as.web.order.reviewed" = "as.web.order.reviewed",
+    "as.web.product.availability.checked" = "as.web.product.availability.checked",
+    "as.web.product.carted" = "as.web.product.carted",
+    "as.web.product.searched" = "as.web.product.searched",
+    "as.web.product.shipping.selected" = "as.web.product.shipping.selected",
+    "as.web.product.viewed" = "as.web.product.viewed",
+    "as.web.payment.completed" = "as.web.payment.completed",
+    "page.viewed" = "page.viewed",
+    "custom" = "custom"
+  }
 
-var sectionentered = function (section, page) {
-    return { type: 'section_entered', section: section };
-};
-
-var custom = function (event) {
-    var baseEvent = pageview();
-    baseEvent.type = 'custom';
-    baseEvent.event = event;
-    return baseEvent;
-};
-
-var gatherMetaInfo = function gatherMetaInfo(a) {
-    var event = a[0];
-    var eventBody = {};
-    if (event) {
-        switch (event.trim()) {
-            case 'pageview':
-                eventBody = pageview.apply(null, [].slice.call(a, 1));
-                break;
-            case 'sectionentered':
-                eventBody = sectionentered.apply(null, [].slice.call(a, 1));
-                break;
-            default:
-                eventBody = custom.apply(null, a);
-        }
-        return eventBody;
-    }
-    throw new Error('Upsi! There is something wrong with this event:', a);
-};
-
-
-var gatherSystemInfo = function (e) {
-    var sess = session.getSession();
-    e.t = formatting.formatDateTime(new Date());
-    e.session = sess.id;
-    e.referrer = sess.referrer || '';
-    var campaign = sess.campaign;
-    if (campaign) e.campaign = campaign;
-    e.uid = user.getUserId();
-    var partnerId = browser.window.sessionStorage.getItem('__as.partner_id');
-    var partnerSId = browser.window.sessionStorage.getItem('__as.partner_sid');
-    if (partnerId) {
-        e.partner_id = partnerId;
-    }
-    if (partnerSId) {
-        e.partner_sid = partnerSId;
-    }
-    e.tenant_id = browser.window.asaId;
-    e.v = info.version();
-    return e;
-};
-
-var postboxEvents = function(type, e, meta){
-    var defaultEventInfo = {
-        "type" : type,
-        "occurred" : meta.t,
-        "origin" : browser.window.location.host,
-        "user" : {
-            "did" : meta.uid,
-            "sid" : meta.session
-        },
-        "page" : {
-            "url" : browser.window.location.protocol + '//' + browser.window.location.host + browser.window.location.pathname + browser.window.location.hash + browser.window.location.search,
-            "referrer" : meta.referrer
-        },
-        "v" : meta.v,
-        "campaign" : meta.campaign,
-        "tenant" : meta.tenant_id
+  export interface Event {
+    type: Type;
+    origin: string;
+    occurred: Date;
+    campaign: any;
+    tenant: string;
+    user: {
+      did: string;
+      sid: string;
     };
-    if (meta.partner_id) defaultEventInfo.partnerId = meta.partner_id;
-    if (meta.partner_sid) defaultEventInfo.partnerSId = meta.partner_sid;
-    return _.override(defaultEventInfo, e);
-}
-module.exports = {
-    newpackage: function newpackages(eventName, eventInfo, extra) {
-        var meta = gatherMetaInfo(arguments);
-        meta = gatherSystemInfo(meta);
-        return postboxEvents(eventName, eventInfo, meta);
-    },
-    package: function (eventname, domElement, extra) {
+    page: {
+      url?: string;
+      referrer?: string;
+    };
+    partner_id: string;
+    partner_sid: string;
+    location: string;
+    meta: any;
+    title: string;
+    v: string;
+    [data: string]: any;
+  }
 
-        var event = gatherMetaInfo(arguments);
-        event = gatherSystemInfo(event);
-        // if (arguments[0] == 'pageview') {
-        //     return null;
-        // } else
-        if (arguments[0] == 'sessionStarted') {
-            event.meta = microdata.extractFromHead();
-            if (typeof arguments[1] === 'object') {
-                event.meta = _.override(event.meta, arguments[1]);
-            }
-        } else
-                if (arguments[0] == 'itemview') {
-                    event.meta = DOMMeta(arguments) || microdata.extract(arguments[1]);
-                } else
-                    if (arguments[0] == 'sectionentered') {
-                        event.meta = DOMMeta(arguments) || microdata.extract(arguments[1]);
-                    } else {
-                        var meta = undefined;
-                        if (typeof domElement === 'string' || (typeof domElement === 'object' && typeof domElement.tagName !== 'undefined')) {
-                            meta = microdata.extract(domElement);
-                        } else
-                            if (typeof extra === 'undefined' && typeof domElement === 'object') {
-                                extra = domElement;
-                                domElement = null;
-                            }
-                        meta = _.override(meta, extra);
-                        if (meta !== undefined) event.meta = meta;
-                    }
-        return event;
+  export class Event {
+    constructor(data?: any) {
+      const { id, referrer, campaign } = getSession();
+      const partner_id = partner.getID();
+      const partner_sid = partner.getSID();
+
+      this.origin = window.location.origin;
+      this.occurred = new Date();
+      if (campaign) this.campaign = campaign;
+      this.user = {
+        did: user.getUser(),
+        sid: id
+      };
+
+      this.page = {
+        url: window.location.href
+      };
+      if (referrer) this.page.referrer = referrer;
+      if (window.asa.id) this.tenant_id = window.asa.id;
+
+      if (partner_id) this.partner_id = partner_id;
+      if (partner_sid) this.partner_sid = partner_sid;
+      this.v = info.version();
+      Object.assign(this, data);
     }
-};
+
+    toJSON() {
+      return JSON.parse(JSON.stringify(Object.assign({}, this)));
+    }
+
+    [Symbol.toPrimitive]() {
+      return this.type;
+    }
+  }
+
+  export namespace page {
+    export class viewed extends Event {
+      type = Type["page.viewed"];
+      location: string = window.location.href;
+      title: string = document.title;
+
+      constructor(...args: any[]) {
+        super();
+        if (DOMMeta(args[0])) {
+          const meta = microdata.extract(args[0]);
+          if (meta) this.meta = meta;
+          if (args[1]) this.meta = { ...this.meta, ...args[1] };
+        } else if (args[0]) {
+          this.meta = {
+            ...this.meta,
+            ...args[0],
+            ...microdata.extractFromHead()
+          };
+        } else {
+          this.meta = microdata.extractFromHead();
+        }
+      }
+    }
+  }
+
+  export namespace session {
+    export class started extends page.viewed {
+      type = Type["session.started"];
+      meta = { ...this.meta, ...microdata.extractFromHead() };
+    }
+    export class resumed extends Event {
+      type = Type["session.resumed"];
+      meta = { ...this.meta, ...microdata.extractFromHead() };
+    }
+  }
+
+  export namespace as.web {
+    export namespace order {
+      export class reviewed extends Event {
+        type = Type["as.web.order.reviewed"];
+      }
+    }
+    export namespace product {
+      export namespace availability {
+        export class checked extends Event {
+          type = Type["as.web.product.availability.checked"];
+        }
+      }
+      export class carted extends Event {
+        type = Type["as.web.product.carted"];
+      }
+      export class searched extends Event {
+        type = Type["as.web.product.searched"];
+      }
+      export namespace shipping {
+        export class selected extends Event {
+          type = Type["as.web.product.shipping.selected"];
+        }
+      }
+      export class viewed extends Event {
+        type = Type["as.web.product.viewed"];
+      }
+    }
+    export namespace payment {
+      export class completed extends Event {
+        type = Type["as.web.payment.completed"];
+      }
+    }
+  }
+
+  export const custom = event =>
+    class custom extends Event {
+      type = Type["custom"];
+      event: any = event;
+      constructor(...args: any[]) {
+        super();
+        if (DOMMeta(args[0])) {
+          const meta = microdata.extract(args[0]);
+          if (meta) this.meta = meta;
+          if (args[1]) this.meta = { ...this.meta, ...args[1] };
+        } else if (args[0]) {
+          this.meta = {
+            ...this.meta,
+            ...args[0]
+          };
+        }
+      }
+    };
+}
