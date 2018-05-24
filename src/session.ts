@@ -1,7 +1,6 @@
 import * as user from "./user";
 import { getNumber } from "./randomness";
 import { hash } from "./domain_hash";
-import { override } from "./utils";
 import Baker from "./baker";
 
 const persistence = {
@@ -59,12 +58,11 @@ const builtinSessionManager = {
   createSession(sessionData) {
     sessionStore.setItem(
       SESSION_COOKIE_NAME,
-      JSON.stringify(
-        override(sessionData, {
-          id: `${user.getDomain()}.${hash(`${user.getUser()}.${getNumber()}`)}`,
-          t: new Date().getTime() + SESSION_EXPIRE_TIMEOUT
-        })
-      )
+      JSON.stringify({
+        ...sessionData,
+        id: `${user.getDomain()}.${hash(`${user.getUser()}.${getNumber()}`)}`,
+        t: new Date().getTime() + SESSION_EXPIRE_TIMEOUT
+      })
     );
   },
 
@@ -75,11 +73,11 @@ const builtinSessionManager = {
   },
 
   updateTimeout: function updateTimeout(sessionData) {
-    let session = this.getSession();
-    const sessionId = session.id;
-    session = override(session, sessionData);
-    session.t = new Date().getTime() + SESSION_EXPIRE_TIMEOUT;
-    session.id = sessionId;
+    const session = {
+      ...this.getSession(),
+      ...sessionData,
+      t: new Date().getTime() + SESSION_EXPIRE_TIMEOUT
+    };
 
     sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(session));
   }

@@ -1,118 +1,131 @@
-// var jq = $;
-var jq = require('./DOM');
-var debug = require('./debug');
+import * as debug from "./debug";
 
-var collectReferencedProperties = function (element, item) {
-	var refString = element.attr('itemref');
-	if (typeof refString !== 'undefined') {
-		var refs = refString.split(' ');
-		for (var i = 0; i < refs.length; i++) {
-			var ref = refs[i];
-			var refItem = jq('#' + ref);
-			if (refItem.length === 1){
-				collectProperties(refItem.get(0), item);
-			}
-			else {
-				debug.log('missing metadata element', ref);
-			}
-		}
-	}
+const collectReferencedProperties = (element, item) => {
+  const refString = element.getAttribute("itemref");
+  if (refString) {
+    const refs = refString.split(" ");
+    for (let i = 0; i < refs.length; i++) {
+      const ref = refs[i];
+      const refItem = document.querySelector(`#${ref}`);
+      if (refItem) {
+        collectProperties(refItem, item);
+      } else {
+        debug.log("missing metadata element", ref);
+      }
+    }
+  }
 };
 
-var collectComplexProperty = function (element) {
-	var item = {
-		"type": element.attr("itemtype"),
-		"properties": {}
-	};
-	collectReferencedProperties(element, item);
-	collectProperties(element, item);
-	return item;
+const collectComplexProperty = element => {
+  const item = {
+    type: element.getAttribute("itemtype"),
+    properties: {}
+  };
+  collectReferencedProperties(element, item);
+  collectProperties(element, item);
+  return item;
 };
 
-var collectSimpleProperty = function (el) {
-	var tag = el.prop('tagName');
-	switch (tag) {
-		case 'TIME': return el.attr('datetime');
-		case 'A':
-		case 'LINK':
-			return el.attr('href');
-		default:
-			return el.prop("content") || el.text() || el.attr("src");
-	}
-
+const collectSimpleProperty = el => {
+  const tag = el.tagName;
+  switch (tag) {
+    case "TIME":
+      return el.getAttribute("datetime");
+    case "A":
+    case "LINK":
+      return el.href;
+    default:
+      return el.getAttribute("content") || el.innerText || el.src;
+  }
 };
 
-var collectProperties = function (el, item) {
-	el.children().each(function (_, c) {
-		var child = jq(c);
-		var prop = child.attr('itemprop');
-		if (typeof prop === 'string') {
-			if (typeof child.attr('itemscope') !== 'undefined') {
-				item.properties[prop] = collectComplexProperty(child);
-			} else {
-				item.properties[prop] = collectSimpleProperty(child);
-			}
-		}
+const collectProperties = ({ children }, item) => {
+  Array.prototype.forEach.call(children, child => {
+    const prop = child.getAttribute("itemprop");
+    if (prop) {
+      if (child.getAttribute("itemscope")) {
+        item.properties[prop] = collectComplexProperty(child);
+      } else {
+        item.properties[prop] = collectSimpleProperty(child);
+      }
+    }
 
-		if (typeof child.attr('itemscope') == 'undefined') {
-			collectProperties(child, item);
-		}
-	});
+    if (!child.getAttribute("itemscope")) {
+      collectProperties(child, item);
+    }
+  });
 };
 
-var findTopLevelItems = function (el) {
-	if (!el) return undefined; 
-	var items = [];
-	if (typeof el === 'string') { el = jq('#'+el).get(0); }
-	else if (typeof el === 'object' && typeof el.tagName === 'string') { el = jq(el); }
-	else return {};
+const processElement = el => {
+  if (el.hasAttribute("itemscope")) {
+    let map = Array.prototype.reduce.call(
+      el.children,
+      (acc, curr) => ({
+        ...acc,
+        [curr.getAttribute("itemprop")]: processElement(curr)
+      }),
+      {}
+    );
 
-	var processElement = function (e) {
-		var el = jq(e);
-		var itemScope = el.attr('itemscope');
-		var itemProp = el.attr('itemprop');
-		if (typeof itemScope !== 'undefined') {
-			if (typeof itemProp !== 'undefined') {
-				return;
-			} else {
-				items.push(theOneMapper(collectComplexProperty(el), el));
-			}
-		} else {
-			el.children().each(function (_, c) {
-				processElement(c);
-			});
-		}
-	};
+    if (el.getAttribute("itemtype")) {
+      map = {
+        type: el.getAttribute("itemtype"),
+        properties: map
+      };
+    }
 
-	processElement(el);
-
-	if (items.length === 0) return {};
-	if (items.length === 1) return items[0];
-	return {'__items' : items};
+    return map;
+  } else if (el.hasAttribute("itemprop")) {
+    return el.getAttribute("content") || el.innerText || el.src;
+  } else {
+    return {
+      __items: Array.prototype.map.call(el.children, processElement)
+    };
+  }
 };
 
-var extractFromHead = function () {
-	var meta = {};
-	jq('head > meta[property^="og:"]').each(function () { var m = jq(this); meta[m.attr('property')] = m.attr('content'); });
-	jq('head > meta[name="keywords"]').each(function () { var m = jq(this); meta["keywords"] = m.attr('content'); });
-	return theOneMapper(meta);
+export const extractFromHead = () =>
+  _mapper(
+    Array.prototype.reduce.call(
+      document.querySelectorAll('head > meta[property^="og:"]'),
+      (acc, curr) => ({
+        ...acc,
+        [curr.getAttribute("property")]: curr.getAttribute("content")
+      }),
+      {
+        keywords: document
+          .querySelector('head > meta[name="keywords"]')
+          .getAttribute("content")
+      }
+    )
+  );
+
+export const noMapper = (m, n?) => m;
+
+let _mapper = noMapper;
+
+export const setMapper = mapper => {
+  _mapper = (meta, el) => {
+    try {
+      return mapper(meta, el);
+    } catch (e) {
+      return meta;
+    }
+  };
 };
-var noMapper = function(m) {return m;};
-var theOneMapper = noMapper;
-var callbackWrapper = function callbackWrapper(cb){
-	return function(meta, el){
-		try{
-			return cb(meta, el);
-		} catch(e){
-			return meta;
-		}
-	}
-}
-module.exports = {
-	extract: findTopLevelItems,
-	extractFromHead: extractFromHead,
-	setMapper : function(mapper){
-		theOneMapper = callbackWrapper(mapper);
-	},
-	noMapper : noMapper
+
+export const extract = selector => {
+  const elements =
+    typeof selector === "string"
+      ? document.querySelectorAll(selector)
+      : selector;
+  const data = Array.prototype.map
+    .call(elements, el => _mapper(processElement(el), el))
+    .filter(d => d);
+
+  return data.length > 1
+    ? {
+        __items: data
+      }
+    : data.pop();
 };
