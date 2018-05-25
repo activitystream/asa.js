@@ -28,7 +28,6 @@ export default {
   "should send page.viewed sitea": browser => {
     browser
       .windowMaximize()
-      .windowMaximize()
       .url(sitea)
       .waitForElementVisible("#site_a", 2000)
       .perform(done =>

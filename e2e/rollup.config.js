@@ -58,4 +58,4 @@ MAKE.TEST = () => ({
   plugins: [resolve()]
 });
 
-export default (CONFIG ? MAKE[CONFIG]() : [MAKE.VNC(), MAKE.TEST()]);
+export default (CONFIG ? MAKE[CONFIG]() : [MAKE.TEST(), MAKE.VNC()]);

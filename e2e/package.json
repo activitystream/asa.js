@@ -19,8 +19,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@activitystream/asa":
-      "https://github.com/activitystream/asa.js.git#asaV2split",
+    "@activitystream/asa": "https://github.com/activitystream/asa.js.git#asaV2split",
     "@novnc/novnc": "^1.0.0",
     "ansi-to-html": "^0.6.4",
     "chai": "^4.1.2",
