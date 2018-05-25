@@ -21,6 +21,9 @@ var debugLog = function debugLog(log) {
   return log;
 };
 
+const step = 1000;
+const timeout = 2000;
+
 export default {
   beforeEach: (browser, done) => {
     wipeLogs().then(done);
@@ -29,7 +32,9 @@ export default {
     browser
       .windowMaximize()
       .url(sitea)
-      .waitForElementVisible("#site_a", 2000)
+      .pause(step)
+      .waitForElementVisible("#site_a", timeout)
+      .pause(step)
       .perform(done =>
         getLogs()
           .then(r => r.json())
@@ -39,14 +44,16 @@ export default {
           })
           .catch(console.error)
       )
-      .end();
+      .pause(step);
+    // .end();
   },
 
   "should send page.viewed siteb": browser => {
     browser
       .windowMaximize()
       .url(siteb)
-      .waitForElementVisible("#site_b", 2000)
+      .pause(step)
+      .waitForElementVisible("#site_b", timeout)
       .perform(done =>
         getLogs()
           .then(r => r.json())
@@ -56,15 +63,20 @@ export default {
           })
           .catch(console.error)
       )
-      .end();
+      .pause(step);
+    // .end();
   },
 
   "sitea submitForm": browser => {
     browser
       .windowMaximize()
+      .pause(step)
       .url("http://sitea.com")
-      .waitForElementVisible("#site_a", 2000)
+      .pause(step)
+      .waitForElementVisible("#site_a", timeout)
+      .pause(step)
       .submitForm("#_form_")
+      .pause(step)
       .perform(done =>
         getLogs()
           .then(r => r.json())
@@ -74,15 +86,19 @@ export default {
           })
           .catch(console.error)
       )
-      .end();
+      .pause(step);
+    // .end();
   },
 
   "sitea click offer1": browser => {
     browser
       .windowMaximize()
       .url("http://sitea.com")
-      .waitForElementVisible("#site_a", 2000)
+      .pause(step)
+      .waitForElementVisible("#site_a", timeout)
+      .pause(step)
       .click("#_offer1")
+      .pause(step)
       .perform(done =>
         getLogs()
           .then(r => r.json())
@@ -92,15 +108,19 @@ export default {
           })
           .catch(console.error)
       )
-      .end();
+      .pause(step);
+    // .end();
   },
 
   "sitea click twitter": browser => {
     browser
       .windowMaximize()
       .url("http://sitea.com")
-      .waitForElementVisible("#site_a", 2000)
+      .pause(step)
+      .waitForElementVisible("#site_a", timeout)
+      .pause(step)
       .click("#_twitter")
+      .pause(step)
       .perform(done =>
         getLogs()
           .then(r => r.json())
@@ -110,16 +130,21 @@ export default {
           })
           .catch(console.error)
       )
-      .end();
+      .pause(step);
+    // .end();
   },
 
   "sitea click link with no param": browser => {
     browser
       .windowMaximize()
       .url("http://sitea.com")
-      .waitForElementVisible("#site_a", 2000)
+      .pause(step)
+      .waitForElementVisible("#site_a", timeout)
+      .pause(step)
       .click("#_link_no_param")
-      .waitForElementVisible("#site_b", 2000)
+      .pause(step)
+      .waitForElementVisible("#site_b", timeout)
+      .pause(step)
       .perform(done =>
         getLogs()
           .then(r => r.json())
@@ -129,6 +154,7 @@ export default {
           })
           .catch(console.error)
       )
+      .pause(step)
       .perform(done =>
         getLogs()
           .then(r => r.json())
@@ -147,16 +173,21 @@ export default {
             done();
           })
       )
-      .end();
+      .pause(step);
+    // .end();
   },
 
   "sitea click link with param": browser => {
     browser
       .windowMaximize()
       .url("http://sitea.com")
-      .waitForElementVisible("#site_a", 2000)
+      .pause(step)
+      .waitForElementVisible("#site_a", timeout)
+      .pause(step)
       .click("#_link_with_param")
-      .waitForElementVisible("#site_b", 2000)
+      .pause(step)
+      .waitForElementVisible("#site_b", timeout)
+      .pause(step)
       .perform(done =>
         getLogs()
           .then(r => r.json())
@@ -166,6 +197,7 @@ export default {
           })
           .catch(console.error)
       )
+      .pause(step)
       .perform(done =>
         getLogs()
           .then(r => r.json())
@@ -188,7 +220,8 @@ export default {
           })
           .catch(console.error)
       )
-      .end();
+      .pause(step);
+    // .end();
   },
 
   "Newsletter -> sitea click link with param": browser => {
@@ -197,9 +230,13 @@ export default {
       .url(
         "http://sitea.com?utm_medium=Email&utm_source=Newsletter&utm_campaign=My_Newsletter&utm_content=Free&utm_term=February2017"
       )
-      .waitForElementVisible("#site_a", 2000)
+      .pause(step)
+      .waitForElementVisible("#site_a", timeout)
+      .pause(step)
       .click("#_link_with_param")
-      .waitForElementVisible("#site_b", 2000)
+      .pause(step)
+      .waitForElementVisible("#site_b", timeout)
+      .pause(step)
       .perform(done =>
         getLogs()
           .then(r => r.json())
@@ -209,6 +246,7 @@ export default {
           })
           .catch(console.error)
       )
+      .pause(step)
       .perform(done =>
         getLogs()
           .then(r => r.json())
@@ -222,7 +260,8 @@ export default {
             });
           })
       )
-      .end();
+      .pause(step);
+    // .end();
   },
 
   "Newsletter -> sitea -> read more -> siteb click link no param": browser => {
@@ -231,11 +270,17 @@ export default {
       .url(
         "http://sitea.com?utm_medium=Email&utm_source=Newsletter&utm_campaign=My_Newsletter&utm_content=Free&utm_term=February2017"
       )
-      .waitForElementVisible("#site_a", 10000)
+      .pause(step)
+      .waitForElementVisible("#site_a", timeout)
+      .pause(step)
       .click("#_read_more")
-      .waitForElementVisible("#site_a_read_more", 10000)
+      .pause(step)
+      .waitForElementVisible("#site_a_read_more", timeout)
+      .pause(step)
       .click("#_link_with_param")
-      .waitForElementVisible("#site_b", 10000)
+      .pause(step)
+      .waitForElementVisible("#site_b", timeout)
+      .pause(step)
       .perform(done =>
         getLogs()
           .then(r => r.json())

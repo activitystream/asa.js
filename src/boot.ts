@@ -22,7 +22,7 @@ export default (bootSequence: any[] = []) => {
     const pendingEvents = (window.asa && window.asa.q) || [];
 
     window.asa = new Inbox();
-    window["WebEvent"] = WebEvent.Type;
+    window["WebEvent"] = WebEvent;
 
     // features.defineExperiment(features.MINI_AJAX, 10);
     partner.setPartnerInfo();

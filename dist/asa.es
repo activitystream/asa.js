@@ -1156,7 +1156,7 @@ var boot = (bootSequence = []) => {
     try {
         const pendingEvents = (window.asa && window.asa.q) || [];
         window.asa = new Asa();
-        window["WebEvent"] = WebEvent.Type;
+        window["WebEvent"] = WebEvent;
         // features.defineExperiment(features.MINI_AJAX, 10);
         setPartnerInfo();
         runBootSequence(bootSequence);
