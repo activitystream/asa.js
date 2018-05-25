@@ -704,9 +704,10 @@ const processElement = el => {
     }
 };
 const extractFromHead = () => _mapper(Array.prototype.reduce.call(document.querySelectorAll('head > meta[property^="og:"]'), (acc, curr) => (Object.assign({}, acc, { [curr.getAttribute("property")]: curr.getAttribute("content") })), {
-    keywords: document
-        .querySelector('head > meta[name="keywords"]')
-        .getAttribute("content")
+    keywords: document.querySelector('head > meta[name="keywords"]') &&
+        document
+            .querySelector('head > meta[name="keywords"]')
+            .getAttribute("content")
 }));
 const noMapper = (m, n) => m;
 let _mapper = noMapper;

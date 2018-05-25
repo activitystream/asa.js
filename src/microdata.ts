@@ -93,9 +93,11 @@ export const extractFromHead = () =>
         [curr.getAttribute("property")]: curr.getAttribute("content")
       }),
       {
-        keywords: document
-          .querySelector('head > meta[name="keywords"]')
-          .getAttribute("content")
+        keywords:
+          document.querySelector('head > meta[name="keywords"]') &&
+          document
+            .querySelector('head > meta[name="keywords"]')
+            .getAttribute("content")
       }
     )
   );
