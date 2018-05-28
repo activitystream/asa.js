@@ -14,7 +14,11 @@
     "build": "rollup -c --environment PRODUCTION",
     "start": "rollup -c --environment DEVELOPMENT -w"
   },
-  "keywords": ["activitystream", "analytics", "realtime"],
+  "keywords": [
+    "activitystream",
+    "analytics",
+    "realtime"
+  ],
   "author": "Activitystream",
   "license": "MIT",
   "dependencies": {

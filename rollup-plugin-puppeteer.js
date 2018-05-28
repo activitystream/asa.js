@@ -1,7 +1,6 @@
 import puppeteer from "puppeteer";
 
 export default options => ({
-  name: "puppeteer",
   ongenerate: () => {
     const LGREEN = "\x1B[1;32m";
     const GREEN = "\x1B[0;32m";
