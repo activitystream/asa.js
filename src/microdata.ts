@@ -79,7 +79,7 @@ const processElement = el => {
     return el.getAttribute("content") || el.innerText || el.src;
   } else {
     return {
-      __items: Array.prototype.map.call(el.children, processElement)
+      __items: [].map.call(el.children, processElement)
     };
   }
 };
@@ -116,12 +116,12 @@ export const setMapper = mapper => {
   };
 };
 
-export const extract = selector => {
+export const extract = (selector: string): {} => {
   const elements =
     typeof selector === "string"
       ? document.querySelectorAll(selector)
       : selector;
-  const data = Array.prototype.map
+  const data = [].map
     .call(elements, el => _mapper(processElement(el), el))
     .filter(d => d);
 

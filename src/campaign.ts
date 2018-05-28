@@ -1,11 +1,17 @@
 import { window, document } from "./browser";
 
-export interface Campaign {
-  campaign?: string;
-  medium?: string;
-  source?: string;
-  content?: string;
-  term?: string;
+export enum UTM {
+  "utm_campaign",
+  "utm_medium",
+  "utm_source",
+  "utm_content",
+  "utm_term",
+  "length"
+}
+
+export namespace UTM {
+  export const forEach = Array.prototype.forEach;
+  export const map = Array.prototype.map;
 }
 
 export class Campaign {
@@ -18,45 +24,19 @@ export class Campaign {
   ) {}
 }
 
-export const UTM = [
-  "utm_medium",
-  "utm_source",
-  "utm_campaign",
-  "utm_content",
-  "utm_term"
-];
-
-export default () => {
+export default (): Campaign => {
   const referrer: URL | undefined =
     document.referrer && new URL(document.referrer);
   const location: URL | undefined =
     document.location && new URL(document.location);
 
-  const campaign = UTM.reduce(
-    (acc, curr) => {
-      const value =
-        (referrer && referrer.searchParams.get(curr)) ||
-        (location && location.searchParams.get(curr)) ||
-        window.sessionStorage.getItem(`__as.${curr}`);
-
-      return value
-        ? {
-            ...acc,
-            [curr]: value
-          }
-        : acc;
-    },
-    null as any
+  const campaign = UTM.map(
+    (key: string) =>
+      (referrer && referrer.searchParams.get(key)) ||
+      (location && location.searchParams.get(key)) ||
+      window.sessionStorage.getItem(`__as.${key}`) ||
+      undefined
   );
 
-  return (
-    campaign &&
-    new Campaign(
-      campaign.utm_campaign,
-      campaign.utm_medium,
-      campaign.utm_source,
-      campaign.utm_content,
-      campaign.utm_term
-    )
-  );
+  return campaign.some(p => !!p) && new Campaign(...campaign);
 };
