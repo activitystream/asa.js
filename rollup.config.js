@@ -45,66 +45,57 @@ const DEFAULT = {
 
 const MAKE = {};
 
-MAKE.DEVELOPMENT = () => ({
-  ...DEFAULT,
-  input: "src/index.spec.ts",
-  output: {
-    ...DEFAULT.output,
-    file: "build/asa.js",
-    sourcemap: true
-  },
-  external: ["mocha", "it", "describe"],
-  watch: {
-    chokidar: false,
-    include: "src/**",
-    exclude: "node_modules/**"
-  },
-  plugins: [
-    ...DEFAULT.plugins,
-    serve({
-      open: true,
-      contentBase: ["build"]
+MAKE.DEVELOPMENT = () =>
+  Object.assign({}, DEFAULT, {
+    input: "src/index.spec.ts",
+    output: Object.assign({}, DEFAULT.output, {
+      file: "build/asa.js",
+      sourcemap: true
     }),
-    livereload({
-      watch: "build"
-    })
-  ]
-});
+    external: ["mocha", "it", "describe"],
+    watch: {
+      chokidar: false,
+      include: "src/**",
+      exclude: "node_modules/**"
+    },
+    plugins: DEFAULT.plugins.concat([
+      serve({
+        open: true,
+        contentBase: ["build"]
+      }),
+      livereload({
+        watch: "build"
+      })
+    ])
+  });
 
 MAKE.PRODUCTION = () => [
-  {
-    ...DEFAULT,
+  Object.assign({}, DEFAULT, {
     input: "src/index.ts",
-    output: {
-      ...DEFAULT.output,
+    output: Object.assign({}, DEFAULT.output, {
       file: "dist/asa.min.js"
-    },
-    plugins: [
-      ...DEFAULT.plugins,
+    }),
+    plugins: DEFAULT.plugins.concat([
       babel({
         include: ["src/**"]
       }),
       uglify()
-    ]
-  },
-  {
-    ...DEFAULT,
+    ])
+  }),
+  Object.assign({}, DEFAULT, {
     input: "src/index.ts",
-    output: {
-      ...DEFAULT.output,
+    output: Object.assign({}, DEFAULT.output, {
       format: "es",
       file: "dist/asa.es"
-    }
-  },
-  {
-    ...DEFAULT,
+    })
+  }),
+  Object.assign({}, DEFAULT, {
     input: "src/index.ts",
-    output: {
-      ...DEFAULT.output,
+    output: Object.assign({}, DEFAULT.output, {
       format: "cjs",
       file: "dist/asa.cjs"
-    }
-  }
+    })
+  })
 ];
 
 export default MAKE[ENV]();
