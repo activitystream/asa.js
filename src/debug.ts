@@ -1,4 +1,7 @@
 // old ie
+if (!console) {
+  (<any>window.console) = {};
+}
 if (!console.log) {
   window.console.log = () => {};
 }

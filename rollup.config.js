@@ -5,24 +5,15 @@ import commonjs from "rollup-plugin-commonjs";
 import serve from "rollup-plugin-serve";
 import typescript from "rollup-plugin-typescript2";
 import json from "rollup-plugin-json";
+import babel from "rollup-plugin-babel";
 import uglify from "rollup-plugin-uglify";
 import livereload from "rollup-plugin-livereload";
 
-class Monum {
-  constructor(map) {
-    Object.entries(map).forEach(([key, value]) =>
-      Object.assign(this, { [key]: !!value, [!!value]: key })
-    );
-  }
-
-  [Symbol.toPrimitive]() {
-    return this.true;
-  }
-}
-
-const ENV = new Monum({
-  DEVELOPMENT: process.env.DEVELOPMENT,
-  PRODUCTION: process.env.PRODUCTION
+const ENV = ["DEVELOPMENT", "PRODUCTION"].reduce((acc, curr) => {
+  const obj = Object.assign({}, acc);
+  obj[curr] = process.env[curr];
+  obj[process.env[curr]] = curr;
+  return obj;
 });
 
 const DEFAULT = {
@@ -88,7 +79,13 @@ MAKE.PRODUCTION = () => [
       ...DEFAULT.output,
       file: "dist/asa.min.js"
     },
-    plugins: [...DEFAULT.plugins, uglify()]
+    plugins: [
+      ...DEFAULT.plugins,
+      babel({
+        include: ["src/**"]
+      }),
+      uglify()
+    ]
   },
   {
     ...DEFAULT,

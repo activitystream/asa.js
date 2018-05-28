@@ -35,29 +35,33 @@ export const defaults = {
 export class Parser {
   private options = defaults;
 
+  getAuthority(str: Location | string) {
+    return this.parseURI(typeof str !== "string" ? str.href : str).authority;
+  }
+
   constructor(options = {}) {
     this.options = { ...this.options, ...options };
   }
 
   parseURI(
-    str
+    str: string
   ): {
-    source?: any;
-    protocol?: any;
-    authority?: any;
-    userInfo?: any;
-    user?: any;
-    password?: any;
-    host?: any;
-    port?: any;
-    relative?: any;
-    path?: any;
-    directory?: any;
-    file?: any;
-    query?: any;
-    anchor?: any;
+    source?: string;
+    protocol?: string;
+    authority?: string;
+    userInfo?: string;
+    user?: string;
+    password?: string;
+    host?: string;
+    port?: string;
+    relative?: string;
+    path?: string;
+    directory?: string;
+    file?: string;
+    query?: string;
+    anchor?: string;
     queryKey?: {
-      __asa?: any;
+      __asa?: string;
     };
   } {
     const match = this.options.parser.exec(str);

@@ -75,7 +75,7 @@ export default describe("microdata", () => {
 
   describe("meta-data mapper", () => {
     it("should be able to replace each extracted piece of metadata", () => {
-      m.setMapper(meta => ({
+      m.setMapper(() => ({
         c: "d"
       }));
       const data = m.extractFromHead();
@@ -97,7 +97,7 @@ export default describe("microdata", () => {
       expect(m.noMapper("dfd")).to.equal("dfd");
     });
     it("should provide metadata and DOM tree root element it was extracted from", done => {
-      m.setMapper((meta, el) => {
+      m.setMapper((meta: any, el) => {
         expect(el.getAttribute("id")).to.equal("offer1");
         expect(el.getAttribute("data-event-id")).to.equal("123");
         done();

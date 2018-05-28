@@ -21,7 +21,7 @@
 		window.onload = () => {
 			asa('tenant.id.provided', 'AS-E2EAUTOTEST-A');
 			asa('connected.partners.provided', ['siteb.com']);
-			asa(WebEvent.page.viewed);
+			asa('as.web.product.viewed');
 		}
 	</script>
 
@@ -46,14 +46,14 @@
 		<a href="#" onclick="dataLayer.push({event : 'viewedsection', section_id : 'section123'})">Push in data layer (triggers ASA sectionview)</a>
 	</p>
 	<p>
-		<a id="_offer1" href="#" onclick="asa(WebEvent.as.web.product.viewed, 'offer1')">Scrape metadata</a>
+		<a id="_offer1" href="#" onclick="asa('as.web.product.viewed', 'offer1')">Scrape metadata</a>
 	</p>
 	<p>
 		<a id="_read_more" href="http://sitea.com/readmore">Scrape metadata</a>
 	</p>
 	<form id="_form_" action="http://siteb.com/buy" method="GET">
-		<input name="__asa_partner_id" value="123" hidden="true">
-		<input name="__asa_partner_sid" value="555" hidden="true">
+		<input name="__as.partner_id" value="123" hidden="true">
+		<input name="__as.partner_sid" value="555" hidden="true">
 		<button type="submit">Buy</button>
 	</form>
 	<div itemscope itemtype="http://schema.org/Offer" id="offer1">

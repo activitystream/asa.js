@@ -6,7 +6,7 @@ const collectReferencedProperties = (element, item) => {
     const refs = refString.split(" ");
     for (let i = 0; i < refs.length; i++) {
       const ref = refs[i];
-      const refItem = document.querySelector(`#${ref}`);
+      const refItem = document.getElementById(ref);
       if (refItem) {
         collectProperties(refItem, item);
       } else {
@@ -39,7 +39,7 @@ const collectSimpleProperty = el => {
   }
 };
 
-const collectProperties = ({ children }, item) => {
+const collectProperties = ({ children }: HTMLElement, item) => {
   Array.prototype.forEach.call(children, child => {
     const prop = child.getAttribute("itemprop");
     if (prop) {

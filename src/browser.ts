@@ -1,8 +1,8 @@
-import { WebEvent } from "./event";
+import inbox, { Inbox } from "./inbox";
 
 declare global {
   interface Window {
-    asa: any;
+    asa: Inbox;
   }
 
   interface Document {}
@@ -12,15 +12,10 @@ declare global {
   }
 }
 
-const Window = {
+const Window: { sessionStorage: Storage; location: Location; asa: Inbox } = {
   sessionStorage: window.sessionStorage,
   location: window.location,
-  set asa(instance) {
-    window.asa = instance;
-  },
-  get asa() {
-    return window.asa;
-  }
+  asa: inbox
 };
 
 const Document: any = {

@@ -1,5 +1,4 @@
 import * as debug from "./debug";
-import * as features from "./features";
 import * as formatting from "./formatting";
 import * as info from "./version";
 
@@ -21,11 +20,11 @@ const submitEvent = ev =>
     t: formatting.formatDateTime(new Date())
   });
 
-const submitError = (err, context?) =>
+const submitError = (err: { code: number }, context?) =>
   (err && (err.code === 22 || err.code === 18)) ||
   ERROR({ err, context, v: info.version() });
 
-class Server {
+export class Server {
   private _dispatchEvent = submitEvent;
   private _dispatchError = submitError;
   private pendingSubmission = [];
@@ -36,12 +35,12 @@ class Server {
     this.pendingSubmission.push(e);
   }
 
-  public get submitEvent() {
-    return this._dispatchEvent;
+  public submitEvent(event) {
+    return this._dispatchEvent(event);
   }
 
-  public get submitError() {
-    return this._dispatchError;
+  public submitError(error, data) {
+    return this._dispatchError(error, data);
   }
 
   public batchOn() {

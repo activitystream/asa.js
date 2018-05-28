@@ -1,102 +1,78 @@
-import * as session from "./session";
-import * as microdata from "./microdata";
-import * as autoTrack from "./auto_track";
+import getCampaign, { Campaign } from "./campaign";
 import * as debug from "./debug";
-import { WebEvent } from "./event";
-import server from "./server";
-import * as user from "./user";
-import getCampaign from "./campaign";
-import getReferrer from "./referrer";
-import { window, document } from "./browser";
+import { AsaEvent } from "./event";
+import { document } from "./browser";
 import parser from "./parseuri";
-import { setPartnerInfo } from "./partner";
+import server from "./server";
+import session from "./session";
 
-export interface Asa {
-  (event: WebEvent.Event, data?, ...rest): Asa;
+export interface Inbox {
+  (name: AsaEvent.Type, ...data: any[]): Inbox;
 
   id?: string; // tenant id
-  transport: (data: any) => Asa;
+  transport?(event: AsaEvent.Event): void;
+  providers?: string[];
 }
 
-function Asa(tenant?: string): void {
-  let serviceProviders = [];
-  let sessionResumed = false;
+export function Inbox(tenant?: string): void {
+  session.destroySession();
 
-  setPartnerInfo();
-
-  interface LocalEvents {}
-  const LocalEvents = {
-    "custom.session.created": (data, ...rest) =>
-      session.customSession(data, rest[0], rest[1]),
-    "connected.partners.provided": data => autoTrack.links(data),
-    "service.providers.provided": data => {
-      serviceProviders = data;
-    },
-    "tenant.id.provided": data => {
-      window.asa.id = data;
-    },
-    "debug.mode.enabled": data => debug.setDebugMode(data),
-    "microdata.transformer.provided": data => microdata.setMapper(data)
-  };
-
-  const instance: any = function Asa(
-    event: new (data?: any, ...rest) => WebEvent.Event | keyof LocalEvents,
-    data?,
-    ...rest
-  ): Asa {
+  const instance: Inbox = function Inbox(
+    name: AsaEvent.Type,
+    ...data: any[]
+  ): Inbox {
     try {
-      if (typeof event === "string" && event in LocalEvents) {
-        LocalEvents[event](data, ...rest);
+      if (!AsaEvent.web[name]) {
+        if (AsaEvent.local[name]) {
+          AsaEvent.local[name].call(instance, ...data);
+        }
         return;
       }
-
-      const campaign = getCampaign();
-      const referrer = getReferrer(
-        document.location,
-        document.referrer,
-        serviceProviders
-      );
+      const campaign: Campaign = getCampaign();
+      const referrer: string = getReferrer();
       if (!session.hasSession()) {
         debug.log("no session, starting a new one");
-        session.createSession({ campaign, referrer });
-        sessionResumed = true;
-        instance.transport(
-          new WebEvent.session.started({
-            newBrowser: user.isUserNew()
-          })
-        );
-      } else {
-        const referrerAuth = parser.parseURI(document.referrer).authority;
-        const currentAuth = parser.parseURI(document.location).authority;
-        if (
-          referrerAuth !== currentAuth &&
-          serviceProviders.indexOf(referrerAuth) === -1
-        ) {
-          session.updateTimeout({ campaign, referrer });
-          debug.log("session resumed");
-          sessionResumed = true;
-          instance.transport(new WebEvent.session.resumed());
-        }
+        session.createSession({
+          campaign,
+          referrer
+        });
+      } else if (referrer) {
+        session.updateTimeout({
+          campaign,
+          referrer
+        });
+        debug.log("session resumed");
       }
 
-      instance.transport(new event(data, ...rest));
-    } catch (e) {
-      debug.forceLog("inbox exception:", e);
-      server.submitError(e, {
+      instance.transport(new AsaEvent.web[name](...data));
+    } catch (error) {
+      debug.forceLog("inbox exception:", error);
+      server.submitError(error, {
         location: "processing inbox message",
-        arguments: [event, data, ...rest]
+        arguments: [event, ...data]
       });
     }
     return instance;
   };
 
   instance.id = tenant;
-  instance.transport = data => {
-    server.submitEvent(data);
-    return instance;
+  instance.transport = (event: AsaEvent.Event): void => {
+    server.submitEvent(event);
+  };
+  instance.providers = [];
+
+  const getReferrer = (): string => {
+    const referrer: string = parser.getAuthority(document.referrer);
+    const location: string = parser.getAuthority(document.location);
+
+    return referrer &&
+      referrer !== location &&
+      !~instance.providers.indexOf(referrer)
+      ? referrer
+      : null;
   };
 
-  return <void>instance;
+  return (instance as any) as void;
 }
 
-export default Asa;
+export default new Inbox();

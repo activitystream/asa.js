@@ -2,22 +2,13 @@ import parser from "./parseuri";
 import { window, document } from "./browser";
 import { UTM } from "./campaign";
 
-const PARTNER_ID_KEY = "__as.PARTNER_ID";
-const PARTNER_SID_KEY = "__as.PARTNER_SID";
+export const PARTNER_ID_KEY = "__as.partner_id";
+export const PARTNER_SID_KEY = "__as.partner_sid";
 
 const updatePartnerInfo = () => {
-  const asaPartnerKey = "__asa";
-
   const uri = parser.parseURI(window.location.href);
-  const asaPartnerValue = decodeURIComponent(uri.queryKey.__asa || "").split(
-    "|"
-  );
-  let partnerId;
-  let partnerSId;
-  if (asaPartnerValue) {
-    partnerId = asaPartnerValue[0];
-    partnerSId = asaPartnerValue[1];
-  }
+  let partnerId = uri.queryKey[PARTNER_ID_KEY];
+  let partnerSId = uri.queryKey[PARTNER_SID_KEY];
 
   UTM.forEach(key => {
     const keyValue = decodeURIComponent(uri.queryKey[key] || "");

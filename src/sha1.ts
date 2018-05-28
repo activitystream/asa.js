@@ -18,29 +18,29 @@ let b64pad = ""; /* base-64 pad character. "=" for strict RFC compliance   */
  * These are the functions you'll usually want to call
  * They take string arguments and return either hex or base-64 encoded strings
  */
-function hex_sha1(s) {
+export function hex_sha1(s) {
   return rstr2hex(rstr_sha1(str2rstr_utf8(s)));
 }
-function b64_sha1(s) {
+export function b64_sha1(s) {
   return rstr2b64(rstr_sha1(str2rstr_utf8(s)));
 }
-function any_sha1(s, e) {
+export function any_sha1(s, e) {
   return rstr2any(rstr_sha1(str2rstr_utf8(s)), e);
 }
-function hex_hmac_sha1(k, d) {
+export function hex_hmac_sha1(k, d) {
   return rstr2hex(rstr_hmac_sha1(str2rstr_utf8(k), str2rstr_utf8(d)));
 }
-function b64_hmac_sha1(k, d) {
+export function b64_hmac_sha1(k, d) {
   return rstr2b64(rstr_hmac_sha1(str2rstr_utf8(k), str2rstr_utf8(d)));
 }
-function any_hmac_sha1(k, d, e) {
+export function any_hmac_sha1(k, d, e) {
   return rstr2any(rstr_hmac_sha1(str2rstr_utf8(k), str2rstr_utf8(d)), e);
 }
 
 /*
  * Perform a simple self-test to see if the VM is working
  */
-function sha1_vm_test() {
+export function sha1_vm_test() {
   return (
     hex_sha1("abc").toLowerCase() == "a9993e364706816aba3e25717850c26c9cd0d89d"
   );
@@ -49,14 +49,14 @@ function sha1_vm_test() {
 /*
  * Calculate the SHA1 of a raw string
  */
-function rstr_sha1(s) {
+export function rstr_sha1(s) {
   return binb2rstr(binb_sha1(rstr2binb(s), s.length * 8));
 }
 
 /*
  * Calculate the HMAC-SHA1 of a key and some data (raw strings)
  */
-function rstr_hmac_sha1(key, data) {
+export function rstr_hmac_sha1(key, data) {
   let bkey = rstr2binb(key);
   if (bkey.length > 16) bkey = binb_sha1(bkey, key.length * 8);
 
@@ -212,7 +212,7 @@ function str2rstr_utf8(input) {
 /*
  * Encode a string as utf-16
  */
-function str2rstr_utf16le(input) {
+export function str2rstr_utf16le(input) {
   let output = "";
   for (let i = 0; i < input.length; i++)
     output += String.fromCharCode(
@@ -222,7 +222,7 @@ function str2rstr_utf16le(input) {
   return output;
 }
 
-function str2rstr_utf16be(input) {
+export function str2rstr_utf16be(input) {
   let output = "";
   for (let i = 0; i < input.length; i++)
     output += String.fromCharCode(

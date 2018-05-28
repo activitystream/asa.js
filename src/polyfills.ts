@@ -50,7 +50,7 @@ if (window.localStorage) {
     const _localStorage = storageAPI();
     const _sessionStorage = storageAPI();
 
-    const storage = Object.defineProperties(window, {
+    Object.defineProperties(window, {
       localStorage: {
         get: () => _localStorage
       },
@@ -58,10 +58,5 @@ if (window.localStorage) {
         get: () => _sessionStorage
       }
     });
-    console.error(e);
-    console.error(
-      "Safari in private mode can not save settings, and some features may not work",
-      "Warning!"
-    );
   }
 }

@@ -28,7 +28,7 @@ export default {
   beforeEach: (browser, done) => {
     wipeLogs().then(done);
   },
-  "should send page.viewed sitea": browser => {
+  "should send as.web.product.viewed sitea": browser => {
     browser
       .windowMaximize()
       .url(sitea)
@@ -39,7 +39,7 @@ export default {
         getLogs()
           .then(r => r.json())
           .then(logs => {
-            browser.expect(logs.length).to.equal(2);
+            browser.expect(logs.length).to.equal(1);
             done();
           })
           .catch(console.error)
@@ -48,7 +48,7 @@ export default {
     // .end();
   },
 
-  "should send page.viewed siteb": browser => {
+  "should send as.web.product.viewed siteb": browser => {
     browser
       .windowMaximize()
       .url(siteb)
@@ -58,7 +58,7 @@ export default {
         getLogs()
           .then(r => r.json())
           .then(logs => {
-            browser.expect(logs.length).to.equal(2);
+            browser.expect(logs.length).to.equal(1);
             done();
           })
           .catch(console.error)
@@ -103,7 +103,7 @@ export default {
         getLogs()
           .then(r => r.json())
           .then(logs => {
-            browser.expect(logs.length).to.equal(4);
+            browser.expect(logs.length).to.equal(2);
             done();
           })
           .catch(console.error)
@@ -125,7 +125,7 @@ export default {
         getLogs()
           .then(r => r.json())
           .then(logs => {
-            browser.expect(logs.length).to.equal(2);
+            browser.expect(logs.length).to.equal(1);
             done();
           })
           .catch(console.error)
@@ -149,7 +149,7 @@ export default {
         getLogs()
           .then(r => r.json())
           .then(logs => {
-            browser.expect(logs.length).to.equal(4);
+            browser.expect(logs.length).to.equal(2);
             done();
           })
           .catch(console.error)
@@ -163,13 +163,13 @@ export default {
               d =>
                 d &&
                 d.ev &&
-                (d.ev.type === "page.viewed" &&
-                  d.ev.tenant_id === "AS-E2EAUTOTEST-B")
+                (d.ev.type === "as.web.product.viewed" &&
+                  d.ev.tenant === "AS-E2EAUTOTEST-B")
             );
             browser
               .expect(pageViewSiteB.length && pageViewSiteB[0].ev.partner_id)
               .to.equal("AS-E2EAUTOTEST-A");
-            browser.expect(logs.length).to.equal(4);
+            browser.expect(logs.length).to.equal(2);
             done();
           })
       )
@@ -192,7 +192,7 @@ export default {
         getLogs()
           .then(r => r.json())
           .then(logs => {
-            browser.expect(logs.length).to.equal(4);
+            browser.expect(logs.length).to.equal(2);
             done();
           })
           .catch(console.error)
@@ -206,15 +206,15 @@ export default {
               return (
                 d &&
                 d.ev &&
-                (d.ev.type === "page.viewed" &&
-                  d.ev.tenant_id === "AS-E2EAUTOTEST-B")
+                (d.ev.type === "as.web.product.viewed" &&
+                  d.ev.tenant === "AS-E2EAUTOTEST-B")
               );
             });
 
             browser
               .expect(pageViewSiteB.length && pageViewSiteB[0].ev.partner_id)
               .to.equal("AS-E2EAUTOTEST-A");
-            browser.expect(eventLogs.length).to.equal(4);
+            browser.expect(eventLogs.length).to.equal(2);
             browser.expect(pageViewSiteB[0].ev.page.url.indexOf("sendmeover"));
             done();
           })
@@ -241,7 +241,7 @@ export default {
         getLogs()
           .then(r => r.json())
           .then(logs => {
-            browser.expect(logs.length).to.equal(4);
+            browser.expect(logs.length).to.equal(2);
             done();
           })
           .catch(console.error)
@@ -285,19 +285,21 @@ export default {
         getLogs()
           .then(r => r.json())
           .then(logs => {
-            browser.expect(logs.length).to.equal(4);
+            browser.expect(logs.length).to.equal(2);
             getLogs()
               .then(r => r.json())
               .then(eventLogs => {
-                eventLogs.filter(d => d.type === "page.viewed").forEach(d => {
-                  browser
-                    .expect(d.ev.campaign.campaign)
-                    .to.equal("My_Newsletter");
-                  browser.expect(d.ev.campaign.source).to.equal("Newsletter");
-                  browser.expect(d.ev.campaign.medium).to.equal("Email");
-                  browser.expect(d.ev.campaign.term).to.equal("February2017");
-                });
-                browser.expect(eventLogs.length).to.equal(4);
+                eventLogs
+                  .filter(d => d.type === "as.web.product.viewed")
+                  .forEach(d => {
+                    browser
+                      .expect(d.ev.campaign.campaign)
+                      .to.equal("My_Newsletter");
+                    browser.expect(d.ev.campaign.source).to.equal("Newsletter");
+                    browser.expect(d.ev.campaign.medium).to.equal("Email");
+                    browser.expect(d.ev.campaign.term).to.equal("February2017");
+                  });
+                browser.expect(eventLogs.length).to.equal(2);
                 done();
               })
               .catch(console.error);

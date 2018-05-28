@@ -1,7 +1,4 @@
-import parser from "./parseuri";
 import { window, document } from "./browser";
-
-const { sessionStorage } = window;
 
 export interface Campaign {
   campaign?: string;
@@ -30,17 +27,17 @@ export const UTM = [
 ];
 
 export default () => {
-  let campaignKeys;
-
-  const referrer: any = document.referrer && new URL(document.referrer);
-  const location: any = document.location && new URL(document.location);
+  const referrer: URL | undefined =
+    document.referrer && new URL(document.referrer);
+  const location: URL | undefined =
+    document.location && new URL(document.location);
 
   const campaign = UTM.reduce(
     (acc, curr) => {
       const value =
         (referrer && referrer.searchParams.get(curr)) ||
         (location && location.searchParams.get(curr)) ||
-        sessionStorage.getItem(`__as.${curr}`);
+        window.sessionStorage.getItem(`__as.${curr}`);
 
       return value
         ? {

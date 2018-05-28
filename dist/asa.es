@@ -17,8 +17,8 @@ function bind(fn, thisArg) {
   };
 }
 
-function Promise(fn) {
-  if (!(this instanceof Promise))
+function Promise$1(fn) {
+  if (!(this instanceof Promise$1))
     throw new TypeError('Promises must be constructed via new');
   if (typeof fn !== 'function') throw new TypeError('not a function');
   this._state = 0;
@@ -38,7 +38,7 @@ function handle(self, deferred) {
     return;
   }
   self._handled = true;
-  Promise._immediateFn(function() {
+  Promise$1._immediateFn(function() {
     var cb = self._state === 1 ? deferred.onFulfilled : deferred.onRejected;
     if (cb === null) {
       (self._state === 1 ? resolve : reject)(deferred.promise, self._value);
@@ -65,7 +65,7 @@ function resolve(self, newValue) {
       (typeof newValue === 'object' || typeof newValue === 'function')
     ) {
       var then = newValue.then;
-      if (newValue instanceof Promise) {
+      if (newValue instanceof Promise$1) {
         self._state = 3;
         self._value = newValue;
         finale(self);
@@ -91,9 +91,9 @@ function reject(self, newValue) {
 
 function finale(self) {
   if (self._state === 2 && self._deferreds.length === 0) {
-    Promise._immediateFn(function() {
+    Promise$1._immediateFn(function() {
       if (!self._handled) {
-        Promise._unhandledRejectionFn(self._value);
+        Promise$1._unhandledRejectionFn(self._value);
       }
     });
   }
@@ -138,18 +138,18 @@ function doResolve(fn, self) {
   }
 }
 
-Promise.prototype['catch'] = function(onRejected) {
+Promise$1.prototype['catch'] = function(onRejected) {
   return this.then(null, onRejected);
 };
 
-Promise.prototype.then = function(onFulfilled, onRejected) {
+Promise$1.prototype.then = function(onFulfilled, onRejected) {
   var prom = new this.constructor(noop);
 
   handle(this, new Handler(onFulfilled, onRejected, prom));
   return prom;
 };
 
-Promise.prototype['finally'] = function(callback) {
+Promise$1.prototype['finally'] = function(callback) {
   var constructor = this.constructor;
   return this.then(
     function(value) {
@@ -165,8 +165,8 @@ Promise.prototype['finally'] = function(callback) {
   );
 };
 
-Promise.all = function(arr) {
-  return new Promise(function(resolve, reject) {
+Promise$1.all = function(arr) {
+  return new Promise$1(function(resolve, reject) {
     if (!arr || typeof arr.length === 'undefined')
       throw new TypeError('Promise.all accepts an array');
     var args = Array.prototype.slice.call(arr);
@@ -203,24 +203,24 @@ Promise.all = function(arr) {
   });
 };
 
-Promise.resolve = function(value) {
-  if (value && typeof value === 'object' && value.constructor === Promise) {
+Promise$1.resolve = function(value) {
+  if (value && typeof value === 'object' && value.constructor === Promise$1) {
     return value;
   }
 
-  return new Promise(function(resolve) {
+  return new Promise$1(function(resolve) {
     resolve(value);
   });
 };
 
-Promise.reject = function(value) {
-  return new Promise(function(resolve, reject) {
+Promise$1.reject = function(value) {
+  return new Promise$1(function(resolve, reject) {
     reject(value);
   });
 };
 
-Promise.race = function(values) {
-  return new Promise(function(resolve, reject) {
+Promise$1.race = function(values) {
+  return new Promise$1(function(resolve, reject) {
     for (var i = 0, len = values.length; i < len; i++) {
       values[i].then(resolve, reject);
     }
@@ -228,7 +228,7 @@ Promise.race = function(values) {
 };
 
 // Use polyfill for setImmediate for performance gains
-Promise._immediateFn =
+Promise$1._immediateFn =
   (typeof setImmediate === 'function' &&
     function(fn) {
       setImmediate(fn);
@@ -237,7 +237,7 @@ Promise._immediateFn =
     setTimeoutFunc(fn, 0);
   };
 
-Promise._unhandledRejectionFn = function _unhandledRejectionFn(err) {
+Promise$1._unhandledRejectionFn = function _unhandledRejectionFn(err) {
   if (typeof console !== 'undefined' && console) {
     console.warn('Possible Unhandled Promise Rejection:', err); // eslint-disable-line no-console
   }
@@ -260,7 +260,7 @@ var globalNS = (function() {
 })();
 
 if (!globalNS.Promise) {
-  globalNS.Promise = Promise;
+  globalNS.Promise = Promise$1;
 }
 
 if (!String.prototype.trim) {
@@ -307,7 +307,7 @@ if (window.localStorage) {
         };
         const _localStorage = storageAPI();
         const _sessionStorage = storageAPI();
-        const storage = Object.defineProperties(window, {
+        Object.defineProperties(window, {
             localStorage: {
                 get: () => _localStorage
             },
@@ -315,8 +315,6 @@ if (window.localStorage) {
                 get: () => _sessionStorage
             }
         });
-        console.error(e);
-        console.error("Safari in private mode can not save settings, and some features may not work", "Warning!");
     }
 }
 
@@ -356,6 +354,9 @@ class Parser {
         this.options = defaults;
         this.options = Object.assign({}, this.options, options);
     }
+    getAuthority(str) {
+        return this.parseURI(typeof str !== "string" ? str.href : str).authority;
+    }
     parseURI(str) {
         const match = this.options.parser.exec(str);
         const uri = {};
@@ -372,22 +373,6 @@ class Parser {
 }
 var parser = new Parser();
 
-const Window = {
-    sessionStorage: window.sessionStorage,
-    location: window.location,
-    set asa(instance) {
-        window.asa = instance;
-    },
-    get asa() {
-        return window.asa;
-    }
-};
-const Document = {
-    location: document.location,
-    referrer: document.referrer
-};
-
-const { sessionStorage } = Window;
 class Campaign {
     constructor(campaign, medium, source, content, term) {
         this.campaign = campaign;
@@ -410,7 +395,7 @@ var getCampaign = () => {
     const campaign = UTM.reduce((acc, curr) => {
         const value = (referrer && referrer.searchParams.get(curr)) ||
             (location && location.searchParams.get(curr)) ||
-            sessionStorage.getItem(`__as.${curr}`);
+            Window.sessionStorage.getItem(`__as.${curr}`);
         return value
             ? Object.assign({}, acc, { [curr]: value }) : acc;
     }, null);
@@ -418,50 +403,10 @@ var getCampaign = () => {
         new Campaign(campaign.utm_campaign, campaign.utm_medium, campaign.utm_source, campaign.utm_content, campaign.utm_term));
 };
 
-const PARTNER_ID_KEY = "__as.PARTNER_ID";
-const PARTNER_SID_KEY = "__as.PARTNER_SID";
-const updatePartnerInfo = () => {
-    const uri = parser.parseURI(Window.location.href);
-    const asaPartnerValue = decodeURIComponent(uri.queryKey.__asa || "").split("|");
-    let partnerId;
-    let partnerSId;
-    if (asaPartnerValue) {
-        partnerId = asaPartnerValue[0];
-        partnerSId = asaPartnerValue[1];
-    }
-    UTM.forEach(key => {
-        const keyValue = decodeURIComponent(uri.queryKey[key] || "");
-        if (keyValue) {
-            Window.sessionStorage.setItem(`__as.${key}`, keyValue);
-        }
-        else {
-            Window.sessionStorage.removeItem(`__as.${key}`);
-        }
-    });
-    if (partnerId) {
-        Window.sessionStorage.setItem(PARTNER_ID_KEY, partnerId);
-    }
-    else {
-        Window.sessionStorage.removeItem(PARTNER_ID_KEY);
-    }
-    if (partnerSId) {
-        Window.sessionStorage.setItem(PARTNER_SID_KEY, partnerSId);
-    }
-    else {
-        Window.sessionStorage.removeItem(PARTNER_SID_KEY);
-    }
-};
-const setPartnerInfo = () => {
-    const referrer = parser.parseURI(Document.referrer).authority;
-    const currentHost = parser.parseURI(Window.location.origin).authority;
-    if (referrer !== currentHost) {
-        updatePartnerInfo();
-    }
-};
-const getID = () => Window.sessionStorage.getItem(PARTNER_ID_KEY);
-const getSID = () => Window.sessionStorage.getItem(PARTNER_SID_KEY);
-
 // old ie
+if (!console) {
+    window.console = {};
+}
 if (!console.log) {
     window.console.log = () => { };
 }
@@ -473,6 +418,83 @@ const setDebugMode = on => {
     _log = on ? doLog : noLog;
 };
 const forceLog = doLog;
+
+const processElement = el => {
+    if (el.hasAttribute("itemscope")) {
+        let map = Array.prototype.reduce.call(el.children, (acc, curr) => (Object.assign({}, acc, { [curr.getAttribute("itemprop")]: processElement(curr) })), {});
+        if (el.getAttribute("itemtype")) {
+            map = {
+                type: el.getAttribute("itemtype"),
+                properties: map
+            };
+        }
+        return map;
+    }
+    else if (el.hasAttribute("itemprop")) {
+        return el.getAttribute("content") || el.innerText || el.src;
+    }
+    else {
+        return {
+            __items: Array.prototype.map.call(el.children, processElement)
+        };
+    }
+};
+const extractFromHead = () => _mapper(Array.prototype.reduce.call(document.querySelectorAll('head > meta[property^="og:"]'), (acc, curr) => (Object.assign({}, acc, { [curr.getAttribute("property")]: curr.getAttribute("content") })), {
+    keywords: document.querySelector('head > meta[name="keywords"]') &&
+        document
+            .querySelector('head > meta[name="keywords"]')
+            .getAttribute("content")
+}));
+const noMapper = (m, n) => m;
+let _mapper = noMapper;
+const setMapper = mapper => {
+    _mapper = (meta, el) => {
+        try {
+            return mapper(meta, el);
+        }
+        catch (e) {
+            return meta;
+        }
+    };
+};
+const extract = selector => {
+    const elements = typeof selector === "string"
+        ? document.querySelectorAll(selector)
+        : selector;
+    const data = Array.prototype.map
+        .call(elements, el => _mapper(processElement(el), el))
+        .filter(d => d);
+    return data.length > 1
+        ? {
+            __items: data
+        }
+        : data.pop();
+};
+
+/*! *****************************************************************************
+Copyright (c) Microsoft Corporation. All rights reserved.
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at http://www.apache.org/licenses/LICENSE-2.0
+
+THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+MERCHANTABLITY OR NON-INFRINGEMENT.
+
+See the Apache Version 2.0 License for specific language governing permissions
+and limitations under the License.
+***************************************************************************** */
+
+function __rest(s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) if (e.indexOf(p[i]) < 0)
+            t[p[i]] = s[p[i]];
+    return t;
+}
 
 /*
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-1, as defined
@@ -592,12 +614,10 @@ var Baker = {
 };
 
 const USER_ID_COOKIE = "__as_user";
-let isNew = false;
 const generateUser = () => `${hash(Window.location.host)}.${hash(`${getNumber()}`)}`;
 const setUser = () => {
     const id = generateUser();
     Baker.setItem(USER_ID_COOKIE, id, Infinity, "/");
-    isNew = true;
     return id;
 };
 const getUser = () => {
@@ -609,7 +629,7 @@ const getUser = () => {
     return user;
 };
 const getDomain = () => hash(Window.location.host);
-const isUserNew = () => isNew;
+const getHash = () => hash(getUser().split(".")[1]);
 
 const persistence = {
     get(id) {
@@ -628,7 +648,7 @@ const persistence = {
             throw new Error(`Error while trying to set item to session cookie: "${id}" <- ${value}`);
         }
     },
-    remove: id => {
+    remove: (id) => {
         try {
             Baker.removeItem(id);
         }
@@ -646,93 +666,51 @@ const store = {
 const sessionStore = store;
 const SESSION_EXPIRE_TIMEOUT = 30 * 60 * 1000;
 const SESSION_COOKIE_NAME = "__asa_session";
-const builtinSessionManager = {
+class SessionManager {
     hasSession() {
         const item = sessionStore.getItem(SESSION_COOKIE_NAME);
         try {
-            return item && JSON.parse(item).t > new Date();
+            return !!(item && JSON.parse(item).t > new Date());
         }
         catch (e) {
             return false;
         }
-    },
-    createSession(sessionData) {
-        sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(Object.assign({}, sessionData, { id: `${getDomain()}.${hash(`${getUser()}.${getNumber()}`)}`, t: new Date().getTime() + SESSION_EXPIRE_TIMEOUT })));
-    },
-    destroySession: () => sessionStore.removeItem(SESSION_COOKIE_NAME),
+    }
+    createSession(data) {
+        sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(Object.assign({}, data, { id: `${getDomain()}.${hash(`${getUser()}.${getNumber()}`)}`, t: new Date().getTime() + SESSION_EXPIRE_TIMEOUT })));
+    }
+    destroySession() {
+        return sessionStore.removeItem(SESSION_COOKIE_NAME);
+    }
     getSession() {
         return JSON.parse(sessionStore.getItem(SESSION_COOKIE_NAME));
-    },
-    updateTimeout: function updateTimeout(sessionData) {
-        const session = Object.assign({}, this.getSession(), sessionData, { t: new Date().getTime() + SESSION_EXPIRE_TIMEOUT });
+    }
+    updateTimeout(_a = this.getSession()) {
+        var { campaign, referrer } = _a, sessionData = __rest(_a, ["campaign", "referrer"]);
+        const session = Object.assign({}, this.getSession(), sessionData, campaign && { campaign: campaign }, referrer && { referrer: referrer }, { t: new Date().getTime() + SESSION_EXPIRE_TIMEOUT });
         sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(session));
     }
+}
+let sessionManager = new SessionManager();
+const customSession = (hasSession, getSession, createSession) => {
+    sessionManager = new class extends SessionManager {
+        hasSession() {
+            return hasSession();
+        }
+        getSession() {
+            return getSession();
+        }
+        createSession(data) {
+            createSession(data);
+        }
+    }();
 };
-const providedSessionManager = (hasSession, getSession, createSession, destroySession, updateTimeout) => ({
-    hasSession,
-    createSession,
-    getSession,
-    destroySession,
-    updateTimeout
-});
-let sessionManager = builtinSessionManager;
-const getSession = () => sessionManager.getSession();
-const hasSession = () => !!sessionManager.hasSession();
-const createSession = (sessionData) => sessionManager.createSession(sessionData);
-const destroySession = () => sessionManager.destroySession();
-const customSession = (hasSessions, getSession, createSession) => (sessionManager = providedSessionManager(hasSessions, getSession, createSession, destroySession, updateTimeout));
-const updateTimeout = (sessionData) => sessionManager.updateTimeout(sessionData);
-
-const processElement = el => {
-    if (el.hasAttribute("itemscope")) {
-        let map = Array.prototype.reduce.call(el.children, (acc, curr) => (Object.assign({}, acc, { [curr.getAttribute("itemprop")]: processElement(curr) })), {});
-        if (el.getAttribute("itemtype")) {
-            map = {
-                type: el.getAttribute("itemtype"),
-                properties: map
-            };
-        }
-        return map;
-    }
-    else if (el.hasAttribute("itemprop")) {
-        return el.getAttribute("content") || el.innerText || el.src;
-    }
-    else {
-        return {
-            __items: Array.prototype.map.call(el.children, processElement)
-        };
-    }
-};
-const extractFromHead = () => _mapper(Array.prototype.reduce.call(document.querySelectorAll('head > meta[property^="og:"]'), (acc, curr) => (Object.assign({}, acc, { [curr.getAttribute("property")]: curr.getAttribute("content") })), {
-    keywords: document.querySelector('head > meta[name="keywords"]') &&
-        document
-            .querySelector('head > meta[name="keywords"]')
-            .getAttribute("content")
-}));
-const noMapper = (m, n) => m;
-let _mapper = noMapper;
-const setMapper = mapper => {
-    _mapper = (meta, el) => {
-        try {
-            return mapper(meta, el);
-        }
-        catch (e) {
-            return meta;
-        }
-    };
-};
-const extract = selector => {
-    const elements = typeof selector === "string"
-        ? document.querySelectorAll(selector)
-        : selector;
-    const data = Array.prototype.map
-        .call(elements, el => _mapper(processElement(el), el))
-        .filter(d => d);
-    return data.length > 1
-        ? {
-            __items: data
-        }
-        : data.pop();
+const proxy = {
+    getSession: () => sessionManager.getSession(),
+    createSession: (data) => sessionManager.createSession(data),
+    hasSession: () => sessionManager.hasSession(),
+    updateTimeout: (data) => sessionManager.updateTimeout(data),
+    destroySession: () => sessionManager.destroySession()
 };
 
 function links(domains) {
@@ -740,39 +718,17 @@ function links(domains) {
     const tracker = ({ target }) => {
         let href = target.href;
         if (href) {
-            const destination = parser.parseURI(href);
-            if (domainsTracked.indexOf(destination.authority) > -1) {
-                if (!destination.queryKey["__asa"]) {
-                    const alreadyHasParams = target.href.indexOf("?") !== -1;
-                    href = `${href +
-                        (alreadyHasParams ? "&" : "?")}__asa=${encodeURIComponent(`${Window.asa.id}|${getSession().id}`)}`;
-                    target.href = href;
-                }
-                const utmKeys = [
-                    "utm_medium",
-                    "utm_source",
-                    "utm_campaign",
-                    "utm_content",
-                    "utm_term"
-                ];
-                const __as__campagin = {};
-                utmKeys.forEach(utm_key => {
-                    const utm_value = Window.sessionStorage.getItem(`__as.${utm_key}`);
-                    if (utm_value) {
-                        __as__campagin[utm_key] = utm_value;
+            const destination = new URL(href);
+            if (~domainsTracked.indexOf(destination.host)) {
+                destination.searchParams.set(PARTNER_ID_KEY, Window.asa.id);
+                destination.searchParams.set(PARTNER_SID_KEY, proxy.getSession().id);
+                UTM.forEach(key => {
+                    const value = Window.sessionStorage.getItem(`__as.${key}`);
+                    if (value) {
+                        destination.searchParams.set(key, value);
                     }
                 });
-                if (Object.keys(__as__campagin).length) {
-                    if (!Object.keys(destination.queryKey).some(key => key.indexOf("utm_") !== -1)) {
-                        const hasParams = href.indexOf("?") !== -1;
-                        Object.keys(__as__campagin).forEach((d, i) => {
-                            href = `${href +
-                                (!hasParams && i === 0 ? "?" : "&") +
-                                d}=${encodeURIComponent(__as__campagin[d])}`;
-                        });
-                        target.href = href;
-                    }
-                }
+                target.href = destination.href;
             }
         }
     };
@@ -782,6 +738,14 @@ function links(domains) {
 }
 
 let experiments = {};
+const defineExperiment = (name, percentage) => {
+    if (typeof percentage === "boolean") {
+        if (percentage)
+            experiments[name] = percentage;
+    }
+    else
+        experiments[name] = getHash() % 100 <= percentage;
+};
 const experimentsLive = () => {
     const result = [];
     for (const exp in experiments) {
@@ -792,39 +756,52 @@ const experimentsLive = () => {
     }
     return result.join(".");
 };
+const MINI_AJAX = "miniAjax";
 
-const major = 1;
-const minor = 1;
-const build = 77;
-const version = () => [major, minor, build].join(".") +
+var name = "@activitystream/asa";
+var version = "1.1.77";
+var description = "Activity Stream Analytics data sumbission library";
+var browser = "dist/asa.min.js";
+var main = "dist/asa.cjs";
+var module$1 = "dist/asa.es";
+var repository = {"url":"git@github.com:activitystream/asa.js.git"};
+var scripts = {"test":"rollup -c --environment TEST -w","build":"rollup -c --environment PRODUCTION","start":"rollup -c --environment DEVELOPMENT -w"};
+var keywords = ["activitystream","analytics","realtime"];
+var author = "Activitystream";
+var license = "MIT";
+var dependencies = {"promise-polyfill":"^7.1.2","whatwg-fetch":"^2.0.4"};
+var devDependencies = {"@types/chai":"^4.1.2","@types/mocha":"^5.2.0","@types/sinon":"^4.3.3","@types/source-map-support":"^0.4.0","@types/whatwg-fetch":"0.0.33","chai":"^4.1.2","mocha":"^5.1.1","sinon":"^5.0.7","source-map-support":"^0.5.5","rollup":"^0.58.2","rollup-plugin-babel":"^3.0.4","rollup-plugin-commonjs":"^9.1.3","rollup-plugin-json":"^2.3.0","rollup-plugin-livereload":"^0.6.0","rollup-plugin-node-builtins":"^2.1.2","rollup-plugin-node-globals":"^1.2.1","rollup-plugin-node-resolve":"^3.3.0","rollup-plugin-serve":"^0.4.2","rollup-plugin-typescript2":"^0.13.0","rollup-plugin-uglify":"^3.0.0","typescript":"^2.8.3","babel-core":"^6.26.3","babel-preset-env":"^1.7.0"};
+var pkg = {
+	name: name,
+	version: version,
+	description: description,
+	browser: browser,
+	main: main,
+	module: module$1,
+	repository: repository,
+	scripts: scripts,
+	keywords: keywords,
+	author: author,
+	license: license,
+	dependencies: dependencies,
+	devDependencies: devDependencies,
+	"private": true
+};
+
+const version$1 = () => pkg.version +
     (experimentsLive() ? `-${experimentsLive()}` : "");
 
-const DOMMeta = selector => selector &&
+const DOMMeta = (selector) => selector &&
     (selector instanceof HTMLElement ||
         selector[0] instanceof HTMLElement ||
         typeof selector === "string")
     ? selector
     : false;
-var WebEvent;
-(function (WebEvent) {
-    let Type;
-    (function (Type) {
-        Type["session.started"] = "session.started";
-        Type["session.resumed"] = "session.resumed";
-        Type["as.web.customer.account.provided"] = "as.web.customer.account.provided";
-        Type["as.web.order.reviewed"] = "as.web.order.reviewed";
-        Type["as.web.product.availability.checked"] = "as.web.product.availability.checked";
-        Type["as.web.product.carted"] = "as.web.product.carted";
-        Type["as.web.product.searched"] = "as.web.product.searched";
-        Type["as.web.product.shipping.selected"] = "as.web.product.shipping.selected";
-        Type["as.web.product.viewed"] = "as.web.product.viewed";
-        Type["as.web.payment.completed"] = "as.web.payment.completed";
-        Type["page.viewed"] = "page.viewed";
-        Type["custom"] = "custom";
-    })(Type = WebEvent.Type || (WebEvent.Type = {}));
+var AsaEvent;
+(function (AsaEvent) {
     class Event {
-        constructor(data) {
-            const { id, referrer, campaign } = getSession();
+        constructor() {
+            const { id, referrer, campaign } = proxy.getSession();
             const partner_id = getID();
             const partner_sid = getSID();
             this.origin = Window.location.origin;
@@ -840,14 +817,13 @@ var WebEvent;
             };
             if (referrer)
                 this.page.referrer = referrer;
-            if (Window.asa.id)
-                this.tenant_id = Window.asa.id;
+            if (inbox.id)
+                this.tenant = inbox.id;
             if (partner_id)
                 this.partner_id = partner_id;
             if (partner_sid)
                 this.partner_sid = partner_sid;
-            this.v = version();
-            Object.assign(this, data);
+            this.v = version$1();
         }
         toJSON() {
             return JSON.parse(JSON.stringify(Object.assign({}, this)));
@@ -856,51 +832,7 @@ var WebEvent;
             return this.type;
         }
     }
-    WebEvent.Event = Event;
-    let page;
-    (function (page) {
-        class viewed extends Event {
-            constructor(...args) {
-                super();
-                this.type = Type["page.viewed"];
-                this.location = Window.location.href;
-                this.title = document.title;
-                if (DOMMeta(args[0])) {
-                    const meta = extract(args[0]);
-                    if (meta)
-                        this.meta = meta;
-                    if (args[1])
-                        this.meta = Object.assign({}, this.meta, args[1]);
-                }
-                else if (args[0]) {
-                    this.meta = Object.assign({}, this.meta, args[0], extractFromHead());
-                }
-                else {
-                    this.meta = extractFromHead();
-                }
-            }
-        }
-        page.viewed = viewed;
-    })(page = WebEvent.page || (WebEvent.page = {}));
-    let session;
-    (function (session) {
-        class started extends page.viewed {
-            constructor() {
-                super(...arguments);
-                this.type = Type["session.started"];
-                this.meta = Object.assign({}, this.meta, extractFromHead());
-            }
-        }
-        session.started = started;
-        class resumed extends Event {
-            constructor() {
-                super(...arguments);
-                this.type = Type["session.resumed"];
-                this.meta = Object.assign({}, this.meta, extractFromHead());
-            }
-        }
-        session.resumed = resumed;
-    })(session = WebEvent.session || (WebEvent.session = {}));
+    AsaEvent.Event = Event;
     let as;
     (function (as) {
         let web;
@@ -910,85 +842,123 @@ var WebEvent;
                 class reviewed extends Event {
                     constructor() {
                         super(...arguments);
-                        this.type = Type["as.web.order.reviewed"];
+                        this.type = "as.web.order.reviewed";
                     }
                 }
                 order.reviewed = reviewed;
             })(order = web.order || (web.order = {}));
-            let product;
-            (function (product) {
-                let availability;
-                (function (availability) {
-                    class checked extends Event {
+            let customer;
+            (function (customer) {
+                let account;
+                (function (account) {
+                    class provided extends Event {
                         constructor() {
                             super(...arguments);
-                            this.type = Type["as.web.product.availability.checked"];
+                            this.type = "as.web.customer.account.provided";
+                        }
+                    }
+                    account.provided = provided;
+                })(account = customer.account || (customer.account = {}));
+            })(customer = web.customer || (web.customer = {}));
+            let product;
+            (function (product_1) {
+                class product extends Event {
+                    constructor(data) {
+                        super();
+                        if (DOMMeta(data)) {
+                            const meta = extract(data);
+                            if (meta)
+                                this.meta = meta;
+                        }
+                        else {
+                            this.meta = Object.assign({}, data, extractFromHead());
+                        }
+                    }
+                }
+                product_1.product = product;
+                let availability;
+                (function (availability) {
+                    class checked extends product {
+                        constructor() {
+                            super(...arguments);
+                            this.type = "as.web.product.availability.checked";
                         }
                     }
                     availability.checked = checked;
-                })(availability = product.availability || (product.availability = {}));
-                class carted extends Event {
+                })(availability = product_1.availability || (product_1.availability = {}));
+                class carted extends product {
                     constructor() {
                         super(...arguments);
-                        this.type = Type["as.web.product.carted"];
+                        this.type = "as.web.product.carted";
                     }
                 }
-                product.carted = carted;
-                class searched extends Event {
+                product_1.carted = carted;
+                class searched extends product {
                     constructor() {
                         super(...arguments);
-                        this.type = Type["as.web.product.searched"];
+                        this.type = "as.web.product.searched";
                     }
                 }
-                product.searched = searched;
+                product_1.searched = searched;
                 let shipping;
                 (function (shipping) {
-                    class selected extends Event {
+                    class selected extends product {
                         constructor() {
                             super(...arguments);
-                            this.type = Type["as.web.product.shipping.selected"];
+                            this.type = "as.web.product.shipping.selected";
                         }
                     }
                     shipping.selected = selected;
-                })(shipping = product.shipping || (product.shipping = {}));
-                class viewed extends Event {
+                })(shipping = product_1.shipping || (product_1.shipping = {}));
+                class viewed extends product {
                     constructor() {
                         super(...arguments);
-                        this.type = Type["as.web.product.viewed"];
+                        this.type = "as.web.product.viewed";
                     }
                 }
-                product.viewed = viewed;
+                product_1.viewed = viewed;
             })(product = web.product || (web.product = {}));
             let payment;
             (function (payment) {
                 class completed extends Event {
                     constructor() {
                         super(...arguments);
-                        this.type = Type["as.web.payment.completed"];
+                        this.type = "as.web.payment.completed";
                     }
                 }
                 payment.completed = completed;
             })(payment = web.payment || (web.payment = {}));
         })(web = as.web || (as.web = {}));
-    })(as = WebEvent.as || (WebEvent.as = {}));
-    WebEvent.custom = event => class custom extends Event {
-        constructor(...args) {
-            super();
-            this.type = Type["custom"];
-            this.event = event;
-            if (DOMMeta(args[0])) {
-                const meta = extract(args[0]);
-                if (meta)
-                    this.meta = meta;
-                if (args[1])
-                    this.meta = Object.assign({}, this.meta, args[1]);
-            }
-            else if (args[0]) {
-                this.meta = Object.assign({}, this.meta, args[0]);
-            }
+    })(as = AsaEvent.as || (AsaEvent.as = {}));
+    AsaEvent.web = {
+        "as.web.customer.account.provided": as.web.customer.account.provided,
+        "as.web.order.reviewed": as.web.order.reviewed,
+        "as.web.product.availability.checked": as.web.product.availability.checked,
+        "as.web.product.carted": as.web.product.carted,
+        "as.web.product.searched": as.web.product.searched,
+        "as.web.product.shipping.selected": as.web.product.shipping.selected,
+        "as.web.product.viewed": as.web.product.viewed,
+        "as.web.payment.completed": as.web.payment.completed
+    };
+    AsaEvent.local = {
+        "custom.session.created": customSession,
+        "connected.partners.provided": function (domains) {
+            links(domains);
+        },
+        "service.providers.provided": function (providers) {
+            this.providers = providers.map(parser.getAuthority.bind(parser));
+        },
+        "tenant.id.provided": function (id) {
+            this.id = id;
+        },
+        "debug.mode.enabled": function (on) {
+            setDebugMode(on);
+        },
+        "microdata.transformer.provided": function (mapper) {
+            setMapper(mapper);
         }
     };
-})(WebEvent || (WebEvent = {}));
+})(AsaEvent || (AsaEvent = {}));
 
 const formatDateTime = time => {
     const pad = number => {
@@ -1020,7 +990,7 @@ const submitEvent = ev => EVENT({
     t: formatDateTime(new Date())
 });
 const submitError = (err, context) => (err && (err.code === 22 || err.code === 18)) ||
-    ERROR({ err, context, v: version() });
+    ERROR({ err, context, v: version$1() });
 class Server {
     constructor() {
         this._dispatchEvent = submitEvent;
@@ -1031,11 +1001,11 @@ class Server {
     batchEvent(e) {
         this.pendingSubmission.push(e);
     }
-    get submitEvent() {
-        return this._dispatchEvent;
+    submitEvent(event) {
+        return this._dispatchEvent(event);
     }
-    get submitError() {
-        return this._dispatchError;
+    submitError(error, data) {
+        return this._dispatchError(error, data);
     }
     batchOn() {
         this.batchIntervalHandler = setInterval(() => {
@@ -1073,80 +1043,111 @@ class Server {
 }
 var server = new Server();
 
-var getReferrer = (location, referrer, serviceProviders) => {
-    if (referrer && referrer.length > 0) {
-        const referrerAuth = parser.parseURI(referrer).authority;
-        const currentAuth = parser.parseURI(location).authority;
-        if (referrerAuth != currentAuth &&
-            serviceProviders.indexOf(referrerAuth) === -1) {
-            return referrer;
-        }
-    }
-    return null;
-};
-
-function Asa(tenant) {
-    let serviceProviders = [];
-    setPartnerInfo();
-    const LocalEvents = {
-        "custom.session.created": (data, ...rest) => customSession(data, rest[0], rest[1]),
-        "connected.partners.provided": data => links(data),
-        "service.providers.provided": data => {
-            serviceProviders = data;
-        },
-        "tenant.id.provided": data => {
-            Window.asa.id = data;
-        },
-        "debug.mode.enabled": data => setDebugMode(data),
-        "microdata.transformer.provided": data => setMapper(data)
-    };
-    const instance = function Asa(event, data, ...rest) {
+function Inbox(tenant) {
+    proxy.destroySession();
+    const instance = function Inbox(name, ...data) {
         try {
-            if (typeof event === "string" && event in LocalEvents) {
-                LocalEvents[event](data, ...rest);
+            if (!AsaEvent.web[name]) {
+                if (AsaEvent.local[name]) {
+                    AsaEvent.local[name].call(instance, ...data);
+                }
                 return;
             }
             const campaign = getCampaign();
-            const referrer = getReferrer(Document.location, Document.referrer, serviceProviders);
-            if (!hasSession()) {
+            const referrer = getReferrer();
+            if (!proxy.hasSession()) {
                 log("no session, starting a new one");
-                createSession({ campaign, referrer });
-                instance.transport(new WebEvent.session.started({
-                    newBrowser: isUserNew()
-                }));
+                proxy.createSession({
+                    campaign,
+                    referrer
+                });
             }
-            else {
-                const referrerAuth = parser.parseURI(Document.referrer).authority;
-                const currentAuth = parser.parseURI(Document.location).authority;
-                if (referrerAuth !== currentAuth &&
-                    serviceProviders.indexOf(referrerAuth) === -1) {
-                    updateTimeout({ campaign, referrer });
-                    log("session resumed");
-                    instance.transport(new WebEvent.session.resumed());
-                }
+            else if (referrer) {
+                proxy.updateTimeout({
+                    campaign,
+                    referrer
+                });
+                log("session resumed");
             }
-            instance.transport(new event(data, ...rest));
+            instance.transport(new AsaEvent.web[name](...data));
         }
-        catch (e) {
-            forceLog("inbox exception:", e);
-            server.submitError(e, {
+        catch (error) {
+            forceLog("inbox exception:", error);
+            server.submitError(error, {
                 location: "processing inbox message",
-                arguments: [event, data, ...rest]
+                arguments: [event, ...data]
             });
         }
         return instance;
     };
     instance.id = tenant;
-    instance.transport = data => {
-        server.submitEvent(data);
-        return instance;
+    instance.transport = (event) => {
+        server.submitEvent(event);
+    };
+    instance.providers = [];
+    const getReferrer = () => {
+        const referrer = parser.getAuthority(Document.referrer);
+        const location = parser.getAuthority(Document.location);
+        return referrer &&
+            referrer !== location &&
+            !~instance.providers.indexOf(referrer)
+            ? referrer
+            : null;
     };
     return instance;
 }
+var inbox = new Inbox();
 
-const runBootSequence = (bootSequence) => {
-    bootSequence = bootSequence || [];
-    if (!(bootSequence instanceof Array))
+const Window = {
+    sessionStorage: window.sessionStorage,
+    location: window.location,
+    asa: inbox
+};
+const Document = {
+    location: document.location,
+    referrer: document.referrer
+};
+
+const PARTNER_ID_KEY = "__as.partner_id";
+const PARTNER_SID_KEY = "__as.partner_sid";
+const updatePartnerInfo = () => {
+    const uri = parser.parseURI(Window.location.href);
+    let partnerId = uri.queryKey[PARTNER_ID_KEY];
+    let partnerSId = uri.queryKey[PARTNER_SID_KEY];
+    UTM.forEach(key => {
+        const keyValue = decodeURIComponent(uri.queryKey[key] || "");
+        if (keyValue) {
+            Window.sessionStorage.setItem(`__as.${key}`, keyValue);
+        }
+        else {
+            Window.sessionStorage.removeItem(`__as.${key}`);
+        }
+    });
+    if (partnerId) {
+        Window.sessionStorage.setItem(PARTNER_ID_KEY, partnerId);
+    }
+    else {
+        Window.sessionStorage.removeItem(PARTNER_ID_KEY);
+    }
+    if (partnerSId) {
+        Window.sessionStorage.setItem(PARTNER_SID_KEY, partnerSId);
+    }
+    else {
+        Window.sessionStorage.removeItem(PARTNER_SID_KEY);
+    }
+};
+const setPartnerInfo = () => {
+    const referrer = parser.parseURI(Document.referrer).authority;
+    const currentHost = parser.parseURI(Window.location.origin).authority;
+    if (referrer !== currentHost) {
+        updatePartnerInfo();
+    }
+};
+const getID = () => Window.sessionStorage.getItem(PARTNER_ID_KEY);
+const getSID = () => Window.sessionStorage.getItem(PARTNER_SID_KEY);
+
+const runBootSequence = (bootSequence = []) => {
+    if (!Array.isArray(bootSequence))
         bootSequence = [bootSequence];
     for (let i = 0; i < bootSequence.length; i++) {
         window.asa.apply(null, bootSequence[i]);
@@ -1155,10 +1156,9 @@ const runBootSequence = (bootSequence) => {
 var boot = (bootSequence = []) => {
     // if (DNT && (DNT === 'yes' || DNT.charAt(0) === '1')) return;
     try {
-        const pendingEvents = (window.asa && window.asa.q) || [];
-        window.asa = new Asa();
-        window["WebEvent"] = WebEvent;
-        // features.defineExperiment(features.MINI_AJAX, 10);
+        const pendingEvents = (window.asa && window.asa["q"]) || [];
+        window.asa = inbox;
+        defineExperiment(MINI_AJAX, 10);
         setPartnerInfo();
         runBootSequence(bootSequence);
         for (let i = 0; i < pendingEvents.length; i++) {

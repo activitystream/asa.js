@@ -8,7 +8,7 @@
 
 		window.onload = () => {
 			asa('tenant.id.provided', 'AS-E2EAUTOTEST-B');
-			asa(WebEvent.page.viewed);
+			asa('as.web.product.viewed');
 		}
 	</script>
 
@@ -25,7 +25,7 @@
 	<script>
 		setInterval(function () {
 			document.getElementById('partner_id').innerText = window.sessionStorage.getItem('__as.partner_id');
-			document.getElementById('partner_sid').innerText = window.sessionStorage.getItem('__as.partner_sid');
+			document.getElementById('partner_sid').innerText = window.sessionStorage.getItem('__as.partner_sid')
 		}, 500);
 	</script>
 </body>

@@ -9,7 +9,7 @@
   "scripts": {
     "docker:up": "sudo docker-compose up -d inbox cdn sitea siteb selenium",
     "docker:down": "sudo docker-compose down",
-    "docker:build": "sudo docker-compose build",
+    "docker:build": "sudo docker-compose build --no-cache",
     "prebuild": "sudo service docker start && npm run docker:down",
     "build": "npm run docker:build",
     "postbuild": "npm run docker:up",
@@ -19,7 +19,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@activitystream/asa": "https://github.com/activitystream/asa.js.git#asaV2split",
+    "@activitystream/asa": "https://github.com/activitystream/asa.js.git#asaV2",
     "@novnc/novnc": "^1.0.0",
     "ansi-to-html": "^0.6.4",
     "chai": "^4.1.2",

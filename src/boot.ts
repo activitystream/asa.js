@@ -1,30 +1,30 @@
 import * as partner from "./partner";
-import * as autoTrack from "./auto_track";
 import * as debug from "./debug";
-import Inbox from "./inbox";
+import inbox from "./inbox";
 import server from "./server";
 import * as features from "./features";
-import { WebEvent } from "./event";
+import { AsaEvent } from "./event";
 
-const runBootSequence = (bootSequence: any[]) => {
-  bootSequence = bootSequence || [];
-  if (!(bootSequence instanceof Array)) bootSequence = [bootSequence];
+const runBootSequence: (bootSequence: AsaEvent.Type[]) => void = (
+  bootSequence: AsaEvent.Type[] = []
+): void => {
+  if (!Array.isArray(bootSequence)) bootSequence = [bootSequence];
 
   for (let i = 0; i < bootSequence.length; i++) {
     window.asa.apply(null, bootSequence[i]);
   }
 };
 
-export default (bootSequence: any[] = []) => {
+export default (bootSequence: AsaEvent.Type[] = []): void => {
   // if (DNT && (DNT === 'yes' || DNT.charAt(0) === '1')) return;
 
   try {
-    const pendingEvents = (window.asa && window.asa.q) || [];
+    const pendingEvents: AsaEvent.Type[] =
+      (window.asa && window.asa["q"]) || [];
 
-    window.asa = new Inbox();
-    window["WebEvent"] = WebEvent;
+    window.asa = inbox;
 
-    // features.defineExperiment(features.MINI_AJAX, 10);
+    features.defineExperiment(features.MINI_AJAX, 10);
     partner.setPartnerInfo();
     runBootSequence(bootSequence);
 

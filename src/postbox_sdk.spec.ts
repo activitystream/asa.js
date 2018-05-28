@@ -1,45 +1,42 @@
 import sinon from "sinon";
-import Inbox from "./inbox";
+import { Inbox } from "./inbox";
 import { expect } from "chai";
-import core from "./server";
-import * as info from "./version";
 import * as features from "./features";
-import * as session from "./session";
-import { WebEvent } from "./event";
+import { AsaEvent } from "./event";
+
+const DATE: Date = new Date();
 
 const _fetch = window.fetch;
 
 export default describe("Postbox SDK", () => {
-  let fetch;
-  let asa;
+  let fetchStub: sinon.SinonStub;
+  let asa: Inbox = new Inbox();
 
-  const adjustSystemInfo = ev => {
-    const element = ev.ev;
-    if (element.user.uid) element.user.uid = "user_id";
-    if (element.user.did) element.user.did = "device_id";
-    if (element.user.sid) element.user.sid = "session_id";
-    if (element.occurred) element.occurred = "time";
-    if (element.v) delete element.v;
-    if (element.tenant) delete element.tenant;
-    return ev;
+  const adjustSystemInfo = (data: {}): AsaEvent.Event => {
+    const event: AsaEvent.Event = { ...data } as AsaEvent.Event;
+    if (event.user.did) event.user.did = "device_id";
+    if (event.user.sid) event.user.sid = "session_id";
+    if (event.occurred) event.occurred = DATE;
+    if (event.v) delete event.v;
+    if (event.tenant) delete event.tenant;
+    return event;
   };
 
   before(() => {
-    fetch = sinon.stub(window, "fetch");
+    fetchStub = sinon.stub(window, "fetch");
   });
 
   beforeEach(() => {
     features.clearExperiments();
-    asa = new Inbox();
   });
 
   after(() => {
-    fetch.restore();
+    fetchStub.restore();
   });
 
   describe("product viewed", () => {
     it("sending data generates a complete message", done => {
-      const expectation = {
+      const expectation: AsaEvent.Event = adjustSystemInfo({
         type: "as.web.product.viewed",
         occurred: "time",
         origin: window.location.origin,
@@ -50,28 +47,45 @@ export default describe("Postbox SDK", () => {
         page: {
           url: window.location.href
         },
-        product: {
-          description: "SATURDAY NIGHT FEVER - THE MUSICAL",
-          type: "Event",
-          id: "1-4034344",
-          product_variant: "Floor",
-          price_category: "A",
-          item_price: "222",
-          currency: "DKK",
-          categories: ["Teater", "Musical"]
+        meta: {
+          "og:description":
+            "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.",
+          "og:url": "http://operaen.no/",
+          "og:title":
+            "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett",
+          "og:site_name": "Operaen.no",
+          "og:type": "website",
+          keywords:
+            "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter",
+          product: {
+            description: "SATURDAY NIGHT FEVER - THE MUSICAL",
+            type: "Event",
+            id: "1-4034344",
+            product_variant: "Floor",
+            price_category: "A",
+            item_price: "222",
+            currency: "DKK",
+            categories: ["Teater", "Musical"]
+          }
         }
-      };
-
-      fetch.callsFake((url, options) => {
-        const body = JSON.parse(options.body);
-        if (body.ev.type === expectation.type) {
-          expect(adjustSystemInfo(body).ev).to.eql(expectation);
-          done();
-        }
-        return _fetch(url, options);
       });
 
-      asa(WebEvent.as.web.product.viewed, {
+      fetchStub.callsFake((input: RequestInfo, init: RequestInit): Promise<
+        Response
+      > => {
+        const body = JSON.parse(init.body as string);
+        if (body.err) {
+          return;
+        }
+        const event: AsaEvent.Event = adjustSystemInfo(body.ev);
+        if (event.type === expectation.type) {
+          expect(event).to.eql(expectation);
+          done();
+        }
+        return _fetch(input, init);
+      });
+
+      asa("as.web.product.viewed", {
         product: {
           description: "SATURDAY NIGHT FEVER - THE MUSICAL",
           type: "Event",

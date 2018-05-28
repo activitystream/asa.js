@@ -1,8 +1,6 @@
 import * as features from "./features";
+import pkg from "../package.json";
 
-export const major = 1;
-export const minor = 1;
-export const build = 77;
 export const version = () =>
-  [major, minor, build].join(".") +
+  pkg.version +
   (features.experimentsLive() ? `-${features.experimentsLive()}` : "");

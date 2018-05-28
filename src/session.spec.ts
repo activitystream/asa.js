@@ -1,9 +1,9 @@
-import * as session from "./session";
+import session, { resetManager } from "./session";
 import { expect } from "chai";
 
 export default describe("session", () => {
   before(() => {
-    session.resetSessionMgmt();
+    resetManager();
     session.destroySession();
   });
 
