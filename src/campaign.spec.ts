@@ -1,8 +1,8 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { document } from "./browser";
-import { Inbox } from "./inbox";
-import server from "./server";
+import { Dispatcher } from "./dispatcher";
+import api from "./api";
 import session from "./session";
 import { AsaEvent } from "./event";
 
@@ -12,9 +12,9 @@ const referrerStub: sinon.SinonStub = sinon.stub(document, "referrer");
 export default describe("Campaigns", () => {
   let submitEventStub: sinon.SinonStub;
   let events: AsaEvent.Event[] = [];
-  let asa: Inbox;
+  let asa: Dispatcher;
 
-  const getNewTab = () => new Inbox(null);
+  const getNewTab = () => new Dispatcher(null);
 
   const findEvent = (type: string): AsaEvent.Event =>
     events.find((event: AsaEvent.Event) => event.type === type);
@@ -35,7 +35,7 @@ export default describe("Campaigns", () => {
   });
 
   before(() => {
-    submitEventStub = sinon.stub(server, "submitEvent");
+    submitEventStub = sinon.stub(api, "submitEvent");
     submitEventStub.value(ev => {
       events.push(ev);
     });

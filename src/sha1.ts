@@ -7,6 +7,8 @@
  * See http://pajhome.org.uk/crypt/md5 for details.
  */
 
+export const uid = () => Math.round(Math.random() * Date.now());
+
 /*
  * Configurable variables. You may need to tweak these to be compatible with
  * the server-side, but the defaults work in most cases.
@@ -18,6 +20,7 @@ let b64pad = ""; /* base-64 pad character. "=" for strict RFC compliance   */
  * These are the functions you'll usually want to call
  * They take string arguments and return either hex or base-64 encoded strings
  */
+
 export function hex_sha1(s) {
   return rstr2hex(rstr_sha1(str2rstr_utf8(s)));
 }

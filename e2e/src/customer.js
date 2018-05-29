@@ -7,21 +7,13 @@ const getLogs = () =>
     mode: "cors"
   });
 
-function wipeLogs() {
-  return fetch(`${inbox}/log`, {
+const wipeLogs = () =>
+  fetch(`${inbox}/log`, {
     method: "DELETE",
     mode: "cors"
   });
-}
 
-var debugLog = function debugLog(log) {
-  if (options.logLevel !== "silent") {
-    console.log(`Log contains ${JSON.stringify(log, null, 4)}`);
-  }
-  return log;
-};
-
-const step = 1000;
+const step = 500;
 const timeout = 2000;
 
 export default {
@@ -45,7 +37,6 @@ export default {
           .catch(console.error)
       )
       .pause(step);
-    // .end();
   },
 
   "should send as.web.product.viewed siteb": browser => {
@@ -64,7 +55,6 @@ export default {
           .catch(console.error)
       )
       .pause(step);
-    // .end();
   },
 
   "sitea submitForm": browser => {
@@ -87,7 +77,6 @@ export default {
           .catch(console.error)
       )
       .pause(step);
-    // .end();
   },
 
   "sitea click offer1": browser => {
@@ -109,7 +98,6 @@ export default {
           .catch(console.error)
       )
       .pause(step);
-    // .end();
   },
 
   "sitea click twitter": browser => {
@@ -131,7 +119,6 @@ export default {
           .catch(console.error)
       )
       .pause(step);
-    // .end();
   },
 
   "sitea click link with no param": browser => {
@@ -174,7 +161,6 @@ export default {
           })
       )
       .pause(step);
-    // .end();
   },
 
   "sitea click link with param": browser => {
@@ -221,7 +207,6 @@ export default {
           .catch(console.error)
       )
       .pause(step);
-    // .end();
   },
 
   "Newsletter -> sitea click link with param": browser => {
@@ -261,7 +246,6 @@ export default {
           })
       )
       .pause(step);
-    // .end();
   },
 
   "Newsletter -> sitea -> read more -> siteb click link no param": browser => {
@@ -284,25 +268,19 @@ export default {
       .perform(done =>
         getLogs()
           .then(r => r.json())
-          .then(logs => {
-            browser.expect(logs.length).to.equal(2);
-            getLogs()
-              .then(r => r.json())
-              .then(eventLogs => {
-                eventLogs
-                  .filter(d => d.type === "as.web.product.viewed")
-                  .forEach(d => {
-                    browser
-                      .expect(d.ev.campaign.campaign)
-                      .to.equal("My_Newsletter");
-                    browser.expect(d.ev.campaign.source).to.equal("Newsletter");
-                    browser.expect(d.ev.campaign.medium).to.equal("Email");
-                    browser.expect(d.ev.campaign.term).to.equal("February2017");
-                  });
-                browser.expect(eventLogs.length).to.equal(2);
-                done();
-              })
-              .catch(console.error);
+          .then(eventLogs => {
+            eventLogs
+              .filter(d => d.type === "as.web.product.viewed")
+              .forEach(d => {
+                browser
+                  .expect(d.ev.campaign.campaign)
+                  .to.equal("My_Newsletter");
+                browser.expect(d.ev.campaign.source).to.equal("Newsletter");
+                browser.expect(d.ev.campaign.medium).to.equal("Email");
+                browser.expect(d.ev.campaign.term).to.equal("February2017");
+              });
+            browser.expect(eventLogs.length).to.equal(3);
+            done();
           })
           .catch(console.error)
       )

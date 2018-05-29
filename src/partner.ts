@@ -1,4 +1,3 @@
-import parser from "./parseuri";
 import { window, document } from "./browser";
 import { UTM } from "./campaign";
 
@@ -6,12 +5,12 @@ export const PARTNER_ID_KEY = "__as.partner_id";
 export const PARTNER_SID_KEY = "__as.partner_sid";
 
 const updatePartnerInfo = () => {
-  const uri = parser.parseURI(window.location.href);
-  let partnerId = uri.queryKey[PARTNER_ID_KEY];
-  let partnerSId = uri.queryKey[PARTNER_SID_KEY];
+  const uri = new URL(window.location.href);
+  let partnerId = uri.searchParams.get(PARTNER_ID_KEY);
+  let partnerSId = uri.searchParams.get(PARTNER_SID_KEY);
 
   UTM.forEach(key => {
-    const keyValue = decodeURIComponent(uri.queryKey[key] || "");
+    const keyValue = decodeURIComponent(uri.searchParams.get(key) || "");
     if (keyValue) {
       window.sessionStorage.setItem(`__as.${key}`, keyValue);
     } else {
@@ -32,8 +31,8 @@ const updatePartnerInfo = () => {
 };
 
 export const setPartnerInfo = () => {
-  const referrer = parser.parseURI(document.referrer).authority;
-  const currentHost = parser.parseURI(window.location.origin).authority;
+  const referrer = new URL(document.referrer).host;
+  const currentHost = new URL(window.location.origin).host;
   if (referrer !== currentHost) {
     updatePartnerInfo();
   }
