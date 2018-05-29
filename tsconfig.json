@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "noImplicitAny": false,
+    "module": "es6",
+    "target": "es6",
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "outDir": "build",
+    "experimentalDecorators": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["build", "node_modules", "rollup.config.js"],
+  "typeRoots": ["./node_modules/@types", "./src"]
+}

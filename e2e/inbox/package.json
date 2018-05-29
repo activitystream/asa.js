@@ -1,0 +1,16 @@
+{
+  "name": "inbox",
+  "version": "1.0.0",
+  "description": "test inbox server",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "restify": "^7.2.0",
+    "restify-cookies": "^0.2.5",
+    "restify-cors-middleware": "^1.1.0"
+  }
+}

@@ -1,5 +1,9 @@
 node_modules/
-dist/
-.tmp/
+build/*
+e2e/reports/
+e2e/build/
+!build/index.html
+.rpt2_cache
+.vscode
 *.log
-typings/
+*.code-workspace

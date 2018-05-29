@@ -1,0 +1,16 @@
+{
+  "name": "cdn",
+  "version": "1.0.0",
+  "description": "test operaen server",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "restify": "^7.2.0",
+    "restify-cookies": "^0.2.5",
+    "@activitystream/asa": "https://github.com/activitystream/asa.js.git#asaV2"
+  }
+}

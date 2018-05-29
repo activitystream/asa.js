@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.0/normalize.min.css">
+    <style>
+        body {
+            top: 0;
+            right: 0;
+            left: 0;
+            bottom: 0;
+            position: absolute;
+            display: flex;
+            flex-flow: row-reverse;
+        }
+
+        div#rfb {
+            margin: 0;
+        }
+
+        div#panel {
+            position: relative;
+            height: 100%;
+            flex: 1 0 auto;
+            overflow-y: auto;
+            white-space: pre;
+            padding: 10px;
+            word-break: break-all;
+            box-sizing: border-box;
+            color: #e9e9e9;
+        }
+
+        div#panel * {
+            word-break: break-all;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="./vnc.min.js"></script>
+</body>
+
+</html>
