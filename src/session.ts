@@ -1,8 +1,8 @@
 import * as user from "./user";
-import { getNumber } from "./randomness";
-import { hash } from "./domain_hash";
+import { hex_sha1, uid } from "./sha1";
 import Baker from "./baker";
 import { Campaign } from "./campaign";
+import { getDomain } from "./user";
 
 const persistence = {
   get(id: string): string {
@@ -80,7 +80,7 @@ export class SessionManager implements SessionManager {
       SESSION_COOKIE_NAME,
       JSON.stringify({
         ...data,
-        id: `${user.getDomain()}.${hash(`${user.getUser()}.${getNumber()}`)}`,
+        id: `${getDomain()}.${hex_sha1(`${user.getUser()}.${uid()}`)}`,
         t: new Date().getTime() + SESSION_EXPIRE_TIMEOUT
       })
     );

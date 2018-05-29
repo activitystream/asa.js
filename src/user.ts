@@ -1,5 +1,4 @@
-import { hash } from "./domain_hash";
-import { getNumber } from "./randomness";
+import { hex_sha1, uid } from "./sha1";
 import * as browser from "./browser";
 import Baker from "./baker";
 
@@ -7,8 +6,7 @@ const USER_ID_COOKIE = "__as_user";
 
 let isNew = false;
 
-const generateUser = () =>
-  `${hash(browser.window.location.host)}.${hash(`${getNumber()}`)}`;
+const generateUser = () => `${getDomain()}.${hex_sha1(uid())}`;
 
 export const clearUser = () => Baker.removeItem(USER_ID_COOKIE);
 export const setUser = () => {
@@ -29,8 +27,8 @@ export const getUser = () => {
   return user;
 };
 
-export const getDomain = () => hash(browser.window.location.host);
+export const getDomain = () => hex_sha1(browser.window.location.host);
 
-export const getHash = () => hash(getUser().split(".")[1]);
+export const getHash = (): string => getUser().split(".")[1];
 
 export const isUserNew = () => isNew;

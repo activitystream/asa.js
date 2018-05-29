@@ -1,12 +1,10 @@
-import * as microdata from "./microdata";
+import * as metadata from "./metadata";
 import session, { customSession, Session } from "./session";
-import * as autoTrack from "./auto_track";
-import * as info from "./version";
+import { track } from "./tracking";
+import { version } from "../package.json";
 import * as user from "./user";
 import { window } from "./browser";
-import inbox from "./inbox";
-import parser from "./parseuri";
-import * as debug from "./debug";
+import dispatcher from "./dispatcher";
 import * as partner from "./partner";
 import { Campaign } from "./campaign";
 
@@ -58,11 +56,11 @@ export namespace AsaEvent {
         url: window.location.href
       };
       if (referrer) this.page.referrer = referrer;
-      if (inbox.id) this.tenant = inbox.id;
+      if (dispatcher.id) this.tenant = dispatcher.id;
 
       if (partner_id) this.partner_id = partner_id;
       if (partner_sid) this.partner_sid = partner_sid;
-      this.v = info.version();
+      this.v = version;
     }
 
     toJSON(): string {
@@ -90,10 +88,10 @@ export namespace AsaEvent {
         constructor(data) {
           super();
           if (DOMMeta(data)) {
-            const meta = microdata.extract(data);
+            const meta = metadata.extract(data);
             if (meta) this.meta = meta;
           } else {
-            this.meta = { ...data, ...microdata.extractFromHead() };
+            this.meta = { ...data, ...metadata.extractFromHead() };
           }
         }
       }
@@ -137,25 +135,5 @@ export namespace AsaEvent {
     "as.web.payment.completed": as.web.payment.completed
   };
 
-  export const local: {
-    [name: string]: (...data: any[]) => void;
-  } = {
-    "custom.session.created": customSession,
-    "connected.partners.provided": function(domains: string[]) {
-      autoTrack.links(domains);
-    },
-    "service.providers.provided": function(providers: string[]) {
-      this.providers = providers.map(parser.getAuthority.bind(parser));
-    },
-    "tenant.id.provided": function(id: string) {
-      this.id = id;
-    },
-    "debug.mode.enabled": function(on: boolean) {
-      debug.setDebugMode(on);
-    },
-    "microdata.transformer.provided": function(mapper: () => any) {
-      microdata.setMapper(mapper);
-    }
-  };
-  export type Type = keyof typeof web | keyof typeof local;
+  export type Type = keyof typeof web;
 }

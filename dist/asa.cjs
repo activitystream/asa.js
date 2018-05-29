@@ -320,61 +320,19 @@ if (window.localStorage) {
     }
 }
 
-// parseUri 1.2.2
-// (c) Steven Levithan <stevenlevithan.com>
-// MIT License
-const PARSER = {
-    STRICT: /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/,
-    LOOSE: /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/
-};
-const defaults = {
-    strictMode: false,
-    key: [
-        "source",
-        "protocol",
-        "authority",
-        "userInfo",
-        "user",
-        "password",
-        "host",
-        "port",
-        "relative",
-        "path",
-        "directory",
-        "file",
-        "query",
-        "anchor"
-    ],
-    q: {
-        name: "queryKey",
-        parser: /(?:^|&)([^&=]*)=?([^&]*)/g
-    },
-    parser: PARSER.LOOSE
-};
-class Parser {
-    constructor(options = {}) {
-        this.options = defaults;
-        this.options = Object.assign({}, this.options, options);
-    }
-    getAuthority(str) {
-        return this.parseURI(typeof str !== "string" ? str.href : str).authority;
-    }
-    parseURI(str) {
-        const match = this.options.parser.exec(str);
-        const uri = {};
-        let i = 14;
-        while (i--)
-            uri[this.options.key[i]] = match[i] || "";
-        uri[this.options.q.name] = {};
-        uri[this.options.key[12]].replace(this.options.q.parser, ($0, $1, $2) => {
-            if ($1)
-                uri[this.options.q.name][$1] = $2;
-        });
-        return uri;
-    }
-}
-var parser = new Parser();
-
+var UTM;
+(function (UTM) {
+    UTM[UTM["utm_campaign"] = 0] = "utm_campaign";
+    UTM[UTM["utm_medium"] = 1] = "utm_medium";
+    UTM[UTM["utm_source"] = 2] = "utm_source";
+    UTM[UTM["utm_content"] = 3] = "utm_content";
+    UTM[UTM["utm_term"] = 4] = "utm_term";
+    UTM[UTM["length"] = 5] = "length";
+})(UTM || (UTM = {}));
+(function (UTM) {
+    UTM.forEach = Array.prototype.forEach;
+    UTM.map = Array.prototype.map;
+})(UTM || (UTM = {}));
 class Campaign {
     constructor(campaign, medium, source, content, term) {
         this.campaign = campaign;
@@ -384,93 +342,14 @@ class Campaign {
         this.term = term;
     }
 }
-const UTM = [
-    "utm_medium",
-    "utm_source",
-    "utm_campaign",
-    "utm_content",
-    "utm_term"
-];
 var getCampaign = () => {
     const referrer = Document.referrer && new URL(Document.referrer);
     const location = Document.location && new URL(Document.location);
-    const campaign = UTM.reduce((acc, curr) => {
-        const value = (referrer && referrer.searchParams.get(curr)) ||
-            (location && location.searchParams.get(curr)) ||
-            Window.sessionStorage.getItem(`__as.${curr}`);
-        return value
-            ? Object.assign({}, acc, { [curr]: value }) : acc;
-    }, null);
-    return (campaign &&
-        new Campaign(campaign.utm_campaign, campaign.utm_medium, campaign.utm_source, campaign.utm_content, campaign.utm_term));
-};
-
-// old ie
-if (!console) {
-    window.console = {};
-}
-if (!console.log) {
-    window.console.log = () => { };
-}
-const noLog = (...args) => { };
-const doLog = console.log.bind(console, "asa.js");
-let _log = noLog;
-const log = (...args) => _log(...args);
-const setDebugMode = on => {
-    _log = on ? doLog : noLog;
-};
-const forceLog = doLog;
-
-const processElement = el => {
-    if (el.hasAttribute("itemscope")) {
-        let map = Array.prototype.reduce.call(el.children, (acc, curr) => (Object.assign({}, acc, { [curr.getAttribute("itemprop")]: processElement(curr) })), {});
-        if (el.getAttribute("itemtype")) {
-            map = {
-                type: el.getAttribute("itemtype"),
-                properties: map
-            };
-        }
-        return map;
-    }
-    else if (el.hasAttribute("itemprop")) {
-        return el.getAttribute("content") || el.innerText || el.src;
-    }
-    else {
-        return {
-            __items: Array.prototype.map.call(el.children, processElement)
-        };
-    }
-};
-const extractFromHead = () => _mapper(Array.prototype.reduce.call(document.querySelectorAll('head > meta[property^="og:"]'), (acc, curr) => (Object.assign({}, acc, { [curr.getAttribute("property")]: curr.getAttribute("content") })), {
-    keywords: document.querySelector('head > meta[name="keywords"]') &&
-        document
-            .querySelector('head > meta[name="keywords"]')
-            .getAttribute("content")
-}));
-const noMapper = (m, n) => m;
-let _mapper = noMapper;
-const setMapper = mapper => {
-    _mapper = (meta, el) => {
-        try {
-            return mapper(meta, el);
-        }
-        catch (e) {
-            return meta;
-        }
-    };
-};
-const extract = selector => {
-    const elements = typeof selector === "string"
-        ? document.querySelectorAll(selector)
-        : selector;
-    const data = Array.prototype.map
-        .call(elements, el => _mapper(processElement(el), el))
-        .filter(d => d);
-    return data.length > 1
-        ? {
-            __items: data
-        }
-        : data.pop();
+    const campaign = UTM.map((key) => (referrer && referrer.searchParams.get(key)) ||
+        (location && location.searchParams.get(key)) ||
+        Window.sessionStorage.getItem(`__as.${key}`) ||
+        undefined);
+    return campaign.some(p => !!p) && new Campaign(...campaign);
 };
 
 /*! *****************************************************************************
@@ -506,26 +385,172 @@ function __rest(s, e) {
  * Distributed under the BSD License
  * See http://pajhome.org.uk/crypt/md5 for details.
  */
-
-const hash = d => {
-    let a = 1;
-    let c = 0;
-    let h;
-    let o;
-    if (d) {
-        a = 0;
-        for (h = d["length"] - 1; h >= 0; h--) {
-            o = d.charCodeAt(h);
-            a = ((a << 6) & 268435455) + o + (o << 14);
-            c = a & 266338304;
-            a = c != 0 ? a ^ (c >> 21) : a;
-        }
+const uid = () => Math.round(Math.random() * Date.now());
+/*
+ * Configurable variables. You may need to tweak these to be compatible with
+ * the server-side, but the defaults work in most cases.
+ */
+let hexcase = 0; /* hex output format. 0 - lowercase; 1 - uppercase        */
+/*
+ * These are the functions you'll usually want to call
+ * They take string arguments and return either hex or base-64 encoded strings
+ */
+function hex_sha1(s) {
+    return rstr2hex(rstr_sha1(str2rstr_utf8(s)));
+}
+/*
+ * Calculate the SHA1 of a raw string
+ */
+function rstr_sha1(s) {
+    return binb2rstr(binb_sha1(rstr2binb(s), s.length * 8));
+}
+/*
+ * Convert a raw string to a hex string
+ */
+function rstr2hex(input) {
+    try {
     }
-    return a;
-};
-/* jshint ignore:end */
-
-const getNumber = () => Math.round(Math.random() * Date.now());
+    catch (e) {
+        hexcase = 0;
+    }
+    const hex_tab = hexcase ? "0123456789ABCDEF" : "0123456789abcdef";
+    let output = "";
+    let x;
+    for (let i = 0; i < input.length; i++) {
+        x = input.charCodeAt(i);
+        output += hex_tab.charAt((x >>> 4) & 0x0f) + hex_tab.charAt(x & 0x0f);
+    }
+    return output;
+}
+/*
+ * Encode a string as utf-8.
+ * For efficiency, this assumes the input is valid utf-16.
+ */
+function str2rstr_utf8(input) {
+    let output = "";
+    let i = -1;
+    let x;
+    let y;
+    while (++i < input.length) {
+        /* Decode utf-16 surrogate pairs */
+        x = input.charCodeAt(i);
+        y = i + 1 < input.length ? input.charCodeAt(i + 1) : 0;
+        if (0xd800 <= x && x <= 0xdbff && 0xdc00 <= y && y <= 0xdfff) {
+            x = 0x10000 + ((x & 0x03ff) << 10) + (y & 0x03ff);
+            i++;
+        }
+        /* Encode output as utf-8 */
+        if (x <= 0x7f)
+            output += String.fromCharCode(x);
+        else if (x <= 0x7ff)
+            output += String.fromCharCode(0xc0 | ((x >>> 6) & 0x1f), 0x80 | (x & 0x3f));
+        else if (x <= 0xffff)
+            output += String.fromCharCode(0xe0 | ((x >>> 12) & 0x0f), 0x80 | ((x >>> 6) & 0x3f), 0x80 | (x & 0x3f));
+        else if (x <= 0x1fffff)
+            output += String.fromCharCode(0xf0 | ((x >>> 18) & 0x07), 0x80 | ((x >>> 12) & 0x3f), 0x80 | ((x >>> 6) & 0x3f), 0x80 | (x & 0x3f));
+    }
+    return output;
+}
+/*
+ * Convert a raw string to an array of big-endian words
+ * Characters >255 have their high-byte silently ignored.
+ */
+function rstr2binb(input) {
+    const output = Array(input.length >> 2);
+    for (let i = 0; i < output.length; i++)
+        output[i] = 0;
+    for (let i = 0; i < input.length * 8; i += 8)
+        output[i >> 5] |= (input.charCodeAt(i / 8) & 0xff) << (24 - i % 32);
+    return output;
+}
+/*
+ * Convert an array of big-endian words to a string
+ */
+function binb2rstr(input) {
+    let output = "";
+    for (let i = 0; i < input.length * 32; i += 8)
+        output += String.fromCharCode((input[i >> 5] >>> (24 - i % 32)) & 0xff);
+    return output;
+}
+/*
+ * Calculate the SHA-1 of an array of big-endian words, and a bit length
+ */
+function binb_sha1(x, len) {
+    /* append padding */
+    x[len >> 5] |= 0x80 << (24 - len % 32);
+    x[(((len + 64) >> 9) << 4) + 15] = len;
+    const w = Array(80);
+    let a = 1732584193;
+    let b = -271733879;
+    let c = -1732584194;
+    let d = 271733878;
+    let e = -1009589776;
+    for (let i = 0; i < x.length; i += 16) {
+        const olda = a;
+        const oldb = b;
+        const oldc = c;
+        const oldd = d;
+        const olde = e;
+        for (let j = 0; j < 80; j++) {
+            if (j < 16)
+                w[j] = x[i + j];
+            else
+                w[j] = bit_rol(w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16], 1);
+            const t = safe_add(safe_add(bit_rol(a, 5), sha1_ft(j, b, c, d)), safe_add(safe_add(e, w[j]), sha1_kt(j)));
+            e = d;
+            d = c;
+            c = bit_rol(b, 30);
+            b = a;
+            a = t;
+        }
+        a = safe_add(a, olda);
+        b = safe_add(b, oldb);
+        c = safe_add(c, oldc);
+        d = safe_add(d, oldd);
+        e = safe_add(e, olde);
+    }
+    return Array(a, b, c, d, e);
+}
+/*
+ * Perform the appropriate triplet combination function for the current
+ * iteration
+ */
+function sha1_ft(t, b, c, d) {
+    if (t < 20)
+        return (b & c) | (~b & d);
+    if (t < 40)
+        return b ^ c ^ d;
+    if (t < 60)
+        return (b & c) | (b & d) | (c & d);
+    return b ^ c ^ d;
+}
+/*
+ * Determine the appropriate additive constant for the current iteration
+ */
+function sha1_kt(t) {
+    return t < 20
+        ? 1518500249
+        : t < 40
+            ? 1859775393
+            : t < 60
+                ? -1894007588
+                : -899497514;
+}
+/*
+ * Add integers, wrapping at 2^32. This uses 16-bit operations internally
+ * to work around bugs in some JS interpreters.
+ */
+function safe_add(x, y) {
+    const lsw = (x & 0xffff) + (y & 0xffff);
+    const msw = (x >> 16) + (y >> 16) + (lsw >> 16);
+    return (msw << 16) | (lsw & 0xffff);
+}
+/*
+ * Bitwise rotate a 32-bit number to the left.
+ */
+function bit_rol(num, cnt) {
+    return (num << cnt) | (num >>> (32 - cnt));
+}
 
 /*\
 |*|
@@ -616,7 +641,7 @@ var Baker = {
 };
 
 const USER_ID_COOKIE = "__as_user";
-const generateUser = () => `${hash(Window.location.host)}.${hash(`${getNumber()}`)}`;
+const generateUser = () => `${getDomain()}.${hex_sha1(uid())}`;
 const setUser = () => {
     const id = generateUser();
     Baker.setItem(USER_ID_COOKIE, id, Infinity, "/");
@@ -630,8 +655,7 @@ const getUser = () => {
     }
     return user;
 };
-const getDomain = () => hash(Window.location.host);
-const getHash = () => hash(getUser().split(".")[1]);
+const getDomain = () => hex_sha1(Window.location.host);
 
 const persistence = {
     get(id) {
@@ -679,7 +703,7 @@ class SessionManager {
         }
     }
     createSession(data) {
-        sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(Object.assign({}, data, { id: `${getDomain()}.${hash(`${getUser()}.${getNumber()}`)}`, t: new Date().getTime() + SESSION_EXPIRE_TIMEOUT })));
+        sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(Object.assign({}, data, { id: `${getDomain()}.${hex_sha1(`${getUser()}.${uid()}`)}`, t: new Date().getTime() + SESSION_EXPIRE_TIMEOUT })));
     }
     destroySession() {
         return sessionStore.removeItem(SESSION_COOKIE_NAME);
@@ -715,7 +739,86 @@ const proxy = {
     destroySession: () => sessionManager.destroySession()
 };
 
-function links(domains) {
+// old ie
+if (!console) {
+    window.console = {};
+}
+if (!console.log) {
+    window.console.log = () => { };
+}
+class Logger {
+    constructor() {
+        this._logger = Logger.none;
+    }
+    static none(...args) { }
+    static console(...args) {
+        console.log("asa.js", ...args);
+    }
+    mode(mode) {
+        this._logger = mode ? Logger.console : Logger.none;
+    }
+    log(...args) {
+        this._logger(...args);
+    }
+    force(...args) {
+        Logger.console(...args);
+    }
+}
+var logger = new Logger();
+
+const processElement = el => {
+    if (el.hasAttribute("itemscope")) {
+        let map = Array.prototype.reduce.call(el.children, (acc, curr) => (Object.assign({}, acc, { [curr.getAttribute("itemprop")]: processElement(curr) })), {});
+        if (el.getAttribute("itemtype")) {
+            map = {
+                type: el.getAttribute("itemtype"),
+                properties: map
+            };
+        }
+        return map;
+    }
+    else if (el.hasAttribute("itemprop")) {
+        return el.getAttribute("content") || el.innerText || el.src;
+    }
+    else {
+        return {
+            __items: [].map.call(el.children, processElement)
+        };
+    }
+};
+const extractFromHead = () => _mapper(Array.prototype.reduce.call(document.querySelectorAll('head > meta[property^="og:"]'), (acc, curr) => (Object.assign({}, acc, { [curr.getAttribute("property")]: curr.getAttribute("content") })), {
+    keywords: document.querySelector('head > meta[name="keywords"]') &&
+        document
+            .querySelector('head > meta[name="keywords"]')
+            .getAttribute("content")
+}));
+const noMapper = (m, n) => m;
+let _mapper = noMapper;
+const setMapper = mapper => {
+    _mapper = (meta, el) => {
+        try {
+            return mapper(meta, el);
+        }
+        catch (e) {
+            return meta;
+        }
+    };
+};
+const extract = (selector) => {
+    const elements = typeof selector === "string"
+        ? document.querySelectorAll(selector)
+        : selector;
+    const data = [].map
+        .call(elements, el => _mapper(processElement(el), el))
+        .filter(d => d);
+    return data.length > 1
+        ? {
+            __items: data
+        }
+        : data.pop();
+};
+
+function track(domains) {
     const domainsTracked = domains;
     const tracker = ({ target }) => {
         let href = target.href;
@@ -739,59 +842,7 @@ function links(domains) {
     document.addEventListener("touchstart", tracker);
 }
 
-let experiments = {};
-const defineExperiment = (name, percentage) => {
-    if (typeof percentage === "boolean") {
-        if (percentage)
-            experiments[name] = percentage;
-    }
-    else
-        experiments[name] = getHash() % 100 <= percentage;
-};
-const experimentsLive = () => {
-    const result = [];
-    for (const exp in experiments) {
-        if (experiments.hasOwnProperty(exp)) {
-            if (experiments[exp])
-                result.push(exp);
-        }
-    }
-    return result.join(".");
-};
-const MINI_AJAX = "miniAjax";
-
-var name = "@activitystream/asa";
 var version = "1.1.77";
-var description = "Activity Stream Analytics data sumbission library";
-var browser = "dist/asa.min.js";
-var main = "dist/asa.cjs";
-var module$1 = "dist/asa.es";
-var repository = {"url":"git@github.com:activitystream/asa.js.git"};
-var scripts = {"test":"rollup -c --environment TEST -w","build":"rollup -c --environment PRODUCTION","start":"rollup -c --environment DEVELOPMENT -w"};
-var keywords = ["activitystream","analytics","realtime"];
-var author = "Activitystream";
-var license = "MIT";
-var dependencies = {"promise-polyfill":"^7.1.2","whatwg-fetch":"^2.0.4"};
-var devDependencies = {"@types/chai":"^4.1.2","@types/mocha":"^5.2.0","@types/sinon":"^4.3.3","@types/source-map-support":"^0.4.0","@types/whatwg-fetch":"0.0.33","chai":"^4.1.2","mocha":"^5.1.1","sinon":"^5.0.7","source-map-support":"^0.5.5","rollup":"^0.58.2","rollup-plugin-babel":"^3.0.4","rollup-plugin-commonjs":"^9.1.3","rollup-plugin-json":"^2.3.0","rollup-plugin-livereload":"^0.6.0","rollup-plugin-node-builtins":"^2.1.2","rollup-plugin-node-globals":"^1.2.1","rollup-plugin-node-resolve":"^3.3.0","rollup-plugin-serve":"^0.4.2","rollup-plugin-typescript2":"^0.13.0","rollup-plugin-uglify":"^3.0.0","typescript":"^2.8.3","babel-core":"^6.26.3","babel-preset-env":"^1.7.0"};
-var pkg = {
-	name: name,
-	version: version,
-	description: description,
-	browser: browser,
-	main: main,
-	module: module$1,
-	repository: repository,
-	scripts: scripts,
-	keywords: keywords,
-	author: author,
-	license: license,
-	dependencies: dependencies,
-	devDependencies: devDependencies,
-	"private": true
-};
-
-const version$1 = () => pkg.version +
-    (experimentsLive() ? `-${experimentsLive()}` : "");
 
 const DOMMeta = (selector) => selector &&
     (selector instanceof HTMLElement ||
@@ -819,13 +870,13 @@ var AsaEvent;
             };
             if (referrer)
                 this.page.referrer = referrer;
-            if (inbox.id)
-                this.tenant = inbox.id;
+            if (dispatcher.id)
+                this.tenant = dispatcher.id;
             if (partner_id)
                 this.partner_id = partner_id;
             if (partner_sid)
                 this.partner_sid = partner_sid;
-            this.v = version$1();
+            this.v = version;
         }
         toJSON() {
             return JSON.parse(JSON.stringify(Object.assign({}, this)));
@@ -942,42 +993,21 @@ var AsaEvent;
         "as.web.product.viewed": as.web.product.viewed,
         "as.web.payment.completed": as.web.payment.completed
     };
-    AsaEvent.local = {
-        "custom.session.created": customSession,
-        "connected.partners.provided": function (domains) {
-            links(domains);
-        },
-        "service.providers.provided": function (providers) {
-            this.providers = providers.map(parser.getAuthority.bind(parser));
-        },
-        "tenant.id.provided": function (id) {
-            this.id = id;
-        },
-        "debug.mode.enabled": function (on) {
-            setDebugMode(on);
-        },
-        "microdata.transformer.provided": function (mapper) {
-            setMapper(mapper);
-        }
-    };
 })(AsaEvent || (AsaEvent = {}));
 
-const formatDateTime = time => {
-    const pad = number => {
-        if (number < 10) {
-            return `0${number}`;
-        }
-        return number;
-    };
-    const timezone = time => {
-        const hours = pad(Math.abs(Math.floor(time / 60)));
-        const minutes = pad(Math.abs(time % 60));
-        const sign = time > 0 ? "-" : "+";
-        return `${sign + hours}:${minutes}`;
-    };
-    return `${time.getFullYear()}-${pad(time.getMonth() + 1)}-${pad(time.getDate())}T${pad(time.getHours())}:${pad(time.getMinutes())}:${pad(time.getSeconds())}.${(time.getMilliseconds() / 1000).toFixed(3).slice(2, 5)}${timezone(time.getTimezoneOffset())}`;
-};
-
+const toDigits = (d, n) => ("0" + Math.abs(n)).slice(-d);
+class DateTime extends Date {
+    toJSON() {
+        const offset = -this.getTimezoneOffset();
+        const local = new DateTime(this);
+        local.setMinutes(this.getMinutes() + offset);
+        return (local.toISOString().slice(0, -1) +
+            (~Math.sign(offset) ? "+" : "-") +
+            toDigits(2, offset / 60) +
+            ":" +
+            toDigits(2, offset % 60));
+    }
+}
 const POST = (url, data) => fetch(url, {
     method: "POST",
     body: JSON.stringify(data),
@@ -985,50 +1015,49 @@ const POST = (url, data) => fetch(url, {
         "Content-Type": "text/plain; charset=UTF-8"
     }
 });
-const EVENT = data => POST("//inbox.activitystream.com/asa", data);
-const ERROR = data => POST("//inbox.activitystream.com/asa/error", data);
+const EVENT = (data) => POST("//inbox.activitystream.com/asa", data);
+const ERROR = (data) => POST("//inbox.activitystream.com/asa/error", data);
 const submitEvent = ev => EVENT({
     ev,
-    t: formatDateTime(new Date())
+    t: new DateTime()
 });
-const submitError = (err, context) => (err && (err.code === 22 || err.code === 18)) ||
-    ERROR({ err, context, v: version$1() });
-class Server {
+const submitError = (err, context) => ERROR({ err, context, v: version });
+class API {
     constructor() {
         this._dispatchEvent = submitEvent;
         this._dispatchError = submitError;
         this.pendingSubmission = [];
         this.done = true;
+        this.submitEvent = event => {
+            return this._dispatchEvent(event);
+        };
+        this.submitError = (error, context) => {
+            return this._dispatchError(error, context);
+        };
     }
     batchEvent(e) {
         this.pendingSubmission.push(e);
-    }
-    submitEvent(event) {
-        return this._dispatchEvent(event);
-    }
-    submitError(error, data) {
-        return this._dispatchError(error, data);
     }
     batchOn() {
         this.batchIntervalHandler = setInterval(() => {
             try {
                 if (this.pendingSubmission.length > 0 && this.done) {
                     const batchSize = Math.min(this.pendingSubmission.length, 10);
-                    const event = this.pendingSubmission.slice(0, batchSize);
+                    const events = this.pendingSubmission.slice(0, batchSize);
                     this.done = false;
-                    submitEvent(event)
-                        .then(() => this.pendingSubmission.splice(0, event.length))
-                        .catch(log);
+                    events.forEach(event => submitEvent(event)
+                        .then(() => this.pendingSubmission.splice(0, events.length))
+                        .catch(logger.log));
                 }
             }
             catch (e) {
-                log("exception submitting", e);
+                logger.log("exception submitting", e);
             }
         }, 400);
     }
     batchOff() {
         if (!this.batchIntervalHandler) {
-            log("cannot batch off, it is not on");
+            logger.log("cannot batch off, it is not on");
         }
         else {
             clearInterval(this.batchIntervalHandler);
@@ -1043,22 +1072,34 @@ class Server {
         this._dispatchEvent = submitEvent;
     }
 }
-var server = new Server();
+var api = new API();
 
-function Inbox(tenant) {
+function Dispatcher(tenant) {
     proxy.destroySession();
-    const instance = function Inbox(name, ...data) {
+    this.setTenant(tenant);
+    this.setProviders([]);
+    return function Dispatcher(name, ...data) {
+        const getReferrer = () => {
+            const referrer = Document.referrer && new URL(Document.referrer).host;
+            const location = Document.location && new URL(Document.location).host;
+            return referrer &&
+                location &&
+                referrer !== location &&
+                !~this.providers.indexOf(referrer)
+                ? referrer
+                : null;
+        };
         try {
             if (!AsaEvent.web[name]) {
-                if (AsaEvent.local[name]) {
-                    AsaEvent.local[name].call(instance, ...data);
+                if (local[name]) {
+                    local[name].call(this, ...data);
                 }
                 return;
             }
             const campaign = getCampaign();
             const referrer = getReferrer();
             if (!proxy.hasSession()) {
-                log("no session, starting a new one");
+                logger.log("no session, starting a new one");
                 proxy.createSession({
                     campaign,
                     referrer
@@ -1069,41 +1110,42 @@ function Inbox(tenant) {
                     campaign,
                     referrer
                 });
-                log("session resumed");
+                logger.log("session resumed");
             }
-            instance.transport(new AsaEvent.web[name](...data));
+            api.submitEvent(new AsaEvent.web[name](...data));
         }
         catch (error) {
-            forceLog("inbox exception:", error);
-            server.submitError(error, {
+            logger.force("inbox exception:", error);
+            api.submitError(error, {
                 location: "processing inbox message",
                 arguments: [event, ...data]
             });
         }
-        return instance;
-    };
-    instance.id = tenant;
-    instance.transport = (event) => {
-        server.submitEvent(event);
-    };
-    instance.providers = [];
-    const getReferrer = () => {
-        const referrer = parser.getAuthority(Document.referrer);
-        const location = parser.getAuthority(Document.location);
-        return referrer &&
-            referrer !== location &&
-            !~instance.providers.indexOf(referrer)
-            ? referrer
-            : null;
-    };
-    return instance;
+        return Dispatcher.bind(this);
+    }.bind(this);
 }
-var inbox = new Inbox();
+Dispatcher.prototype = new class Dispatcher {
+    setTenant(tenant) {
+        this.id = tenant;
+    }
+    setProviders(providers) {
+        this.providers = providers.map(provider => new URL(provider).host);
+    }
+}();
+const local = {
+    "custom.session.created": customSession,
+    "connected.partners.provided": track,
+    "service.providers.provided": Dispatcher.prototype.setProviders,
+    "tenant.id.provided": Dispatcher.prototype.setTenant,
+    "debug.mode.enabled": logger.mode,
+    "metadata.transformer.provided": setMapper
+};
+var dispatcher = new Dispatcher();
 
 const Window = {
     sessionStorage: window.sessionStorage,
     location: window.location,
-    asa: inbox
+    asa: dispatcher
 };
 const Document = {
     location: document.location,
@@ -1113,11 +1155,11 @@ const Document = {
 const PARTNER_ID_KEY = "__as.partner_id";
 const PARTNER_SID_KEY = "__as.partner_sid";
 const updatePartnerInfo = () => {
-    const uri = parser.parseURI(Window.location.href);
-    let partnerId = uri.queryKey[PARTNER_ID_KEY];
-    let partnerSId = uri.queryKey[PARTNER_SID_KEY];
+    const uri = new URL(Window.location.href);
+    let partnerId = uri.searchParams.get(PARTNER_ID_KEY);
+    let partnerSId = uri.searchParams.get(PARTNER_SID_KEY);
     UTM.forEach(key => {
-        const keyValue = decodeURIComponent(uri.queryKey[key] || "");
+        const keyValue = decodeURIComponent(uri.searchParams.get(key) || "");
         if (keyValue) {
             Window.sessionStorage.setItem(`__as.${key}`, keyValue);
         }
@@ -1139,8 +1181,8 @@ const updatePartnerInfo = () => {
     }
 };
 const setPartnerInfo = () => {
-    const referrer = parser.parseURI(Document.referrer).authority;
-    const currentHost = parser.parseURI(Window.location.origin).authority;
+    const referrer = new URL(Document.referrer).host;
+    const currentHost = new URL(Window.location.origin).host;
     if (referrer !== currentHost) {
         updatePartnerInfo();
     }
@@ -1148,29 +1190,16 @@ const setPartnerInfo = () => {
 const getID = () => Window.sessionStorage.getItem(PARTNER_ID_KEY);
 const getSID = () => Window.sessionStorage.getItem(PARTNER_SID_KEY);
 
-const runBootSequence = (bootSequence = []) => {
-    if (!Array.isArray(bootSequence))
-        bootSequence = [bootSequence];
-    for (let i = 0; i < bootSequence.length; i++) {
-        window.asa.apply(null, bootSequence[i]);
-    }
-};
-var boot = (bootSequence = []) => {
-    // if (DNT && (DNT === 'yes' || DNT.charAt(0) === '1')) return;
+var boot = () => {
     try {
-        const pendingEvents = (window.asa && window.asa["q"]) || [];
-        window.asa = inbox;
-        defineExperiment(MINI_AJAX, 10);
+        const queue = (window.asa && window.asa["q"]) || [];
+        window.asa = dispatcher;
         setPartnerInfo();
-        runBootSequence(bootSequence);
-        for (let i = 0; i < pendingEvents.length; i++) {
-            window.asa.apply(null, pendingEvents[i]);
-        }
-        // autoTrack.sections();
+        queue.forEach(event => window.asa(event));
     }
     catch (e) {
-        forceLog("exception during init: ", e);
-        server.submitError(e, { location: "boot script" });
+        logger.force("exception during init: ", e);
+        api.submitError(e, { location: "boot script" });
     }
 };
 

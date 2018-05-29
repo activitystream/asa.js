@@ -1,8 +1,8 @@
-import inbox, { Inbox } from "./inbox";
+import inbox, { Dispatcher } from "./dispatcher";
 
 declare global {
   interface Window {
-    asa: Inbox;
+    asa: Dispatcher;
   }
 
   interface Document {}
@@ -12,7 +12,11 @@ declare global {
   }
 }
 
-const Window: { sessionStorage: Storage; location: Location; asa: Inbox } = {
+const Window: {
+  sessionStorage: Storage;
+  location: Location;
+  asa: Dispatcher;
+} = {
   sessionStorage: window.sessionStorage,
   location: window.location,
   asa: inbox

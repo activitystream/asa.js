@@ -1,40 +1,18 @@
-import * as partner from "./partner";
-import * as debug from "./debug";
-import inbox from "./inbox";
-import server from "./server";
-import * as features from "./features";
+import { setPartnerInfo } from "./partner";
+import logger from "./logger";
+import dispatcher from "./dispatcher";
+import api from "./api";
 import { AsaEvent } from "./event";
 
-const runBootSequence: (bootSequence: AsaEvent.Type[]) => void = (
-  bootSequence: AsaEvent.Type[] = []
-): void => {
-  if (!Array.isArray(bootSequence)) bootSequence = [bootSequence];
-
-  for (let i = 0; i < bootSequence.length; i++) {
-    window.asa.apply(null, bootSequence[i]);
-  }
-};
-
-export default (bootSequence: AsaEvent.Type[] = []): void => {
-  // if (DNT && (DNT === 'yes' || DNT.charAt(0) === '1')) return;
-
+export default (): void => {
   try {
-    const pendingEvents: AsaEvent.Type[] =
-      (window.asa && window.asa["q"]) || [];
+    const queue: AsaEvent.Type[] = (window.asa && window.asa["q"]) || [];
+    window.asa = dispatcher;
 
-    window.asa = inbox;
-
-    features.defineExperiment(features.MINI_AJAX, 10);
-    partner.setPartnerInfo();
-    runBootSequence(bootSequence);
-
-    for (let i = 0; i < pendingEvents.length; i++) {
-      window.asa.apply(null, pendingEvents[i]);
-    }
-
-    // autoTrack.sections();
+    setPartnerInfo();
+    queue.forEach(event => window.asa(event));
   } catch (e) {
-    debug.forceLog("exception during init: ", e);
-    server.submitError(e, { location: "boot script" });
+    logger.force("exception during init: ", e);
+    api.submitError(e, { location: "boot script" });
   }
 };

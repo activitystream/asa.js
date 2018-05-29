@@ -1,7 +1,6 @@
 import sinon from "sinon";
-import { Inbox } from "./inbox";
+import { Dispatcher } from "./dispatcher";
 import { expect } from "chai";
-import * as features from "./features";
 import { AsaEvent } from "./event";
 
 const DATE: Date = new Date();
@@ -10,7 +9,7 @@ const _fetch = window.fetch;
 
 export default describe("Postbox SDK", () => {
   let fetchStub: sinon.SinonStub;
-  let asa: Inbox = new Inbox();
+  let asa: Dispatcher = new Dispatcher();
 
   const adjustSystemInfo = (data: {}): AsaEvent.Event => {
     const event: AsaEvent.Event = { ...data } as AsaEvent.Event;
@@ -24,10 +23,6 @@ export default describe("Postbox SDK", () => {
 
   before(() => {
     fetchStub = sinon.stub(window, "fetch");
-  });
-
-  beforeEach(() => {
-    features.clearExperiments();
   });
 
   after(() => {
