@@ -9,21 +9,19 @@ import { Event } from "./event";
 const toDigits = (d: number, n: number): string =>
   ("0" + Math.abs(n)).slice(-d);
 
-export class DateTime extends Date {
-  toJSON(): string {
-    const offset: number = -this.getTimezoneOffset();
-    const local: DateTime = new DateTime(this);
-    local.setMinutes(this.getMinutes() + offset);
+export const stringifyDate = (date: Date): string => {
+  const offset: number = -date.getTimezoneOffset();
+  const local: Date = new Date(date);
+  local.setMinutes(date.getMinutes() + offset);
 
-    return (
-      local.toISOString().slice(0, -1) +
-      (~Math.sign(offset) ? "+" : "-") +
-      toDigits(2, offset / 60) +
-      ":" +
-      toDigits(2, offset % 60)
-    );
-  }
-}
+  return (
+    local.toISOString().slice(0, -1) +
+    (~Math.sign(offset) ? "+" : "-") +
+    toDigits(2, offset / 60) +
+    ":" +
+    toDigits(2, offset % 60)
+  );
+};
 
 const POST = (url: string, data: { [key: string]: any }): Promise<Response> =>
   fetch(url, {
@@ -36,7 +34,7 @@ const POST = (url: string, data: { [key: string]: any }): Promise<Response> =>
 
 export type AsaError = { code: number };
 
-export type EventRequest = { ev: { [key: string]: any }; t: DateTime };
+export type EventRequest = { ev: { [key: string]: any }; t: string };
 export type ErrorRequest = {
   err: AsaError;
   v: string;
@@ -57,7 +55,7 @@ export type ErrorDispatcher = (
 const submitEvent: EventDispatcher = ev =>
   EVENT({
     ev,
-    t: new DateTime()
+    t: stringifyDate(new Date())
   });
 
 const submitError: ErrorDispatcher = (err, context?) =>
