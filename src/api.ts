@@ -1,6 +1,10 @@
+/**
+ * @module api
+ */
+
 import logger from "./logger";
 import { version } from "../package.json";
-import { AsaEvent } from "./event";
+import { Event } from "./event";
 
 const toDigits = (d: number, n: number): string =>
   ("0" + Math.abs(n)).slice(-d);
@@ -44,7 +48,7 @@ export const EVENT = (data: EventRequest): Promise<Response> =>
 export const ERROR = (data: { [key: string]: any }): Promise<Response> =>
   POST("//inbox.activitystream.com/asa/error", data);
 
-export type EventDispatcher = (event: AsaEvent.Event) => Promise<Response>;
+export type EventDispatcher = (event: Event) => Promise<Response>;
 export type ErrorDispatcher = (
   error: AsaError,
   context?: { [key: string]: any }
@@ -62,7 +66,7 @@ const submitError: ErrorDispatcher = (err, context?) =>
 export class API {
   private _dispatchEvent: EventDispatcher = submitEvent;
   private _dispatchError: ErrorDispatcher = submitError;
-  private pendingSubmission: AsaEvent.Event[] = [];
+  private pendingSubmission: Event[] = [];
   private batchIntervalHandler;
   private done = true;
 
@@ -83,10 +87,7 @@ export class API {
       try {
         if (this.pendingSubmission.length > 0 && this.done) {
           const batchSize = Math.min(this.pendingSubmission.length, 10);
-          const events: AsaEvent.Event[] = this.pendingSubmission.slice(
-            0,
-            batchSize
-          );
+          const events: Event[] = this.pendingSubmission.slice(0, batchSize);
           this.done = false;
           events.forEach(event =>
             submitEvent(event)

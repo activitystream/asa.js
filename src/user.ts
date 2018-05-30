@@ -1,3 +1,7 @@
+/**
+ * @module user
+ */
+
 import { hex_sha1, uid } from "./sha1";
 import * as browser from "./browser";
 import Baker from "./baker";

@@ -1,3 +1,7 @@
+/**
+ * @module session
+ */
+
 import * as user from "./user";
 import { hex_sha1, uid } from "./sha1";
 import Baker from "./baker";

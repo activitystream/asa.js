@@ -1,3 +1,7 @@
+/**
+ * @module campaign
+ */
+
 import { window, document } from "./browser";
 
 export enum UTM {

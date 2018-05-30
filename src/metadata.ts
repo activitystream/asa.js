@@ -1,3 +1,7 @@
+/**
+ * @module metadata
+ */
+
 import logger from "./logger";
 
 const collectReferencedProperties = (element, item) => {
@@ -117,13 +121,13 @@ export const setMapper = mapper => {
 };
 
 export const extract = (selector: string): {} => {
-  const elements =
+  const elements: NodeList =
     typeof selector === "string"
       ? document.querySelectorAll(selector)
       : selector;
-  const data = [].map
-    .call(elements, el => _mapper(processElement(el), el))
-    .filter(d => d);
+  const data: any = [].map
+    .call(elements, (el: HTMLElement): any => _mapper(processElement(el), el))
+    .filter((data: any): any => data);
 
   return data.length > 1
     ? {

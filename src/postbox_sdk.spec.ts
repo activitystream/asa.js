@@ -1,7 +1,7 @@
 import sinon from "sinon";
 import { Dispatcher } from "./dispatcher";
 import { expect } from "chai";
-import { AsaEvent } from "./event";
+import { Event } from "./event";
 
 const DATE: Date = new Date();
 
@@ -11,8 +11,8 @@ export default describe("Postbox SDK", () => {
   let fetchStub: sinon.SinonStub;
   let asa: Dispatcher = new Dispatcher();
 
-  const adjustSystemInfo = (data: {}): AsaEvent.Event => {
-    const event: AsaEvent.Event = { ...data } as AsaEvent.Event;
+  const adjustSystemInfo = (data: {}): Event => {
+    const event: Event = { ...data } as Event;
     if (event.user.did) event.user.did = "device_id";
     if (event.user.sid) event.user.sid = "session_id";
     if (event.occurred) event.occurred = DATE;
@@ -31,7 +31,7 @@ export default describe("Postbox SDK", () => {
 
   describe("product viewed", () => {
     it("sending data generates a complete message", done => {
-      const expectation: AsaEvent.Event = adjustSystemInfo({
+      const expectation: Event = adjustSystemInfo({
         type: "as.web.product.viewed",
         occurred: "time",
         origin: window.location.origin,
@@ -72,7 +72,7 @@ export default describe("Postbox SDK", () => {
         if (body.err) {
           return;
         }
-        const event: AsaEvent.Event = adjustSystemInfo(body.ev);
+        const event: Event = adjustSystemInfo(body.ev);
         if (event.type === expectation.type) {
           expect(event).to.eql(expectation);
           done();

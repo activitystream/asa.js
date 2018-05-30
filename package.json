@@ -23,8 +23,6 @@
   "license": "MIT",
   "dependencies": {
     "promise-polyfill": "^7.1.2",
-    "typedoc": "^0.11.1",
-    "typedoc-plugin-markdown": "^1.1.12",
     "whatwg-fetch": "^2.0.4"
   },
   "devDependencies": {
