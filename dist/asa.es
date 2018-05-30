@@ -318,6 +318,9 @@ if (window.localStorage) {
     }
 }
 
+/**
+ * @module campaign
+ */
 var UTM;
 (function (UTM) {
     UTM[UTM["utm_campaign"] = 0] = "utm_campaign";
@@ -638,6 +641,9 @@ var Baker = {
     }
 };
 
+/**
+ * @module user
+ */
 const USER_ID_COOKIE = "__as_user";
 const generateUser = () => `${getDomain()}.${hex_sha1(uid())}`;
 const setUser = () => {
@@ -655,6 +661,9 @@ const getUser = () => {
 };
 const getDomain = () => hex_sha1(Window.location.host);
 
+/**
+ * @module session
+ */
 const persistence = {
     get(id) {
         try {
@@ -737,6 +746,9 @@ const proxy = {
     destroySession: () => sessionManager.destroySession()
 };
 
+/**
+ * @module logger
+ */
 // old ie
 if (!console) {
     window.console = {};
@@ -750,7 +762,7 @@ class Logger {
     }
     static none(...args) { }
     static console(...args) {
-        console.log("asa.js", ...args);
+        console.log("js", ...args);
     }
     mode(mode) {
         this._logger = mode ? Logger.console : Logger.none;
@@ -764,6 +776,9 @@ class Logger {
 }
 var logger = new Logger();
 
+/**
+ * @module metadata
+ */
 const processElement = el => {
     if (el.hasAttribute("itemscope")) {
         let map = Array.prototype.reduce.call(el.children, (acc, curr) => (Object.assign({}, acc, { [curr.getAttribute("itemprop")]: processElement(curr) })), {});
@@ -807,8 +822,8 @@ const extract = (selector) => {
         ? document.querySelectorAll(selector)
         : selector;
     const data = [].map
-        .call(elements, el => _mapper(processElement(el), el))
-        .filter(d => d);
+        .call(elements, (el) => _mapper(processElement(el), el))
+        .filter((data) => data);
     return data.length > 1
         ? {
             __items: data
@@ -816,6 +831,9 @@ const extract = (selector) => {
         : data.pop();
 };
 
+/**
+ * @module tracking
+ */
 function track(domains) {
     const domainsTracked = domains;
     const tracker = ({ target }) => {
@@ -823,9 +841,9 @@ function track(domains) {
         if (href) {
             const destination = new URL(href);
             if (~domainsTracked.indexOf(destination.host)) {
-                destination.searchParams.set(PARTNER_ID_KEY, Window.asa.id);
-                destination.searchParams.set(PARTNER_SID_KEY, proxy.getSession().id);
-                UTM.forEach(key => {
+                destination.searchParams.set(PARTNER_ID_KEY, dispatcher.id);
+                destination.searchParams.set(PARTNER_SID_KEY, proxy.getSession().asa.id);
+                UTM.forEach((key) => {
                     const value = Window.sessionStorage.getItem(`__as.${key}`);
                     if (value) {
                         destination.searchParams.set(key, value);
@@ -842,170 +860,172 @@ function track(domains) {
 
 var version = "1.1.77";
 
+/**
+ * @module event
+ */
 const DOMMeta = (selector) => selector &&
     (selector instanceof HTMLElement ||
         selector[0] instanceof HTMLElement ||
         typeof selector === "string")
     ? selector
     : false;
-var AsaEvent;
-(function (AsaEvent) {
-    class Event {
-        constructor() {
-            const { id, referrer, campaign } = proxy.getSession();
-            const partner_id = getID();
-            const partner_sid = getSID();
-            this.origin = Window.location.origin;
-            this.occurred = new Date();
-            if (campaign)
-                this.campaign = campaign;
-            this.user = {
-                did: getUser(),
-                sid: id
-            };
-            this.page = {
-                url: Window.location.href
-            };
-            if (referrer)
-                this.page.referrer = referrer;
-            if (dispatcher.id)
-                this.tenant = dispatcher.id;
-            if (partner_id)
-                this.partner_id = partner_id;
-            if (partner_sid)
-                this.partner_sid = partner_sid;
-            this.v = version;
-        }
-        toJSON() {
-            return JSON.parse(JSON.stringify(Object.assign({}, this)));
-        }
-        [Symbol.toPrimitive]() {
-            return this.type;
-        }
+class Event {
+    constructor() {
+        const { id, referrer, campaign } = proxy.getSession();
+        const partner_id = getID();
+        const partner_sid = getSID();
+        this.origin = Window.location.origin;
+        this.occurred = new Date();
+        if (campaign)
+            this.campaign = campaign;
+        this.user = {
+            did: getUser(),
+            sid: id
+        };
+        this.page = {
+            url: Window.location.href
+        };
+        if (referrer)
+            this.page.referrer = referrer;
+        if (dispatcher.id)
+            this.tenant = dispatcher.id;
+        if (partner_id)
+            this.partner_id = partner_id;
+        if (partner_sid)
+            this.partner_sid = partner_sid;
+        this.v = version;
     }
-    AsaEvent.Event = Event;
-    let as;
-    (function (as) {
-        let web;
-        (function (web) {
-            let order;
-            (function (order) {
-                class reviewed extends Event {
-                    constructor() {
-                        super(...arguments);
-                        this.type = "as.web.order.reviewed";
-                    }
-                }
-                order.reviewed = reviewed;
-            })(order = web.order || (web.order = {}));
-            let customer;
-            (function (customer) {
-                let account;
-                (function (account) {
-                    class provided extends Event {
-                        constructor() {
-                            super(...arguments);
-                            this.type = "as.web.customer.account.provided";
-                        }
-                    }
-                    account.provided = provided;
-                })(account = customer.account || (customer.account = {}));
-            })(customer = web.customer || (web.customer = {}));
-            let product;
-            (function (product_1) {
-                class product extends Event {
-                    constructor(data) {
-                        super();
-                        if (DOMMeta(data)) {
-                            const meta = extract(data);
-                            if (meta)
-                                this.meta = meta;
-                        }
-                        else {
-                            this.meta = Object.assign({}, data, extractFromHead());
-                        }
-                    }
-                }
-                product_1.product = product;
-                let availability;
-                (function (availability) {
-                    class checked extends product {
-                        constructor() {
-                            super(...arguments);
-                            this.type = "as.web.product.availability.checked";
-                        }
-                    }
-                    availability.checked = checked;
-                })(availability = product_1.availability || (product_1.availability = {}));
-                class carted extends product {
-                    constructor() {
-                        super(...arguments);
-                        this.type = "as.web.product.carted";
-                    }
-                }
-                product_1.carted = carted;
-                class searched extends product {
-                    constructor() {
-                        super(...arguments);
-                        this.type = "as.web.product.searched";
-                    }
-                }
-                product_1.searched = searched;
-                let shipping;
-                (function (shipping) {
-                    class selected extends product {
-                        constructor() {
-                            super(...arguments);
-                            this.type = "as.web.product.shipping.selected";
-                        }
-                    }
-                    shipping.selected = selected;
-                })(shipping = product_1.shipping || (product_1.shipping = {}));
-                class viewed extends product {
-                    constructor() {
-                        super(...arguments);
-                        this.type = "as.web.product.viewed";
-                    }
-                }
-                product_1.viewed = viewed;
-            })(product = web.product || (web.product = {}));
-            let payment;
-            (function (payment) {
-                class completed extends Event {
-                    constructor() {
-                        super(...arguments);
-                        this.type = "as.web.payment.completed";
-                    }
-                }
-                payment.completed = completed;
-            })(payment = web.payment || (web.payment = {}));
-        })(web = as.web || (as.web = {}));
-    })(as = AsaEvent.as || (AsaEvent.as = {}));
-    AsaEvent.web = {
-        "as.web.customer.account.provided": as.web.customer.account.provided,
-        "as.web.order.reviewed": as.web.order.reviewed,
-        "as.web.product.availability.checked": as.web.product.availability.checked,
-        "as.web.product.carted": as.web.product.carted,
-        "as.web.product.searched": as.web.product.searched,
-        "as.web.product.shipping.selected": as.web.product.shipping.selected,
-        "as.web.product.viewed": as.web.product.viewed,
-        "as.web.payment.completed": as.web.payment.completed
-    };
-})(AsaEvent || (AsaEvent = {}));
-
-const toDigits = (d, n) => ("0" + Math.abs(n)).slice(-d);
-class DateTime extends Date {
     toJSON() {
-        const offset = -this.getTimezoneOffset();
-        const local = new DateTime(this);
-        local.setMinutes(this.getMinutes() + offset);
-        return (local.toISOString().slice(0, -1) +
-            (~Math.sign(offset) ? "+" : "-") +
-            toDigits(2, offset / 60) +
-            ":" +
-            toDigits(2, offset % 60));
+        return JSON.parse(JSON.stringify(Object.assign({}, this)));
+    }
+    [Symbol.toPrimitive]() {
+        return this.type;
     }
 }
+var as;
+(function (as) {
+    var web;
+    (function (web) {
+        let order;
+        (function (order) {
+            class reviewed extends Event {
+                constructor() {
+                    super(...arguments);
+                    this.type = "as.web.order.reviewed";
+                }
+            }
+            order.reviewed = reviewed;
+        })(order = web.order || (web.order = {}));
+        let customer;
+        (function (customer) {
+            let account;
+            (function (account) {
+                class provided extends Event {
+                    constructor() {
+                        super(...arguments);
+                        this.type = "as.web.customer.account.provided";
+                    }
+                }
+                account.provided = provided;
+            })(account = customer.account || (customer.account = {}));
+        })(customer = web.customer || (web.customer = {}));
+        let product;
+        (function (product_1) {
+            class product extends Event {
+                constructor(...data) {
+                    super();
+                    if (DOMMeta(data[0])) {
+                        let meta = extract(data[0]);
+                        if (meta && data[1])
+                            meta = Object.assign({}, meta, data[1]);
+                        if (meta)
+                            this.meta = meta;
+                    }
+                    else {
+                        this.meta = Object.assign({}, data[0], extractFromHead());
+                    }
+                }
+            }
+            product_1.product = product;
+            let availability;
+            (function (availability) {
+                class checked extends product {
+                    constructor() {
+                        super(...arguments);
+                        this.type = "as.web.product.availability.checked";
+                    }
+                }
+                availability.checked = checked;
+            })(availability = product_1.availability || (product_1.availability = {}));
+            class carted extends product {
+                constructor() {
+                    super(...arguments);
+                    this.type = "as.web.product.carted";
+                }
+            }
+            product_1.carted = carted;
+            class searched extends product {
+                constructor() {
+                    super(...arguments);
+                    this.type = "as.web.product.searched";
+                }
+            }
+            product_1.searched = searched;
+            let shipping;
+            (function (shipping) {
+                class selected extends product {
+                    constructor() {
+                        super(...arguments);
+                        this.type = "as.web.product.shipping.selected";
+                    }
+                }
+                shipping.selected = selected;
+            })(shipping = product_1.shipping || (product_1.shipping = {}));
+            class viewed extends product {
+                constructor() {
+                    super(...arguments);
+                    this.type = "as.web.product.viewed";
+                }
+            }
+            product_1.viewed = viewed;
+        })(product = web.product || (web.product = {}));
+        let payment;
+        (function (payment) {
+            class completed extends Event {
+                constructor() {
+                    super(...arguments);
+                    this.type = "as.web.payment.completed";
+                }
+            }
+            payment.completed = completed;
+        })(payment = web.payment || (web.payment = {}));
+    })(web = as.web || (as.web = {}));
+})(as || (as = {}));
+const web = {
+    "as.web.customer.account.provided": as.web.customer.account.provided,
+    "as.web.order.reviewed": as.web.order.reviewed,
+    "as.web.product.availability.checked": as.web.product.availability.checked,
+    "as.web.product.carted": as.web.product.carted,
+    "as.web.product.searched": as.web.product.searched,
+    "as.web.product.shipping.selected": as.web.product.shipping.selected,
+    "as.web.product.viewed": as.web.product.viewed,
+    "as.web.payment.completed": as.web.payment.completed
+};
+
+/**
+ * @module api
+ */
+const toDigits = (d, n) => ("0" + Math.abs(n)).slice(-d);
+const stringifyDate = (date) => {
+    const offset = -date.getTimezoneOffset();
+    const local = new Date(date);
+    local.setMinutes(date.getMinutes() + offset);
+    return (local.toISOString().slice(0, -1) +
+        (~Math.sign(offset) ? "+" : "-") +
+        toDigits(2, offset / 60) +
+        ":" +
+        toDigits(2, offset % 60));
+};
 const POST = (url, data) => fetch(url, {
     method: "POST",
     body: JSON.stringify(data),
@@ -1017,7 +1037,7 @@ const EVENT = (data) => POST("//inbox.activitystream.com/asa", data);
 const ERROR = (data) => POST("//inbox.activitystream.com/asa/error", data);
 const submitEvent = ev => EVENT({
     ev,
-    t: new DateTime()
+    t: stringifyDate(new Date())
 });
 const submitError = (err, context) => ERROR({ err, context, v: version });
 class API {
@@ -1072,6 +1092,9 @@ class API {
 }
 var api = new API();
 
+/**
+ * @module dispatcher
+ */
 function Dispatcher(tenant) {
     proxy.destroySession();
     this.setTenant(tenant);
@@ -1088,7 +1111,7 @@ function Dispatcher(tenant) {
                 : null;
         };
         try {
-            if (!AsaEvent.web[name]) {
+            if (!web[name]) {
                 if (local[name]) {
                     local[name].call(this, ...data);
                 }
@@ -1110,7 +1133,7 @@ function Dispatcher(tenant) {
                 });
                 logger.log("session resumed");
             }
-            api.submitEvent(new AsaEvent.web[name](...data));
+            api.submitEvent(new web[name](...data));
         }
         catch (error) {
             logger.force("inbox exception:", error);
@@ -1150,6 +1173,9 @@ const Document = {
     referrer: document.referrer
 };
 
+/**
+ * @module partner
+ */
 const PARTNER_ID_KEY = "__as.partner_id";
 const PARTNER_SID_KEY = "__as.partner_sid";
 const updatePartnerInfo = () => {
@@ -1179,8 +1205,8 @@ const updatePartnerInfo = () => {
     }
 };
 const setPartnerInfo = () => {
-    const referrer = new URL(Document.referrer).host;
-    const currentHost = new URL(Window.location.origin).host;
+    const referrer = Document.referrer && new URL(Document.referrer).host;
+    const currentHost = Document.location && new URL(Window.location.href).host;
     if (referrer !== currentHost) {
         updatePartnerInfo();
     }
@@ -1193,7 +1219,7 @@ var boot = () => {
         const queue = (window.asa && window.asa["q"]) || [];
         window.asa = dispatcher;
         setPartnerInfo();
-        queue.forEach(event => window.asa(event));
+        queue.forEach((args) => dispatcher.apply(null, args));
     }
     catch (e) {
         logger.force("exception during init: ", e);
