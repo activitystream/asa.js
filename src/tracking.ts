@@ -1,5 +1,10 @@
+/**
+ * @module tracking
+ */
+
 import session from "./session";
 import * as browser from "./browser";
+import dispatcher from "./dispatcher";
 import { UTM } from "./campaign";
 import { PARTNER_ID_KEY, PARTNER_SID_KEY } from "./partner";
 
@@ -10,24 +15,29 @@ export function sections() {
   let storedHash = "";
   setInterval(() => {
     if (browser.window.location.hash != storedHash) {
-      const newHash = browser.window.location.hash;
+      const newHash: string = browser.window.location.hash;
       locationHashChanged(storedHash, newHash);
       storedHash = newHash;
     }
   }, 100);
 }
-export function track(domains: string[]) {
-  const domainsTracked = domains;
-  const tracker = ({ target }) => {
-    let href = target.href;
+export function track(domains: string[]): void {
+  const domainsTracked: string[] = domains;
+  const tracker = ({ target }: Event & { target: HTMLAnchorElement }): void => {
+    let href: string = target.href;
     if (href) {
       const destination: URL = new URL(href);
       if (~domainsTracked.indexOf(destination.host)) {
-        destination.searchParams.set(PARTNER_ID_KEY, browser.window.asa.id);
-        destination.searchParams.set(PARTNER_SID_KEY, session.getSession().id);
+        destination.searchParams.set(PARTNER_ID_KEY, dispatcher.id);
+        destination.searchParams.set(
+          PARTNER_SID_KEY,
+          session.getSession().asa.id
+        );
 
-        UTM.forEach(key => {
-          const value = browser.window.sessionStorage.getItem(`__as.${key}`);
+        UTM.forEach((key: string) => {
+          const value: string = browser.window.sessionStorage.getItem(
+            `__as.${key}`
+          );
           if (value) {
             destination.searchParams.set(key, value);
           }

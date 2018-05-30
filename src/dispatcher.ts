@@ -1,14 +1,18 @@
+/**
+ * @module dispatcher
+ */
+
 import getCampaign, { Campaign } from "./campaign";
-import session, { customSession, Session } from "./session";
+import session, { customSession } from "./session";
 import * as metadata from "./metadata";
 import { track } from "./tracking";
 import logger from "./logger";
-import { AsaEvent } from "./event";
+import { web, Type } from "./event";
 import { document } from "./browser";
 import api from "./api";
 
 export interface Dispatcher {
-  (name: AsaEvent.Type, ...data: any[]): Dispatcher;
+  (name: Type, ...data: any[]): Dispatcher;
 
   id?: string;
   setTenant(tenant: string);
@@ -21,7 +25,7 @@ export function Dispatcher(tenant?: string): void {
   this.setTenant(tenant);
   this.setProviders([]);
 
-  return function Dispatcher(name: AsaEvent.Type, ...data: any[]): Dispatcher {
+  return function Dispatcher(name: Type, ...data: any[]): Dispatcher {
     const getReferrer = (): string => {
       const referrer: string =
         document.referrer && new URL(document.referrer).host;
@@ -37,7 +41,7 @@ export function Dispatcher(tenant?: string): void {
     };
 
     try {
-      if (!AsaEvent.web[name]) {
+      if (!web[name]) {
         if (local[name]) {
           local[name].call(this, ...data);
         }
@@ -59,7 +63,7 @@ export function Dispatcher(tenant?: string): void {
         logger.log("session resumed");
       }
 
-      api.submitEvent(new AsaEvent.web[name](...data));
+      api.submitEvent(new web[name](...data));
     } catch (error) {
       logger.force("inbox exception:", error);
       api.submitError(error, {

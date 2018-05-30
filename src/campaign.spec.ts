@@ -4,20 +4,20 @@ import { document } from "./browser";
 import { Dispatcher } from "./dispatcher";
 import api from "./api";
 import session from "./session";
-import { AsaEvent } from "./event";
+import { Event } from "./event";
 
 const locationStub: sinon.SinonStub = sinon.stub(document, "location");
 const referrerStub: sinon.SinonStub = sinon.stub(document, "referrer");
 
 export default describe("Campaigns", () => {
   let submitEventStub: sinon.SinonStub;
-  let events: AsaEvent.Event[] = [];
+  let events: Event[] = [];
   let asa: Dispatcher;
 
   const getNewTab = () => new Dispatcher(null);
 
-  const findEvent = (type: string): AsaEvent.Event =>
-    events.find((event: AsaEvent.Event) => event.type === type);
+  const findEvent = (type: string): Event =>
+    events.find((event: Event) => event.type === type);
 
   const emptyEvents = () => {
     while (events.length) events.pop();
@@ -55,7 +55,7 @@ export default describe("Campaigns", () => {
       title: document.title
     });
     asa("as.web.product.searched", {});
-    const event: AsaEvent.Event = findEvent("as.web.product.searched");
+    const event: Event = findEvent("as.web.product.searched");
     expect(event).to.be.ok;
     expect(event.campaign).to.be.an("object");
     expect(event.campaign.campaign).to.equals("testCampaign");
@@ -139,7 +139,7 @@ export default describe("Campaigns", () => {
       });
       asa("as.web.product.searched", {});
 
-      const event: AsaEvent.Event = findEvent("as.web.product.searched");
+      const event: Event = findEvent("as.web.product.searched");
       expect(event).to.be.ok;
       expect(event.campaign.campaign).to.equals("testCampaign");
       expect(event.campaign.source).to.equals("testSource");

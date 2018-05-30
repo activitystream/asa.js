@@ -1,3 +1,7 @@
+/**
+ * @module logger
+ */
+
 // old ie
 if (!console) {
   (<any>window.console) = {};
@@ -9,7 +13,7 @@ if (!console.log) {
 export class Logger {
   static none(...args: any[]): void {}
   static console(...args: any[]) {
-    console.log("asa.js", ...args);
+    console.log("js", ...args);
   }
 
   private _logger: typeof Logger.none | typeof Logger.console = Logger.none;

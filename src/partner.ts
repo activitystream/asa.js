@@ -1,3 +1,7 @@
+/**
+ * @module partner
+ */
+
 import { window, document } from "./browser";
 import { UTM } from "./campaign";
 
@@ -31,8 +35,9 @@ const updatePartnerInfo = () => {
 };
 
 export const setPartnerInfo = () => {
-  const referrer = new URL(document.referrer).host;
-  const currentHost = new URL(window.location.origin).host;
+  const referrer: string = document.referrer && new URL(document.referrer).host;
+  const currentHost: string =
+    document.location && new URL(window.location.href).host;
   if (referrer !== currentHost) {
     updatePartnerInfo();
   }
