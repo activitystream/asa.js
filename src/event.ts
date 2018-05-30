@@ -2,7 +2,7 @@
  * @module event
  */
 
-import * as metadata from "./metadata";
+import * as microdata from "./microdata";
 import session, { Session } from "./session";
 import { version } from "../package.json";
 import * as user from "./user";
@@ -58,7 +58,7 @@ export abstract class Event {
       url: window.location.href
     };
     if (referrer) this.page.referrer = referrer;
-    if (dispatcher.id) this.tenant = dispatcher.id;
+    if (dispatcher().id) this.tenant = dispatcher().id;
 
     if (partner_id) this.partner_id = partner_id;
     if (partner_sid) this.partner_sid = partner_sid;
@@ -90,11 +90,11 @@ export namespace as.web {
       constructor(...data: any[]) {
         super();
         if (DOMMeta(data[0])) {
-          let meta = metadata.extract(data[0]);
+          let meta = microdata.extract(data[0]);
           if (meta && data[1]) meta = { ...meta, ...data[1] };
           if (meta) this.meta = meta;
         } else {
-          this.meta = { ...data[0], ...metadata.extractFromHead() };
+          this.meta = { ...data[0], ...microdata.extractFromHead() };
         }
       }
     }

@@ -6,6 +6,6 @@ import "./";
 import "./setup.spec";
 import "./session.spec";
 import "./campaign.spec";
-import "./metadata.spec";
+import "./microdata.spec";
 import "./dispatcher.spec";
 import "./postbox_sdk.spec";

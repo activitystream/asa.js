@@ -4,7 +4,7 @@
 
 import getCampaign, { Campaign } from "./campaign";
 import session, { customSession } from "./session";
-import * as metadata from "./metadata";
+import * as microdata from "./microdata";
 import { track } from "./tracking";
 import logger from "./logger";
 import { web, Type } from "./event";
@@ -16,8 +16,10 @@ export interface Dispatcher {
 
   id?: string;
   setTenant(tenant: string);
+  getTenant(): string;
   providers?: string[];
   setProviders(providers: string[]): void;
+  getProviders(): string[];
 }
 
 export function Dispatcher(tenant?: string): void {
@@ -45,7 +47,7 @@ export function Dispatcher(tenant?: string): void {
         if (local[name]) {
           local[name].call(this, ...data);
         }
-        return;
+        return this;
       }
       const campaign: Campaign = getCampaign();
       const referrer: string = getReferrer();
@@ -72,7 +74,7 @@ export function Dispatcher(tenant?: string): void {
       });
     }
 
-    return Dispatcher.bind(this);
+    return this;
   }.bind(this);
 }
 
@@ -97,7 +99,7 @@ export const local: {
   "service.providers.provided": Dispatcher.prototype.setProviders,
   "tenant.id.provided": Dispatcher.prototype.setTenant,
   "debug.mode.enabled": logger.mode,
-  "metadata.transformer.provided": metadata.setMapper
+  "metadata.transformer.provided": microdata.setMapper
 };
 
 export default new Dispatcher();

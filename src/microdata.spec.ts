@@ -1,7 +1,7 @@
-import * as m from "./metadata";
+import * as m from "./microdata";
 import { expect } from "chai";
 
-export default describe("metadata", () => {
+export default describe("microdata", () => {
   it("should extract metadata from DOM element with a single metadata root", () => {
     const data = m.extract("#offer1");
 
