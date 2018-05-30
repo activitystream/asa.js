@@ -1,5 +1,6 @@
 import "promise-polyfill/src/polyfill";
 import "whatwg-fetch";
+import "whatwg-url";
 
 if (!String.prototype.trim) {
   String.prototype.trim = function() {

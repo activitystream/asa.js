@@ -1,5 +1,5 @@
 /**
- * @module metadata
+ * @module microdata
  */
 
 import logger from "./logger";
