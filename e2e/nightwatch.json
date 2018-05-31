@@ -5,11 +5,9 @@
   "custom_assertions_path": "",
   "page_objects_path": "",
   "globals_path": "./globals.js",
-
   "selenium": {
     "start_process": false
   },
-
   "test_settings": {
     "default": {
       "launch_url": "www.google.com",
@@ -23,18 +21,6 @@
       },
       "desiredCapabilities": {
         "browserName": "chrome"
-      }
-    },
-
-    "chrome": {
-      "desiredCapabilities": {
-        "browserName": "chrome"
-      }
-    },
-
-    "edge": {
-      "desiredCapabilities": {
-        "browserName": "MicrosoftEdge"
       }
     }
   }

@@ -11,7 +11,9 @@ import dispatcher from "./dispatcher";
 import * as partner from "./partner";
 import { Campaign } from "./campaign";
 
-const DOMMeta = (selector: HTMLElement | HTMLElement[] | string) =>
+const DOMMeta = (
+  selector: HTMLElement | HTMLElement[] | string
+): HTMLElement[] | HTMLElement | string | boolean =>
   selector &&
   (selector instanceof HTMLElement ||
     selector[0] instanceof HTMLElement ||
@@ -74,6 +76,33 @@ export abstract class Event {
   }
 }
 
+export type Currency = string;
+export type Money = number;
+
+export interface Product {
+  description: string;
+  type: "ExternalEvent";
+  id: string;
+  categories: string[];
+}
+
+export interface Order {
+  id: string;
+  total_price: Money;
+  shipping_price: Money;
+  currency: Currency;
+  products: Product[];
+}
+
+export enum IDType {
+  Email = "Email"
+}
+
+export interface ID {
+  type: IDType;
+  id: string;
+}
+
 export namespace as.web {
   export namespace order {
     export class reviewed extends Event {
@@ -83,18 +112,28 @@ export namespace as.web {
   export namespace customer.account {
     export class provided extends Event {
       type = "as.web.customer.account.provided";
+      ids: ID[];
     }
   }
   export namespace product {
     export class product extends Event {
-      constructor(...data: any[]) {
+      products?: Product[];
+
+      constructor(
+        { products, ...data }: { products: Product[] } | any = {
+          products: null
+        },
+        ...rest: any[]
+      ) {
         super();
-        if (DOMMeta(data[0])) {
-          let meta = microdata.extract(data[0]);
-          if (meta && data[1]) meta = { ...meta, ...data[1] };
+        if (products) this.products = products;
+
+        if (DOMMeta(data)) {
+          let meta = microdata.extract(data);
+          if (meta && rest[0]) meta = { ...meta, ...rest[0] };
           if (meta) this.meta = meta;
         } else {
-          this.meta = { ...data[0], ...microdata.extractFromHead() };
+          this.meta = { ...data, ...microdata.extractFromHead() };
         }
       }
     }
@@ -121,6 +160,12 @@ export namespace as.web {
   export namespace payment {
     export class completed extends Event {
       type = "as.web.payment.completed";
+      orders?: Order[];
+
+      constructor({ orders }: { orders: Order[] } = { orders: null }) {
+        super();
+        if (orders) this.orders = orders;
+      }
     }
   }
 }

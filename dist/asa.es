@@ -9393,6 +9393,10 @@ class Event {
         return this.type;
     }
 }
+var IDType;
+(function (IDType) {
+    IDType["Email"] = "Email";
+})(IDType || (IDType = {}));
 var as;
 (function (as) {
     var web;
@@ -9423,17 +9427,22 @@ var as;
         let product;
         (function (product_1) {
             class product extends Event {
-                constructor(...data) {
+                constructor(_a = {
+                    products: null
+                }, ...rest) {
+                    var { products } = _a, data = __rest(_a, ["products"]);
                     super();
-                    if (DOMMeta(data[0])) {
-                        let meta = extract(data[0]);
-                        if (meta && data[1])
-                            meta = Object.assign({}, meta, data[1]);
+                    if (products)
+                        this.products = products;
+                    if (DOMMeta(data)) {
+                        let meta = extract(data);
+                        if (meta && rest[0])
+                            meta = Object.assign({}, meta, rest[0]);
                         if (meta)
                             this.meta = meta;
                     }
                     else {
-                        this.meta = Object.assign({}, data[0], extractFromHead());
+                        this.meta = Object.assign({}, data, extractFromHead());
                     }
                 }
             }
@@ -9483,9 +9492,11 @@ var as;
         let payment;
         (function (payment) {
             class completed extends Event {
-                constructor() {
-                    super(...arguments);
+                constructor({ orders } = { orders: null }) {
+                    super();
                     this.type = "as.web.payment.completed";
+                    if (orders)
+                        this.orders = orders;
                 }
             }
             payment.completed = completed;

@@ -13,7 +13,7 @@ const wipeLogs = () =>
     mode: "cors"
   });
 
-const step = 500;
+const step = 100;
 const timeout = 2000;
 
 export default {
