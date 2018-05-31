@@ -10,6 +10,6 @@
     "experimentalDecorators": true
   },
   "include": ["src/**/*"],
-  "exclude": ["build", "node_modules", "rollup.config.js"],
+  "exclude": ["build", "node_modules/**/*", "rollup.config.js"],
   "typeRoots": ["./node_modules/@types", "./src"]
 }
