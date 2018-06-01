@@ -172,31 +172,6 @@ class Logger {
 }
 var logger = new Logger();
 
-/*! *****************************************************************************
-Copyright (c) Microsoft Corporation. All rights reserved.
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use
-this file except in compliance with the License. You may obtain a copy of the
-License at http://www.apache.org/licenses/LICENSE-2.0
-
-THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
-WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
-MERCHANTABLITY OR NON-INFRINGEMENT.
-
-See the Apache Version 2.0 License for specific language governing permissions
-and limitations under the License.
-***************************************************************************** */
-
-function __rest(s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) if (e.indexOf(p[i]) < 0)
-            t[p[i]] = s[p[i]];
-    return t;
-}
-
 /*
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-1, as defined
  * in FIPS 180-1
@@ -483,6 +458,11 @@ const getDomain = () => hex_sha1(Window.location.host);
 /**
  * @module session
  */
+const getReferrer = () => {
+    const referrer = Document.referrer && new URL(Document.referrer).host;
+    const location = Document.location && new URL(Document.location.toString()).host;
+    return referrer && location && referrer !== location ? referrer : null;
+};
 const persistence = {
     get(id) {
         try {
@@ -520,16 +500,15 @@ const SESSION_EXPIRE_TIMEOUT = 30 * 60 * 1000;
 const SESSION_COOKIE_NAME = "__asa_session";
 class SessionManager {
     hasSession() {
-        const item = sessionStore.getItem(SESSION_COOKIE_NAME);
         try {
-            return !!(item && JSON.parse(item).t > new Date());
+            return !!(getSession().t > Date.now());
         }
         catch (e) {
             return false;
         }
     }
     createSession(data) {
-        sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(Object.assign({}, data, { id: `${getDomain()}.${hex_sha1(`${getUser()}.${uid()}`)}`, t: new Date().getTime() + SESSION_EXPIRE_TIMEOUT })));
+        sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(Object.assign({}, data, { campaign: getCampaign(), referrer: getReferrer(), id: `${getDomain()}.${hex_sha1(`${getUser()}.${uid()}`)}`, t: Date.now() + SESSION_EXPIRE_TIMEOUT })));
     }
     destroySession() {
         return sessionStore.removeItem(SESSION_COOKIE_NAME);
@@ -537,9 +516,9 @@ class SessionManager {
     getSession() {
         return JSON.parse(sessionStore.getItem(SESSION_COOKIE_NAME));
     }
-    updateTimeout(_a = this.getSession()) {
-        var { campaign, referrer } = _a, sessionData = __rest(_a, ["campaign", "referrer"]);
-        const session = Object.assign({}, this.getSession(), sessionData, campaign && { campaign: campaign }, referrer && { referrer: referrer }, { t: new Date().getTime() + SESSION_EXPIRE_TIMEOUT });
+    refreshSession(data) {
+        const campaign = getCampaign();
+        const session = Object.assign({}, this.getSession(), data, (campaign && { campaign }), { t: Date.now() + SESSION_EXPIRE_TIMEOUT });
         sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(session));
     }
 }
@@ -557,13 +536,10 @@ const customSession = (hasSession, getSession, createSession) => {
         }
     }();
 };
-const proxy = {
-    getSession: () => sessionManager.getSession(),
-    createSession: (data) => sessionManager.createSession(data),
-    hasSession: () => sessionManager.hasSession(),
-    updateTimeout: (data) => sessionManager.updateTimeout(data),
-    destroySession: () => sessionManager.destroySession()
-};
+const getSession = () => sessionManager.getSession();
+const createSession = (data) => sessionManager.createSession(data);
+const hasSession = () => sessionManager.hasSession();
+const refreshSession = (data) => sessionManager.refreshSession(data);
 
 /**
  * @module microdata
@@ -631,7 +607,7 @@ function track(tenant, domains) {
             const destination = new URL(href);
             if (~domainsTracked.indexOf(destination.host)) {
                 destination.searchParams.set(PARTNER_ID_KEY, tenant);
-                destination.searchParams.set(PARTNER_SID_KEY, proxy.getSession().id);
+                destination.searchParams.set(PARTNER_SID_KEY, getSession().id);
                 UTM.forEach((key) => {
                     const value = Window.sessionStorage.getItem(`__as.${key}`);
                     if (value) {
@@ -647,6 +623,31 @@ function track(tenant, domains) {
     document.addEventListener("touchstart", tracker);
 }
 
+/*! *****************************************************************************
+Copyright (c) Microsoft Corporation. All rights reserved.
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at http://www.apache.org/licenses/LICENSE-2.0
+
+THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+MERCHANTABLITY OR NON-INFRINGEMENT.
+
+See the Apache Version 2.0 License for specific language governing permissions
+and limitations under the License.
+***************************************************************************** */
+
+function __rest(s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) if (e.indexOf(p[i]) < 0)
+            t[p[i]] = s[p[i]];
+    return t;
+}
+
 var version = "1.1.77";
 
 /**
@@ -660,7 +661,7 @@ const DOMMeta = (selector) => selector &&
     : false;
 class Event {
     constructor() {
-        const { id, referrer, campaign } = proxy.getSession();
+        const { id, referrer, campaign } = getSession();
         const partner_id = getID();
         const partner_sid = getSID();
         this.origin = Window.location.origin;
@@ -799,9 +800,37 @@ var as;
             }
             payment.completed = completed;
         })(payment = web.payment || (web.payment = {}));
+        let session;
+        (function (session_1) {
+            class session extends as.web.product.product {
+                constructor() {
+                    super(...arguments);
+                    this.location = new URL(document.location.toString()).href;
+                    this.title = document.title.toString();
+                    this.session = getSession();
+                }
+            }
+            session_1.session = session;
+            class started extends session {
+                constructor() {
+                    super(...arguments);
+                    this.type = "as.web.session.started";
+                }
+            }
+            session_1.started = started;
+            class resumed extends session {
+                constructor() {
+                    super(...arguments);
+                    this.type = "as.web.session.resumed";
+                }
+            }
+            session_1.resumed = resumed;
+        })(session = web.session || (web.session = {}));
     })(web = as.web || (as.web = {}));
 })(as || (as = {}));
 const web = {
+    "as.web.session.started": as.web.session.started,
+    "as.web.session.resumed": as.web.session.resumed,
     "as.web.customer.account.provided": as.web.customer.account.provided,
     "as.web.order.reviewed": as.web.order.reviewed,
     "as.web.product.availability.checked": as.web.product.availability.checked,
@@ -895,73 +924,51 @@ var api = new API();
 /**
  * @module dispatcher
  */
-function Dispatcher(tenant) {
-    proxy.destroySession();
-    this.setTenant(tenant);
-    this.setProviders([]);
-    return function Dispatcher(name, ...data) {
-        const getReferrer = () => {
-            const referrer = Document.referrer && new URL(Document.referrer).host;
-            const location = Document.location && new URL(Document.location).host;
-            return referrer &&
-                location &&
-                referrer !== location &&
-                !~this.providers.indexOf(referrer)
-                ? referrer
-                : null;
-        };
-        try {
-            if (!web[name]) {
-                if (local[name]) {
-                    local[name].call(this, ...data);
-                }
-                return this;
+function Dispatcher(name, ...data) {
+    const local = {
+        "create.custom.session": customSession,
+        "set.tenant.id": this.constructor.setTenant,
+        "set.connected.partners": track.bind(null, this.constructor.getTenant()),
+        "set.logger.mode": logger.mode,
+        "set.metadata.transformer": setMapper
+    };
+    try {
+        if (!web[name]) {
+            if (local[name]) {
+                local[name](...data);
             }
-            const campaign = getCampaign();
-            const referrer = getReferrer();
-            if (!proxy.hasSession()) {
-                logger.log("no session, starting a new one");
-                proxy.createSession({
-                    campaign,
-                    referrer
-                });
-            }
-            else if (referrer) {
-                proxy.updateTimeout({
-                    campaign,
-                    referrer
-                });
-                logger.log("session resumed");
-            }
-            api.submitEvent(new web[name](...data));
+            return Dispatcher.bind(this);
         }
-        catch (error) {
-            logger.force("inbox exception:", error);
-            api.submitError(error, {
-                location: "processing inbox message",
-                arguments: [event, ...data]
-            });
-        }
-        return this;
-    }.bind(this);
+        api.submitEvent(new web[name](...data));
+    }
+    catch (error) {
+        logger.force("inbox exception:", error);
+        api.submitError(error, {
+            location: "processing inbox message",
+            arguments: [event, ...data]
+        });
+    }
+    return Dispatcher.bind(this);
 }
 Dispatcher.prototype = new class Dispatcher {
-    setTenant(tenant) {
+    static setTenant(tenant) {
+        if (!hasSession()) {
+            logger.log("no session, starting a new one");
+            createSession();
+            api.submitEvent(new as.web.session.started());
+        }
+        else {
+            refreshSession();
+            api.submitEvent(new as.web.session.resumed());
+            logger.log("session resumed");
+        }
         this.id = tenant;
     }
-    setProviders(providers) {
-        this.providers = providers.map((provider) => new URL(provider).host);
+    static getTenant() {
+        return this.id;
     }
 }();
-const dispatcher = (window.asa = new Dispatcher());
-const local = {
-    "custom.session.created": customSession,
-    "connected.partners.provided": (partners) => track(dispatcher().id, partners),
-    "service.providers.provided": Dispatcher.prototype.setProviders,
-    "tenant.id.provided": Dispatcher.prototype.setTenant,
-    "debug.mode.enabled": logger.mode,
-    "metadata.transformer.provided": setMapper
-};
+var dispatcher = (window.asa = new Dispatcher());
 
 var boot = () => {
     try {

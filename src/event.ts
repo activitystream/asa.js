@@ -3,7 +3,7 @@
  */
 
 import * as microdata from "./microdata";
-import session, { Session } from "./session";
+import { getSession, Session } from "./session";
 import { version } from "../package.json";
 import * as user from "./user";
 import { window } from "./browser";
@@ -44,7 +44,7 @@ export interface Event {
 
 export abstract class Event {
   constructor() {
-    const { id, referrer, campaign }: Session = session.getSession();
+    const { id, referrer, campaign }: Session = getSession();
     const partner_id: string = partner.getID();
     const partner_sid: string = partner.getSID();
 
@@ -71,7 +71,7 @@ export abstract class Event {
     return JSON.parse(JSON.stringify(Object.assign({}, this)));
   }
 
-  [Symbol.toPrimitive](): string {
+  [Symbol.toPrimitive](): Type {
     return this.type;
   }
 }
@@ -168,11 +168,26 @@ export namespace as.web {
       }
     }
   }
+  export namespace session {
+    export class session extends as.web.product.product {
+      location: string = new URL(document.location.toString()).href;
+      title: string = document.title.toString();
+      session: Session = getSession();
+    }
+    export class started extends session {
+      type = "as.web.session.started";
+    }
+    export class resumed extends session {
+      type = "as.web.session.resumed";
+    }
+  }
 }
 
 export const web: {
   [name: string]: new (...args: any[]) => Event;
 } = {
+  "as.web.session.started": as.web.session.started,
+  "as.web.session.resumed": as.web.session.resumed,
   "as.web.customer.account.provided": as.web.customer.account.provided,
   "as.web.order.reviewed": as.web.order.reviewed,
   "as.web.product.availability.checked": as.web.product.availability.checked,

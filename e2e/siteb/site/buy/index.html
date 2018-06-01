@@ -7,7 +7,7 @@
 		(function (i, s, o, g, r, a, m) { i['ActivitystreamAnalyticsObject'] = r; i[r] = i[r] || function () { (i[r].q = i[r].q || []).push(arguments) }, i[r].l = 1 * new Date(); a = s.createElement(o), m = s.getElementsByTagName(o)[0]; a.async = 1; a.src = g; m.parentNode.insertBefore(a, m) })(window, document, 'script', local ? 'http://localhost:6053/asa.min.js' : '//cdn.activitystream.com/asa.min.js', 'asa');
 
 		window.onload = () => {
-			asa('tenant.id.provided', 'AS-E2EAUTOTEST-B');
+			asa('set.tenant.id', 'AS-E2EAUTOTEST-B');
 			asa('as.web.product.viewed');
 		}
 	</script>

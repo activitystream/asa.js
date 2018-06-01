@@ -65,7 +65,8 @@ MAKE.TEST = () =>
       globals(),
       builtins(),
       serve({
-        contentBase: ["build"]
+        contentBase: ["build"],
+        headers: { "Access-Control-Expose-Headers": "SourceMap,X-SourceMap" }
       }),
       puppeteer({
         url: "http://localhost:10001"
@@ -91,7 +92,8 @@ MAKE.DEVELOPMENT = () =>
       builtins(),
       serve({
         open: true,
-        contentBase: ["build"]
+        contentBase: ["build"],
+        headers: { "Access-Control-Expose-Headers": "SourceMap,X-SourceMap" }
       }),
       livereload({
         watch: "build"

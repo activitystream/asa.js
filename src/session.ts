@@ -5,8 +5,17 @@
 import * as user from "./user";
 import { hex_sha1, uid } from "./sha1";
 import Baker from "./baker";
-import { Campaign } from "./campaign";
+import getCampaign, { Campaign } from "./campaign";
 import { getDomain } from "./user";
+import { document } from "./browser";
+
+const getReferrer = (): string => {
+  const referrer: string = document.referrer && new URL(document.referrer).host;
+  const location: string =
+    document.location && new URL(document.location.toString()).host;
+
+  return referrer && location && referrer !== location ? referrer : null;
+};
 
 const persistence = {
   get(id: string): string {
@@ -51,14 +60,14 @@ const SESSION_EXPIRE_TIMEOUT = 30 * 60 * 1000;
 const SESSION_COOKIE_NAME = "__asa_session";
 
 export interface Data {
-  campaign?: Campaign;
-  referrer?: string;
   [k: string]: any;
 }
 
 export interface Session extends Data {
   id: string;
-  t: Date;
+  campaign?: Campaign;
+  referrer?: string;
+  t: number;
 }
 
 export interface SessionManager {
@@ -66,26 +75,27 @@ export interface SessionManager {
   createSession(data?: Data): void;
   destroySession(): void;
   getSession(): Session;
-  updateTimeout(): void;
+  refreshSession(): void;
 }
 
 export class SessionManager implements SessionManager {
   hasSession() {
-    const item: string = sessionStore.getItem(SESSION_COOKIE_NAME);
     try {
-      return !!(item && JSON.parse(item).t > new Date());
+      return !!(getSession().t > Date.now());
     } catch (e) {
       return false;
     }
   }
 
-  createSession(data: Data): void {
+  createSession(data?: Data): void {
     sessionStore.setItem(
       SESSION_COOKIE_NAME,
       JSON.stringify({
         ...data,
+        campaign: getCampaign(),
+        referrer: getReferrer(),
         id: `${getDomain()}.${hex_sha1(`${user.getUser()}.${uid()}`)}`,
-        t: new Date().getTime() + SESSION_EXPIRE_TIMEOUT
+        t: Date.now() + SESSION_EXPIRE_TIMEOUT
       })
     );
   }
@@ -98,17 +108,14 @@ export class SessionManager implements SessionManager {
     return JSON.parse(sessionStore.getItem(SESSION_COOKIE_NAME));
   }
 
-  updateTimeout(
-    { campaign, referrer, ...sessionData }: Data = this.getSession()
-  ) {
-    const session: Session = Object.assign(
-      {},
-      this.getSession(),
-      sessionData,
-      campaign && { campaign: campaign },
-      referrer && { referrer: referrer },
-      { t: new Date().getTime() + SESSION_EXPIRE_TIMEOUT }
-    );
+  refreshSession(data?: Data) {
+    const campaign = getCampaign();
+    const session: Session = {
+      ...this.getSession(),
+      ...data,
+      ...(campaign && { campaign }),
+      t: Date.now() + SESSION_EXPIRE_TIMEOUT
+    };
 
     sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(session));
   }
@@ -135,12 +142,10 @@ export const resetManager = () => {
   sessionManager = new SessionManager();
 };
 
-const proxy: SessionManager = {
-  getSession: (): Session => sessionManager.getSession(),
-  createSession: (data?: Data) => sessionManager.createSession(data),
-  hasSession: () => sessionManager.hasSession(),
-  updateTimeout: (data?: Data) => sessionManager.updateTimeout(data),
-  destroySession: () => sessionManager.destroySession()
-};
-
-export default proxy;
+export const getSession = (): Session => sessionManager.getSession();
+export const createSession = (data?: Data) =>
+  sessionManager.createSession(data);
+export const hasSession = () => sessionManager.hasSession();
+export const refreshSession = (data?: Data) =>
+  sessionManager.refreshSession(data);
+export const destroySession = () => sessionManager.destroySession();
