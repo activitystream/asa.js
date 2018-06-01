@@ -3,27 +3,43 @@ import sinon from "sinon";
 import * as browser from "./browser";
 import { Dispatcher } from "./dispatcher";
 import api from "./api";
-import session from "./session";
+import { Event } from "./event";
+import { destroySession } from "./session";
 import * as user from "./user";
 import { version } from "../package.json";
 
 const locationStub = sinon.stub(browser.document, "location");
+const getNewTab = () => {
+  destroySession();
+  return new Dispatcher()("set.tenant.id", "AS-E2EAUTOTEST-A");
+};
 
 export default describe("dispatcher", () => {
   let requests = [];
   let asa: Dispatcher;
   let submitEventStub: sinon.SinonStub;
-  const lastRequest = ({ keepTitle = false, keepSession = false } = {}) => {
-    return JSON.parse(
+  const getRequests = ({
+    keepTitle = false,
+    keepSession = false,
+    keepSessionEvents = false
+  } = {}) =>
+    JSON.parse(
       JSON.stringify(
-        requests.map(r => {
-          if (!keepSession) delete r.session;
-          if (!keepTitle) delete r.title;
-          return r;
-        })[0]
+        requests
+          .filter(
+            (r: Event): boolean =>
+              keepSessionEvents ||
+              !~["as.web.session.started", "as.web.session.resumed"].indexOf(
+                r.type as string
+              )
+          )
+          .map((r: Event): Event => {
+            if (!keepSession) delete r.session;
+            if (!keepTitle) delete r.title;
+            return r;
+          })
       )
     );
-  };
 
   const adjustSystemInfo = ({
     origin = null,
@@ -35,7 +51,8 @@ export default describe("dispatcher", () => {
     return {
       ...event,
       v: version,
-      occurred: "time",
+      location: "asdf",
+      occurred: new Date("1997-01-01"),
       origin: window.location.origin,
       user: {
         did: "device_id",
@@ -57,13 +74,82 @@ export default describe("dispatcher", () => {
   beforeEach(() => {
     user.clearUser();
     locationStub.restore();
-    session.destroySession();
     requests = [];
-    asa = new Dispatcher();
+    asa = getNewTab();
   });
 
   after(() => {
     submitEventStub.restore();
+  });
+
+  describe("default as.web.session.started", function() {
+    it("should send session started", function() {
+      asa("as.web.product.viewed");
+
+      expect(requests.length).to.equal(2);
+    });
+    it("should be a POST with data describing the event", function() {
+      asa("as.web.product.viewed");
+      var expectation = adjustSystemInfo({
+        type: "as.web.session.started",
+        location: "sadfs",
+        title:
+          "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett",
+        meta: {
+          "og:description":
+            "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.",
+          "og:url": "http://operaen.no/",
+          "og:title":
+            "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett",
+          "og:site_name": "Operaen.no",
+          "og:type": "website",
+          keywords:
+            "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter"
+        }
+      });
+
+      var request = adjustSystemInfo(
+        getRequests({
+          keepSessionEvents: true,
+          keepTitle: true
+        })[0]
+      );
+      expect(request).to.eql(expectation);
+    });
+  });
+
+  describe("pageview with custom meta", function() {
+    xit("should be a POST with data describing the event", function() {
+      asa("pageview", { a: "s" });
+
+      var expectation = adjustSystemInfo({
+        ev: {
+          type: "custom",
+          event: "sessionStarted",
+          location: "sadfs",
+          title:
+            "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett",
+          meta: {
+            "og:description":
+              "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.",
+            "og:url": "http://operaen.no/",
+            "og:title":
+              "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett",
+            "og:site_name": "Operaen.no",
+            "og:type": "website",
+            keywords:
+              "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter",
+            a: "s"
+          }
+        }
+      });
+
+      var request = getRequests({
+        keepSessionEvents: true,
+        keepTitle: true
+      }).pop();
+      expect(request).to.eql(expectation);
+    });
   });
 
   describe("default as.web.product.viewed", () => {
@@ -85,7 +171,7 @@ export default describe("dispatcher", () => {
         }
       });
 
-      const request = adjustSystemInfo(lastRequest({ keepTitle: true }));
+      const request = adjustSystemInfo(getRequests({ keepTitle: true }).pop());
       expect(request).to.eql(expectation);
     });
   });
@@ -110,7 +196,7 @@ export default describe("dispatcher", () => {
         }
       });
 
-      const request = adjustSystemInfo(lastRequest({ keepTitle: true }));
+      const request = adjustSystemInfo(getRequests({ keepTitle: true }).pop());
       expect(request).to.eql(expectation);
     });
   });
@@ -170,6 +256,7 @@ export default describe("dispatcher", () => {
         window.location.origin +
           "/test.html?utm_campaign=testCampaign&utm_source=testSource"
       );
+      const asa = getNewTab();
       asa("as.web.product.viewed");
       const expectation = adjustSystemInfo({
         type: "as.web.product.viewed",
@@ -187,7 +274,7 @@ export default describe("dispatcher", () => {
         }
       });
 
-      const request = adjustSystemInfo(lastRequest());
+      const request = adjustSystemInfo(getRequests().pop());
       expect(request).to.eql(expectation);
     });
   });
@@ -211,7 +298,7 @@ export default describe("dispatcher", () => {
         }
       });
 
-      expect(adjustSystemInfo(lastRequest({ keepTitle: false }))).to.eql(
+      expect(adjustSystemInfo(getRequests({ keepTitle: false }).pop())).to.eql(
         expectation
       );
     });
@@ -253,7 +340,7 @@ export default describe("dispatcher", () => {
           }
         });
 
-        expect(lastRequest()).to.eql(lastExpectation);
+        expect(getRequests().pop()).to.eql(lastExpectation);
         done();
       }, 700);
     });
@@ -262,7 +349,7 @@ export default describe("dispatcher", () => {
   describe("custom session management", () => {
     it("should allow devs to provide their own session id", () => {
       asa(
-        "custom.session.created",
+        "create.custom.session",
         () => false,
         () => ({
           id: "my_session"
@@ -271,7 +358,7 @@ export default describe("dispatcher", () => {
       );
       asa("as.web.product.viewed");
 
-      expect(lastRequest({ keepSession: true }).user.sid).to.equal(
+      expect(getRequests({ keepSession: true }).pop().user.sid).to.equal(
         "my_session"
       );
     });

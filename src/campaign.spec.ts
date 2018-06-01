@@ -3,7 +3,7 @@ import sinon from "sinon";
 import { document } from "./browser";
 import { Dispatcher } from "./dispatcher";
 import api from "./api";
-import session from "./session";
+import { createSession, destroySession } from "./session";
 import { Event } from "./event";
 
 const locationStub: sinon.SinonStub = sinon.stub(document, "location");
@@ -12,9 +12,11 @@ const referrerStub: sinon.SinonStub = sinon.stub(document, "referrer");
 export default describe("Campaigns", () => {
   let submitEventStub: sinon.SinonStub;
   let events: Event[] = [];
-  let asa: Dispatcher;
 
-  const getNewTab = () => new Dispatcher(null);
+  const getNewTab = () => {
+    destroySession();
+    return new Dispatcher()("set.tenant.id", "AS-E2EAUTOTEST-A");
+  };
 
   const findEvent = (type: string): Event =>
     events.find((event: Event) => event.type === type);
@@ -25,13 +27,11 @@ export default describe("Campaigns", () => {
 
   beforeEach(() => {
     events = [];
-    asa = getNewTab();
   });
 
   afterEach(() => {
     locationStub.restore();
     referrerStub.restore();
-    session.createSession({});
   });
 
   before(() => {
@@ -50,12 +50,14 @@ export default describe("Campaigns", () => {
       "http://fle.com/place?utm_campaign=testCampaign&utm_source=testSource"
     );
     referrerStub.value("http://smashbangpow.dk");
+    const asa = getNewTab();
     asa("as.web.product.viewed", {
       location: window.location.href,
       title: document.title
     });
     asa("as.web.product.searched", {});
     const event: Event = findEvent("as.web.product.searched");
+
     expect(event).to.be.ok;
     expect(event.campaign).to.be.an("object");
     expect(event.campaign.campaign).to.equals("testCampaign");
@@ -69,11 +71,12 @@ export default describe("Campaigns", () => {
         "http://fle.com/place?utm_campaign=testCampaign&utm_source=testSource"
       );
       referrerStub.value("http://smashbangpow.dk");
-      asa("as.web.product.viewed", {
+      const tab1 = getNewTab();
+      tab1("as.web.product.viewed", {
         location: window.location.href,
         title: document.title
       });
-      asa("as.web.product.searched", {});
+      tab1("as.web.product.searched", {});
 
       locationStub.value(
         "http://flo.com/place?utm_campaign=testCampaign1&utm_source=testSource1"
@@ -97,11 +100,12 @@ export default describe("Campaigns", () => {
         "http://fle.com/place?utm_campaign=testCampaign&utm_source=testSource"
       );
       referrerStub.value("http://smashbangpow.dk");
-      asa("as.web.product.viewed", {
+      const tab1 = getNewTab();
+      tab1("as.web.product.viewed", {
         location: window.location.href,
         title: document.title
       });
-      asa("as.web.product.searched", {});
+      tab1("as.web.product.searched", {});
 
       locationStub.value("http://fle.com/place");
       referrerStub.value("");
@@ -123,6 +127,7 @@ export default describe("Campaigns", () => {
         "http://fle.com/place?utm_campaign=testCampaign&utm_source=testSource"
       );
       referrerStub.value("http://smashbangpow.dk");
+      const asa = getNewTab();
       asa("service.providers.provided", ["http://paymentgw.gw"]);
       asa("as.web.product.viewed", {
         location: window.location.href,
@@ -151,6 +156,7 @@ export default describe("Campaigns", () => {
         "http://fle.com/place?utm_campaign=testCampaign&utm_source=testSource"
       );
       referrerStub.value("http://smashbangpow.dk");
+      const asa = getNewTab();
       asa("service.providers.provided", ["http://paymentgw.gw"]);
       asa("as.web.product.viewed", {
         location: window.location.href,
