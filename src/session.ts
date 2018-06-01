@@ -79,7 +79,7 @@ export class SessionManager implements SessionManager {
     }
   }
 
-  createSession(data) {
+  createSession(data: Data): void {
     sessionStore.setItem(
       SESSION_COOKIE_NAME,
       JSON.stringify({

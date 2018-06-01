@@ -2,6 +2,12 @@ import "promise-polyfill/src/polyfill";
 import "whatwg-fetch";
 import "whatwg-url";
 
+declare global {
+  interface String {
+    endsWith: (searchString: string, endPosition?: number) => boolean;
+  }
+}
+
 if (!String.prototype.trim) {
   String.prototype.trim = function() {
     return this.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, "");

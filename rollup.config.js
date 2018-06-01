@@ -29,25 +29,25 @@ const DEFAULT = {
     name: "asa",
     format: "umd",
     globals: {
-      "whatwg-fetch": "fetch"
+      "whatwg-fetch": "fetch",
+      "whatwg-url": "URL",
+      "promise-polyfill/src/polyfill": "Promise"
     }
   },
   cache: false,
   perf: true,
-  external: ["whatwg-fetch"],
+  external: ["whatwg-fetch", "whatwg-url", "promise-polyfill/src/polyfill"],
   plugins: [
     typescript(),
     resolve({
       browser: true
     }),
     commonjs({
-      namedExports: !ENV.PRODUCTION ? { chai: ["expect"] } : {},
+      namedExports: !ENV.PRODUCTION && { chai: ["expect"] },
       include: ["node_modules/**"],
       sourceMap: false
     }),
-    json(),
-    globals(),
-    builtins()
+    json()
   ]
 };
 
@@ -62,6 +62,8 @@ MAKE.TEST = () =>
     }),
     external: ["mocha", "it", "describe"],
     plugins: DEFAULT.plugins.concat([
+      globals(),
+      builtins(),
       serve({
         contentBase: ["build"]
       }),
@@ -85,6 +87,8 @@ MAKE.DEVELOPMENT = () =>
       exclude: "node_modules/**"
     },
     plugins: DEFAULT.plugins.concat([
+      globals(),
+      builtins(),
       serve({
         open: true,
         contentBase: ["build"]
