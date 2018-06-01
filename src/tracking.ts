@@ -4,7 +4,6 @@
 
 import session from "./session";
 import * as browser from "./browser";
-import dispatcher from "./dispatcher";
 import { UTM } from "./campaign";
 import { PARTNER_ID_KEY, PARTNER_SID_KEY } from "./partner";
 
@@ -21,14 +20,14 @@ export function sections() {
     }
   }, 100);
 }
-export function track(domains: string[]): void {
+export function track(tenant: string, domains: string[]): void {
   const domainsTracked: string[] = domains;
   const tracker = ({ target }: Event & { target: HTMLAnchorElement }): void => {
     let href: string = target.href;
     if (href) {
       const destination: URL = new URL(href);
       if (~domainsTracked.indexOf(destination.host)) {
-        destination.searchParams.set(PARTNER_ID_KEY, dispatcher().id);
+        destination.searchParams.set(PARTNER_ID_KEY, tenant);
         destination.searchParams.set(PARTNER_SID_KEY, session.getSession().id);
 
         UTM.forEach((key: string) => {

@@ -1,25 +1,11 @@
-import inbox, { Dispatcher } from "./dispatcher";
-
-declare global {
-  interface Window {
-    asa: Dispatcher;
-  }
-
-  interface Document {}
-
-  interface String {
-    endsWith: (searchString: string, endPosition?: number) => boolean;
-  }
-}
+import inbox from "./dispatcher";
 
 const Window: {
   sessionStorage: Storage;
   location: Location;
-  asa: Dispatcher;
 } = {
   sessionStorage: window.sessionStorage,
-  location: window.location,
-  asa: inbox
+  location: window.location
 };
 
 const Document: any = {

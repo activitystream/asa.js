@@ -14,11 +14,7 @@
     "build": "rollup -c --environment PRODUCTION",
     "start": "rollup -c --environment DEVELOPMENT -w"
   },
-  "keywords": [
-    "activitystream",
-    "analytics",
-    "realtime"
-  ],
+  "keywords": ["activitystream", "analytics", "realtime"],
   "author": "Activitystream",
   "license": "MIT",
   "dependencies": {
@@ -33,7 +29,9 @@
     "@types/source-map-support": "^0.4.0",
     "@types/whatwg-fetch": "0.0.33",
     "babel-core": "^6.26.3",
+    "babel-plugin-external-helpers": "^6.22.0",
     "babel-preset-env": "^1.7.0",
+    "babel-preset-es2015-rollup": "^3.0.0",
     "chai": "^4.1.2",
     "mocha": "^5.1.1",
     "puppeteer": "^1.4.0",

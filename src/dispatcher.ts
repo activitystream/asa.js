@@ -11,8 +11,14 @@ import { web, Type } from "./event";
 import { document } from "./browser";
 import api from "./api";
 
+declare global {
+  interface Window {
+    asa: Dispatcher;
+  }
+}
+
 export interface Dispatcher {
-  (name: Type, ...data: any[]): Dispatcher;
+  (name?: Type, ...data: any[]): Dispatcher;
 
   id?: string;
   setTenant(tenant: string);
@@ -27,7 +33,7 @@ export function Dispatcher(tenant?: string): void {
   this.setTenant(tenant);
   this.setProviders([]);
 
-  return function Dispatcher(name: Type, ...data: any[]): Dispatcher {
+  return function Dispatcher(name?: Type, ...data: any[]): Dispatcher {
     const getReferrer = (): string => {
       const referrer: string =
         document.referrer && new URL(document.referrer).host;
@@ -87,19 +93,24 @@ Dispatcher.prototype = new class Dispatcher {
   }
 
   setProviders(providers: string[]) {
-    this.providers = providers.map(provider => new URL(provider).host);
+    this.providers = providers.map(
+      (provider: string): string => new URL(provider).host
+    );
   }
 }();
+
+const dispatcher: Dispatcher = (window.asa = new Dispatcher());
 
 export const local: {
   [name: string]: (...data: any[]) => void;
 } = {
   "custom.session.created": customSession,
-  "connected.partners.provided": track,
+  "connected.partners.provided": (partners: string[]): void =>
+    track(dispatcher().id, partners),
   "service.providers.provided": Dispatcher.prototype.setProviders,
   "tenant.id.provided": Dispatcher.prototype.setTenant,
   "debug.mode.enabled": logger.mode,
   "metadata.transformer.provided": microdata.setMapper
 };
 
-export default new Dispatcher();
+export default dispatcher;
