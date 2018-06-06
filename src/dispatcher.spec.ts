@@ -10,8 +10,10 @@ import { version } from "../package.json";
 
 const locationStub = sinon.stub(browser.document, "location");
 const getNewTab = () => {
+  const dispatcher: Dispatcher = new Dispatcher();
   destroySession();
-  return new Dispatcher()("set.tenant.id", "AS-E2EAUTOTEST-A");
+  dispatcher("set.tenant.id", "AS-E2EAUTOTEST-A");
+  return dispatcher;
 };
 
 export default describe("dispatcher", () => {
@@ -33,11 +35,13 @@ export default describe("dispatcher", () => {
                 r.type as string
               )
           )
-          .map((r: Event): Event => {
-            if (!keepSession) delete r.session;
-            if (!keepTitle) delete r.title;
-            return r;
-          })
+          .map(
+            (r: Event): Event => {
+              if (!keepSession) delete r.session;
+              if (!keepTitle) delete r.title;
+              return r;
+            }
+          )
       )
     );
 
@@ -93,6 +97,7 @@ export default describe("dispatcher", () => {
       var expectation = adjustSystemInfo({
         type: "as.web.session.started",
         location: "sadfs",
+        tenant: "AS-E2EAUTOTEST-A",
         title:
           "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett",
         meta: {
@@ -127,6 +132,7 @@ export default describe("dispatcher", () => {
           type: "custom",
           event: "sessionStarted",
           location: "sadfs",
+          tenant: "AS-E2EAUTOTEST-A",
           title:
             "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett",
           meta: {
@@ -157,7 +163,7 @@ export default describe("dispatcher", () => {
       asa("as.web.product.viewed");
       const expectation = adjustSystemInfo({
         type: "as.web.product.viewed",
-
+        tenant: "AS-E2EAUTOTEST-A",
         meta: {
           "og:description":
             "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.",
@@ -182,6 +188,7 @@ export default describe("dispatcher", () => {
 
       const expectation = adjustSystemInfo({
         type: "as.web.product.viewed",
+        tenant: "AS-E2EAUTOTEST-A",
         meta: {
           "og:description":
             "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.",
@@ -261,6 +268,7 @@ export default describe("dispatcher", () => {
       const expectation = adjustSystemInfo({
         type: "as.web.product.viewed",
         campaign: { campaign: "testCampaign", source: "testSource" },
+        tenant: "AS-E2EAUTOTEST-A",
         meta: {
           "og:description":
             "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.",
@@ -285,6 +293,7 @@ export default describe("dispatcher", () => {
 
       const expectation = adjustSystemInfo({
         type: "as.web.product.viewed",
+        tenant: "AS-E2EAUTOTEST-A",
         meta: {
           "og:description":
             "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.",
@@ -323,6 +332,7 @@ export default describe("dispatcher", () => {
             type: "as.web.product.viewed",
             page: "/test.html",
             location: "sadfs",
+            tenant: "AS-E2EAUTOTEST-A",
             title:
               "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett",
             meta: {

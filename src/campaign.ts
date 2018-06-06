@@ -42,5 +42,5 @@ export default (): Campaign => {
       undefined
   );
 
-  return campaign.some(p => !!p) && new Campaign(...campaign);
+  return campaign.some(p => !!p) ? new Campaign(...campaign) : null;
 };

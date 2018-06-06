@@ -5,17 +5,12 @@
 import * as user from "./user";
 import { hex_sha1, uid } from "./sha1";
 import Baker from "./baker";
-import getCampaign, { Campaign } from "./campaign";
+import { Campaign } from "./campaign";
 import { getDomain } from "./user";
 import { document } from "./browser";
 
-const getReferrer = (): string => {
-  const referrer: string = document.referrer && new URL(document.referrer).host;
-  const location: string =
-    document.location && new URL(document.location.toString()).host;
-
-  return referrer && location && referrer !== location ? referrer : null;
-};
+const SESSION_EXPIRE_TIMEOUT = 30 * 60 * 1000;
+const SESSION_COOKIE_NAME = "__asa_session";
 
 const persistence = {
   get(id: string): string {
@@ -56,15 +51,13 @@ const store = {
 
 const sessionStore = store;
 
-const SESSION_EXPIRE_TIMEOUT = 30 * 60 * 1000;
-const SESSION_COOKIE_NAME = "__asa_session";
-
 export interface Data {
   [k: string]: any;
 }
 
 export interface Session extends Data {
   id: string;
+  tenant: string;
   campaign?: Campaign;
   referrer?: string;
   t: number;
@@ -92,8 +85,6 @@ export class SessionManager implements SessionManager {
       SESSION_COOKIE_NAME,
       JSON.stringify({
         ...data,
-        campaign: getCampaign(),
-        referrer: getReferrer(),
         id: `${getDomain()}.${hex_sha1(`${user.getUser()}.${uid()}`)}`,
         t: Date.now() + SESSION_EXPIRE_TIMEOUT
       })
@@ -109,11 +100,9 @@ export class SessionManager implements SessionManager {
   }
 
   refreshSession(data?: Data) {
-    const campaign = getCampaign();
     const session: Session = {
       ...this.getSession(),
       ...data,
-      ...(campaign && { campaign }),
       t: Date.now() + SESSION_EXPIRE_TIMEOUT
     };
 
