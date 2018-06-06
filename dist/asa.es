@@ -98,7 +98,7 @@ var getCampaign = () => {
         (location && location.searchParams.get(key)) ||
         Window.sessionStorage.getItem(`__as.${key}`) ||
         undefined);
-    return campaign.some(p => !!p) && new Campaign(...campaign);
+    return campaign.some(p => !!p) ? new Campaign(...campaign) : null;
 };
 
 /**
@@ -458,11 +458,8 @@ const getDomain = () => hex_sha1(Window.location.host);
 /**
  * @module session
  */
-const getReferrer = () => {
-    const referrer = Document.referrer && new URL(Document.referrer).host;
-    const location = Document.location && new URL(Document.location.toString()).host;
-    return referrer && location && referrer !== location ? referrer : null;
-};
+const SESSION_EXPIRE_TIMEOUT = 30 * 60 * 1000;
+const SESSION_COOKIE_NAME = "__asa_session";
 const persistence = {
     get(id) {
         try {
@@ -496,8 +493,6 @@ const store = {
     removeItem: persistence.remove
 };
 const sessionStore = store;
-const SESSION_EXPIRE_TIMEOUT = 30 * 60 * 1000;
-const SESSION_COOKIE_NAME = "__asa_session";
 class SessionManager {
     hasSession() {
         try {
@@ -508,7 +503,7 @@ class SessionManager {
         }
     }
     createSession(data) {
-        sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(Object.assign({}, data, { campaign: getCampaign(), referrer: getReferrer(), id: `${getDomain()}.${hex_sha1(`${getUser()}.${uid()}`)}`, t: Date.now() + SESSION_EXPIRE_TIMEOUT })));
+        sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(Object.assign({}, data, { id: `${getDomain()}.${hex_sha1(`${getUser()}.${uid()}`)}`, t: Date.now() + SESSION_EXPIRE_TIMEOUT })));
     }
     destroySession() {
         return sessionStore.removeItem(SESSION_COOKIE_NAME);
@@ -517,8 +512,7 @@ class SessionManager {
         return JSON.parse(sessionStore.getItem(SESSION_COOKIE_NAME));
     }
     refreshSession(data) {
-        const campaign = getCampaign();
-        const session = Object.assign({}, this.getSession(), data, (campaign && { campaign }), { t: Date.now() + SESSION_EXPIRE_TIMEOUT });
+        const session = Object.assign({}, this.getSession(), data, { t: Date.now() + SESSION_EXPIRE_TIMEOUT });
         sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(session));
     }
 }
@@ -661,7 +655,7 @@ const DOMMeta = (selector) => selector &&
     : false;
 class Event {
     constructor() {
-        const { id, referrer, campaign } = getSession();
+        const { id, referrer, campaign, tenant } = getSession();
         const partner_id = getID();
         const partner_sid = getSID();
         this.origin = Window.location.origin;
@@ -677,8 +671,7 @@ class Event {
         };
         if (referrer)
             this.page.referrer = referrer;
-        if (dispatcher().id)
-            this.tenant = dispatcher().id;
+        this.tenant = tenant;
         if (partner_id)
             this.partner_id = partner_id;
         if (partner_sid)
@@ -924,50 +917,61 @@ var api = new API();
 /**
  * @module dispatcher
  */
-function Dispatcher(name, ...data) {
-    const local = {
-        "create.custom.session": customSession,
-        "set.tenant.id": this.constructor.setTenant,
-        "set.connected.partners": track.bind(null, this.constructor.getTenant()),
-        "set.logger.mode": logger.mode,
-        "set.metadata.transformer": setMapper
-    };
-    try {
-        if (!web[name]) {
-            if (local[name]) {
-                local[name](...data);
+function Dispatcher() {
+    let tenant = null;
+    let providers = [];
+    return function Dispatcher(name, ...data) {
+        const local = {
+            "create.custom.session": customSession,
+            "set.tenant.id": (tenant) => {
+                if (!hasSession()) {
+                    const referrer = Document.referrer && new URL(Document.referrer).host;
+                    const location = Document.location && new URL(Document.location.toString()).host;
+                    logger.log("no session, starting a new one");
+                    createSession({
+                        tenant,
+                        campaign: getCampaign(),
+                        referrer: referrer &&
+                            location &&
+                            referrer !== location &&
+                            !~providers.indexOf(referrer)
+                            ? referrer
+                            : null
+                    });
+                    api.submitEvent(new as.web.session.started());
+                }
+                else {
+                    refreshSession({
+                        tenant,
+                        campaign: getCampaign()
+                    });
+                    api.submitEvent(new as.web.session.resumed());
+                    logger.log("session resumed");
+                }
+            },
+            "set.connected.partners": (partners) => track(tenant, partners),
+            "set.service.providers": (domains) => (providers = domains),
+            "set.logger.mode": logger.mode,
+            "set.metadata.transformer": setMapper
+        };
+        try {
+            if (!web[name]) {
+                if (local[name]) {
+                    local[name].call(this, ...data);
+                }
+                return;
             }
-            return Dispatcher.bind(this);
+            api.submitEvent(new web[name](...data));
         }
-        api.submitEvent(new web[name](...data));
-    }
-    catch (error) {
-        logger.force("inbox exception:", error);
-        api.submitError(error, {
-            location: "processing inbox message",
-            arguments: [event, ...data]
-        });
-    }
-    return Dispatcher.bind(this);
+        catch (error) {
+            logger.force("inbox exception:", error);
+            api.submitError(error, {
+                location: "processing inbox message",
+                arguments: [event, ...data]
+            });
+        }
+    };
 }
-Dispatcher.prototype = new class Dispatcher {
-    static setTenant(tenant) {
-        if (!hasSession()) {
-            logger.log("no session, starting a new one");
-            createSession();
-            api.submitEvent(new as.web.session.started());
-        }
-        else {
-            refreshSession();
-            api.submitEvent(new as.web.session.resumed());
-            logger.log("session resumed");
-        }
-        this.id = tenant;
-    }
-    static getTenant() {
-        return this.id;
-    }
-}();
 var dispatcher = (window.asa = new Dispatcher());
 
 var boot = () => {
