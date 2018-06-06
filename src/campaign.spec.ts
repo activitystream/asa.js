@@ -14,8 +14,10 @@ export default describe("Campaigns", () => {
   let events: Event[] = [];
 
   const getNewTab = () => {
+    const dispatcher: Dispatcher = new Dispatcher();
     destroySession();
-    return new Dispatcher()("set.tenant.id", "AS-E2EAUTOTEST-A");
+    dispatcher("set.tenant.id", "AS-E2EAUTOTEST-A");
+    return dispatcher;
   };
 
   const findEvent = (type: string): Event =>

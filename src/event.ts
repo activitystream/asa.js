@@ -7,7 +7,6 @@ import { getSession, Session } from "./session";
 import { version } from "../package.json";
 import * as user from "./user";
 import { window } from "./browser";
-import dispatcher from "./dispatcher";
 import * as partner from "./partner";
 import { Campaign } from "./campaign";
 
@@ -44,7 +43,7 @@ export interface Event {
 
 export abstract class Event {
   constructor() {
-    const { id, referrer, campaign }: Session = getSession();
+    const { id, referrer, campaign, tenant }: Session = getSession();
     const partner_id: string = partner.getID();
     const partner_sid: string = partner.getSID();
 
@@ -60,7 +59,7 @@ export abstract class Event {
       url: window.location.href
     };
     if (referrer) this.page.referrer = referrer;
-    if (dispatcher().id) this.tenant = dispatcher().id;
+    this.tenant = tenant;
 
     if (partner_id) this.partner_id = partner_id;
     if (partner_sid) this.partner_sid = partner_sid;

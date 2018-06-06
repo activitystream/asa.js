@@ -26,62 +26,76 @@ declare global {
 
 export interface Dispatcher {
   id: string;
+
   (name?: Type, ...data: any[]): Dispatcher;
 
   setTenant(tenant: string): void;
   getTenant(): string;
+  setProviders(providers: string[]): void;
+  getProviders(): string[];
 }
 
-export function Dispatcher(name?: Type, ...data: any[]): void {
-  const local: {
-    [name: string]: (...data: any[]) => void;
-  } = {
-    "create.custom.session": customSession,
-    "set.tenant.id": this.constructor.setTenant,
-    "set.connected.partners": track.bind(null, this.constructor.getTenant()),
-    "set.logger.mode": logger.mode,
-    "set.metadata.transformer": microdata.setMapper
-  };
+export function Dispatcher(): void {
+  let tenant: string = null;
+  let providers: string[] = [];
 
-  try {
-    if (!web[name]) {
-      if (local[name]) {
-        local[name](...data);
+  return function Dispatcher(name?: Type, ...data: any[]) {
+    const local: {
+      [name: string]: (...data: any[]) => void;
+    } = {
+      "create.custom.session": customSession,
+      "set.tenant.id": (tenant: string) => {
+        if (!hasSession()) {
+          const referrer: string =
+            document.referrer && new URL(document.referrer).host;
+          const location: string =
+            document.location && new URL(document.location.toString()).host;
+
+          logger.log("no session, starting a new one");
+          createSession({
+            tenant,
+            campaign: getCampaign(),
+            referrer:
+              referrer &&
+              location &&
+              referrer !== location &&
+              !~providers.indexOf(referrer)
+                ? referrer
+                : null
+          });
+          api.submitEvent(new as.web.session.started());
+        } else {
+          refreshSession({
+            tenant,
+            campaign: getCampaign()
+          });
+          api.submitEvent(new as.web.session.resumed());
+          logger.log("session resumed");
+        }
+      },
+      "set.connected.partners": (partners: string[]) => track(tenant, partners),
+      "set.service.providers": (domains: string[]) => (providers = domains),
+      "set.logger.mode": logger.mode,
+      "set.metadata.transformer": microdata.setMapper
+    };
+
+    try {
+      if (!web[name]) {
+        if (local[name]) {
+          local[name].call(this, ...data);
+        }
+        return;
       }
-      return Dispatcher.bind(this);
+
+      api.submitEvent(new web[name](...data));
+    } catch (error) {
+      logger.force("inbox exception:", error);
+      api.submitError(error, {
+        location: "processing inbox message",
+        arguments: [event, ...data]
+      });
     }
-
-    api.submitEvent(new web[name](...data));
-  } catch (error) {
-    logger.force("inbox exception:", error);
-    api.submitError(error, {
-      location: "processing inbox message",
-      arguments: [event, ...data]
-    });
-  }
-
-  return Dispatcher.bind(this);
+  } as any;
 }
-
-Dispatcher.prototype = new class Dispatcher {
-  static id: string;
-
-  static setTenant(tenant: string): void {
-    if (!hasSession()) {
-      logger.log("no session, starting a new one");
-      createSession();
-      api.submitEvent(new as.web.session.started());
-    } else {
-      refreshSession();
-      api.submitEvent(new as.web.session.resumed());
-      logger.log("session resumed");
-    }
-    this.id = tenant;
-  }
-
-  static getTenant(): string {
-    return this.id;
-  }
-}();
 
 export default (window.asa = new Dispatcher());
