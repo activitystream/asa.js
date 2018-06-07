@@ -130,7 +130,7 @@ export default describe("Campaigns", () => {
       );
       referrerStub.value("http://smashbangpow.dk");
       const asa = getNewTab();
-      asa("service.providers.provided", ["http://paymentgw.gw"]);
+      asa("set.service.providers", ["http://paymentgw.gw"]);
       asa("as.web.product.viewed", {
         location: window.location.href,
         title: document.title
@@ -159,7 +159,7 @@ export default describe("Campaigns", () => {
       );
       referrerStub.value("http://smashbangpow.dk");
       const asa = getNewTab();
-      asa("service.providers.provided", ["http://paymentgw.gw"]);
+      asa("set.service.providers", ["http://paymentgw.gw"]);
       asa("as.web.product.viewed", {
         location: window.location.href,
         title: document.title
@@ -168,7 +168,7 @@ export default describe("Campaigns", () => {
 
       locationStub.value("http://fle.com/place2");
       referrerStub.value("http://fle.com/place");
-      asa("service.providers.provided", ["http://paymentgw.gw"]);
+      asa("set.service.providers", ["http://paymentgw.gw"]);
       asa("as.web.product.viewed", {});
       asa("as.web.product.searched", {});
 
@@ -176,7 +176,7 @@ export default describe("Campaigns", () => {
       referrerStub.value("http://paymentgw.gw");
 
       emptyEvents();
-      asa("service.providers.provided", ["http://paymentgw.gw"]);
+      asa("set.service.providers", ["http://paymentgw.gw"]);
       asa("as.web.product.viewed", {});
       asa("as.web.product.searched", {});
 
@@ -193,7 +193,7 @@ export default describe("Campaigns", () => {
     //         referrerStub('http://sitea.com',
     //    };
     //     partners.setPartnerInfo();
-    //     asa('service.providers.provided', 'http://siteb.com/?buybekbea=aavekwwe&__asa=AS-E2EAUTOTEST%7C52770730.451c571a6556a2c69671b901430db663330b64ab&someotherparam=bla');
+    //     asa('set.service.providers', 'http://siteb.com/?buybekbea=aavekwwe&__asa=AS-E2EAUTOTEST%7C52770730.451c571a6556a2c69671b901430db663330b64ab&someotherparam=bla');
     //     asa('as.web.product.viewed');
     //     asa('as.web.product.searched', {});
     //

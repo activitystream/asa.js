@@ -1,6 +1,6 @@
 import "promise-polyfill/src/polyfill";
+import { URLSearchParams } from "whatwg-url";
 import "whatwg-fetch";
-import "whatwg-url";
 
 declare global {
   interface String {
@@ -66,4 +66,19 @@ if (window.localStorage) {
       }
     });
   }
+}
+
+if (!window.URL) {
+  Object.defineProperties(window, {
+    URL: {
+      get: () =>
+        function URL(url: string): void {
+          const anchor: HTMLAnchorElement = document.createElement("a");
+          anchor.href = url;
+          anchor["searchParams"] = new URLSearchParams(anchor.search);
+
+          return anchor as any;
+        }
+    }
+  });
 }

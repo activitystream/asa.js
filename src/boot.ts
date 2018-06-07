@@ -12,8 +12,8 @@ export default (): void => {
     window.asa = dispatcher;
 
     setPartnerInfo();
-    queue.forEach((args: QueueItem): Dispatcher =>
-      dispatcher.apply(null, args)
+    queue.forEach(
+      (args: QueueItem): Dispatcher => dispatcher.apply(null, args)
     );
   } catch (e) {
     logger.force("exception during init: ", e);

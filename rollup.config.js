@@ -30,7 +30,6 @@ const DEFAULT = {
     format: "umd",
     globals: {
       "whatwg-fetch": "fetch",
-      "whatwg-url": "URL",
       "promise-polyfill/src/polyfill": "Promise"
     }
   },

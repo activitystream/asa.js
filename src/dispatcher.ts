@@ -44,7 +44,8 @@ export function Dispatcher(): void {
       [name: string]: (...data: any[]) => void;
     } = {
       "create.custom.session": customSession,
-      "set.tenant.id": (tenant: string) => {
+      "set.tenant.id": (id: string) => {
+        tenant = id;
         if (!hasSession()) {
           const referrer: string =
             document.referrer && new URL(document.referrer).host;
@@ -54,7 +55,6 @@ export function Dispatcher(): void {
           logger.log("no session, starting a new one");
           createSession({
             tenant,
-            campaign: getCampaign(),
             referrer:
               referrer &&
               location &&
@@ -65,10 +65,7 @@ export function Dispatcher(): void {
           });
           api.submitEvent(new as.web.session.started());
         } else {
-          refreshSession({
-            tenant,
-            campaign: getCampaign()
-          });
+          refreshSession({ tenant });
           api.submitEvent(new as.web.session.resumed());
           logger.log("session resumed");
         }

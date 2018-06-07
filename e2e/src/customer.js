@@ -31,7 +31,7 @@ export default {
         getLogs()
           .then(r => r.json())
           .then(logs => {
-            browser.expect(logs.length).to.equal(1);
+            browser.expect(logs.length).to.equal(2);
             done();
           })
           .catch(console.error)
@@ -49,7 +49,7 @@ export default {
         getLogs()
           .then(r => r.json())
           .then(logs => {
-            browser.expect(logs.length).to.equal(1);
+            browser.expect(logs.length).to.equal(2);
             done();
           })
           .catch(console.error)
@@ -71,7 +71,7 @@ export default {
         getLogs()
           .then(r => r.json())
           .then(logs => {
-            browser.expect(logs.length).to.equal(2);
+            browser.expect(logs.length).to.equal(4);
             done();
           })
           .catch(console.error)
@@ -92,7 +92,7 @@ export default {
         getLogs()
           .then(r => r.json())
           .then(logs => {
-            browser.expect(logs.length).to.equal(2);
+            browser.expect(logs.length).to.equal(3);
             done();
           })
           .catch(console.error)
@@ -113,7 +113,7 @@ export default {
         getLogs()
           .then(r => r.json())
           .then(logs => {
-            browser.expect(logs.length).to.equal(1);
+            browser.expect(logs.length).to.equal(2);
             done();
           })
           .catch(console.error)
@@ -136,7 +136,7 @@ export default {
         getLogs()
           .then(r => r.json())
           .then(logs => {
-            browser.expect(logs.length).to.equal(2);
+            browser.expect(logs.length).to.equal(4);
             done();
           })
           .catch(console.error)
@@ -156,7 +156,7 @@ export default {
             browser
               .expect(pageViewSiteB.length && pageViewSiteB[0].ev.partner_id)
               .to.equal("AS-E2EAUTOTEST-A");
-            browser.expect(logs.length).to.equal(2);
+            browser.expect(logs.length).to.equal(4);
             done();
           })
       )
@@ -178,7 +178,7 @@ export default {
         getLogs()
           .then(r => r.json())
           .then(logs => {
-            browser.expect(logs.length).to.equal(2);
+            browser.expect(logs.length).to.equal(4);
             done();
           })
           .catch(console.error)
@@ -200,7 +200,7 @@ export default {
             browser
               .expect(pageViewSiteB.length && pageViewSiteB[0].ev.partner_id)
               .to.equal("AS-E2EAUTOTEST-A");
-            browser.expect(eventLogs.length).to.equal(2);
+            browser.expect(eventLogs.length).to.equal(4);
             browser.expect(pageViewSiteB[0].ev.page.url.indexOf("sendmeover"));
             done();
           })
@@ -226,7 +226,7 @@ export default {
         getLogs()
           .then(r => r.json())
           .then(logs => {
-            browser.expect(logs.length).to.equal(2);
+            browser.expect(logs.length).to.equal(4);
             done();
           })
           .catch(console.error)
@@ -279,7 +279,7 @@ export default {
                 browser.expect(d.ev.campaign.medium).to.equal("Email");
                 browser.expect(d.ev.campaign.term).to.equal("February2017");
               });
-            browser.expect(eventLogs.length).to.equal(3);
+            browser.expect(eventLogs.length).to.equal(4);
             done();
           })
           .catch(console.error)

@@ -9,7 +9,7 @@ export const PARTNER_ID_KEY = "__as.partner_id";
 export const PARTNER_SID_KEY = "__as.partner_sid";
 
 const updatePartnerInfo = () => {
-  const uri: URL = window.location && new URL(window.location.href);
+  const uri: URL = document.location && new URL(document.location);
   let partnerId: string = uri.searchParams.get(PARTNER_ID_KEY);
   let partnerSId: string = uri.searchParams.get(PARTNER_SID_KEY);
 
