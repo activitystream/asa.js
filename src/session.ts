@@ -5,7 +5,7 @@
 import * as user from "./user";
 import { hex_sha1, uid } from "./sha1";
 import Baker from "./baker";
-import { Campaign } from "./campaign";
+import getCampaign, { Campaign } from "./campaign";
 import { getDomain } from "./user";
 import { document } from "./browser";
 
@@ -81,10 +81,12 @@ export class SessionManager implements SessionManager {
   }
 
   createSession(data?: Data): void {
+    const campaign: Campaign = getCampaign();
     sessionStore.setItem(
       SESSION_COOKIE_NAME,
       JSON.stringify({
         ...data,
+        ...(campaign && { campaign }),
         id: `${getDomain()}.${hex_sha1(`${user.getUser()}.${uid()}`)}`,
         t: Date.now() + SESSION_EXPIRE_TIMEOUT
       })
@@ -100,8 +102,10 @@ export class SessionManager implements SessionManager {
   }
 
   refreshSession(data?: Data) {
+    const campaign: Campaign = getCampaign();
     const session: Session = {
       ...this.getSession(),
+      ...(campaign && { campaign }),
       ...data,
       t: Date.now() + SESSION_EXPIRE_TIMEOUT
     };

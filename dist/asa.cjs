@@ -1,8 +1,8 @@
 'use strict';
 
 require('promise-polyfill/src/polyfill');
+var whatwgUrl = require('whatwg-url');
 require('whatwg-fetch');
-require('whatwg-url');
 
 if (!String.prototype.trim) {
     String.prototype.trim = function () {
@@ -58,6 +58,18 @@ if (window.localStorage) {
         });
     }
 }
+if (!window.URL) {
+    Object.defineProperties(window, {
+        URL: {
+            get: () => function URL(url) {
+                const anchor = document.createElement("a");
+                anchor.href = url;
+                anchor["searchParams"] = new whatwgUrl.URLSearchParams(anchor.search);
+                return anchor;
+            }
+        }
+    });
+}
 
 const Window = {
     sessionStorage: window.sessionStorage,
@@ -109,7 +121,7 @@ var getCampaign = () => {
 const PARTNER_ID_KEY = "__as.partner_id";
 const PARTNER_SID_KEY = "__as.partner_sid";
 const updatePartnerInfo = () => {
-    const uri = Window.location && new URL(Window.location.href);
+    const uri = Document.location && new URL(Document.location);
     let partnerId = uri.searchParams.get(PARTNER_ID_KEY);
     let partnerSId = uri.searchParams.get(PARTNER_SID_KEY);
     UTM.forEach((key) => {
@@ -505,7 +517,8 @@ class SessionManager {
         }
     }
     createSession(data) {
-        sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(Object.assign({}, data, { id: `${getDomain()}.${hex_sha1(`${getUser()}.${uid()}`)}`, t: Date.now() + SESSION_EXPIRE_TIMEOUT })));
+        const campaign = getCampaign();
+        sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(Object.assign({}, data, (campaign && { campaign }), { id: `${getDomain()}.${hex_sha1(`${getUser()}.${uid()}`)}`, t: Date.now() + SESSION_EXPIRE_TIMEOUT })));
     }
     destroySession() {
         return sessionStore.removeItem(SESSION_COOKIE_NAME);
@@ -514,7 +527,8 @@ class SessionManager {
         return JSON.parse(sessionStore.getItem(SESSION_COOKIE_NAME));
     }
     refreshSession(data) {
-        const session = Object.assign({}, this.getSession(), data, { t: Date.now() + SESSION_EXPIRE_TIMEOUT });
+        const campaign = getCampaign();
+        const session = Object.assign({}, this.getSession(), (campaign && { campaign }), data, { t: Date.now() + SESSION_EXPIRE_TIMEOUT });
         sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(session));
     }
 }
@@ -925,14 +939,14 @@ function Dispatcher() {
     return function Dispatcher(name, ...data) {
         const local = {
             "create.custom.session": customSession,
-            "set.tenant.id": (tenant) => {
+            "set.tenant.id": (id) => {
+                tenant = id;
                 if (!hasSession()) {
                     const referrer = Document.referrer && new URL(Document.referrer).host;
                     const location = Document.location && new URL(Document.location.toString()).host;
                     logger.log("no session, starting a new one");
                     createSession({
                         tenant,
-                        campaign: getCampaign(),
                         referrer: referrer &&
                             location &&
                             referrer !== location &&
@@ -943,10 +957,7 @@ function Dispatcher() {
                     api.submitEvent(new as.web.session.started());
                 }
                 else {
-                    refreshSession({
-                        tenant,
-                        campaign: getCampaign()
-                    });
+                    refreshSession({ tenant });
                     api.submitEvent(new as.web.session.resumed());
                     logger.log("session resumed");
                 }

@@ -9,3 +9,4 @@ import "./campaign.spec";
 import "./microdata.spec";
 import "./dispatcher.spec";
 import "./postbox_sdk.spec";
+import "./partner.spec";
