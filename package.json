@@ -5,7 +5,6 @@
   "browser": "dist/asa.min.js",
   "main": "dist/asa.cjs",
   "module": "dist/asa.es",
-  "private": true,
   "repository": {
     "url": "git@github.com:activitystream/asa.js.git"
   },
