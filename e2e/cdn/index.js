@@ -14,7 +14,7 @@ server.use(CookieParser.parse);
 server.get(
   "/:(\\.*)",
   plugins.serveStatic({
-    directory: "node_modules/@activitystream/asa/dist"
+    directory: "./dist"
   })
 );
 

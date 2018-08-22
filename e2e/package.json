@@ -12,6 +12,7 @@
     "docker:build": "sudo docker-compose build --no-cache",
     "prebuild": "sudo service docker start && npm run docker:down",
     "build": "npm run docker:build",
+    "build:local": "rm -rf ./cdn/dist && cp -r ../dist ./cdn/dist && npm run build",
     "postbuild": "npm run docker:up",
     "start": "rollup -c",
     "test": "echo \"Error: no test specified\" && exit 1"
