@@ -610,9 +610,8 @@ const extract = (selector) => {
 function track(tenant, domains) {
     const domainsTracked = domains;
     const tracker = ({ target }) => {
-        let href = target.href;
-        if (href) {
-            const destination = new URL(href);
+        if ("href" in target) {
+            const destination = new URL(target.href);
             if (~domainsTracked.indexOf(destination.host)) {
                 destination.searchParams.set(PARTNER_ID_KEY, tenant);
                 destination.searchParams.set(PARTNER_SID_KEY, getSession().id);
@@ -624,6 +623,17 @@ function track(tenant, domains) {
                 });
                 target.href = destination.href;
             }
+        }
+        else if ("form" in target) {
+            const inputs = ["input", "input"].map(document.createElement);
+            inputs[0].name = PARTNER_ID_KEY;
+            inputs[0].value = tenant;
+            inputs[1].name = PARTNER_SID_KEY;
+            inputs[1].value = getSession().id;
+            inputs.forEach((input) => {
+                input.type = "hidden";
+                target.form.appendChild(input);
+            });
         }
     };
     document.addEventListener("mousedown", tracker);

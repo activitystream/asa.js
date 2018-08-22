@@ -7,25 +7,13 @@ import * as browser from "./browser";
 import { UTM } from "./campaign";
 import { PARTNER_ID_KEY, PARTNER_SID_KEY } from "./partner";
 
-export function sections() {
-  const locationHashChanged = (oldHash, newHash) => {
-    window.asa("sectionentered", newHash.substr(1));
-  };
-  let storedHash = "";
-  setInterval(() => {
-    if (browser.window.location.hash != storedHash) {
-      const newHash: string = browser.window.location.hash;
-      locationHashChanged(storedHash, newHash);
-      storedHash = newHash;
-    }
-  }, 100);
-}
 export function track(tenant: string, domains: string[]): void {
   const domainsTracked: string[] = domains;
-  const tracker = ({ target }: Event & { target: HTMLAnchorElement }): void => {
-    let href: string = target.href;
-    if (href) {
-      const destination: URL = new URL(href);
+  const tracker = ({
+    target
+  }: Event & ({ target: HTMLAnchorElement | HTMLInputElement })): void => {
+    if ("href" in target) {
+      const destination: URL = new URL(target.href);
       if (~domainsTracked.indexOf(destination.host)) {
         destination.searchParams.set(PARTNER_ID_KEY, tenant);
         destination.searchParams.set(PARTNER_SID_KEY, getSession().id);
@@ -40,6 +28,18 @@ export function track(tenant: string, domains: string[]): void {
         });
         target.href = destination.href;
       }
+    } else if ("form" in target) {
+      const inputs: HTMLInputElement[] = ["input", "input"].map(
+        document.createElement as any
+      );
+      inputs[0].name = PARTNER_ID_KEY;
+      inputs[0].value = tenant;
+      inputs[1].name = PARTNER_SID_KEY;
+      inputs[1].value = getSession().id;
+      inputs.forEach((input: HTMLInputElement) => {
+        input.type = "hidden";
+        target.form.appendChild(input);
+      });
     }
   };
   document.addEventListener("mousedown", tracker);
