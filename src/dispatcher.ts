@@ -39,36 +39,39 @@ export function Dispatcher(): void {
   let providers: string[] = [];
 
   return function Dispatcher(name?: Type, ...data: any[]) {
+    const setTenantId = (id: string) => {
+      tenant = id;
+      if (!hasSession()) {
+        const referrer: string =
+          document.referrer && new URL(document.referrer).host;
+        const location: string =
+          document.location && new URL(document.location.toString()).host;
+
+        logger.log("no session, starting a new one");
+        createSession({
+          tenant,
+          referrer:
+            referrer &&
+            location &&
+            referrer !== location &&
+            !~providers.indexOf(referrer)
+              ? referrer
+              : null
+        });
+        api.submitEvent(new as.web.session.started());
+      } else {
+        refreshSession({ tenant });
+        api.submitEvent(new as.web.session.resumed());
+        logger.log("session resumed");
+      }
+    };
+
     const local: {
       [name: string]: (...data: any[]) => void;
     } = {
       "create.custom.session": customSession,
-      "set.tenant.id": (id: string) => {
-        tenant = id;
-        if (!hasSession()) {
-          const referrer: string =
-            document.referrer && new URL(document.referrer).host;
-          const location: string =
-            document.location && new URL(document.location.toString()).host;
-
-          logger.log("no session, starting a new one");
-          createSession({
-            tenant,
-            referrer:
-              referrer &&
-              location &&
-              referrer !== location &&
-              !~providers.indexOf(referrer)
-                ? referrer
-                : null
-          });
-          api.submitEvent(new as.web.session.started());
-        } else {
-          refreshSession({ tenant });
-          api.submitEvent(new as.web.session.resumed());
-          logger.log("session resumed");
-        }
-      },
+      "set.tenant.id": setTenantId,
+      "tenant.id.provided": setTenantId,
       "set.connected.partners": (partners: string[]) => track(tenant, partners),
       "set.service.providers": (domains: string[]) => (providers = domains),
       "set.partner.key": (name: string, value: string) => key(name, value),
