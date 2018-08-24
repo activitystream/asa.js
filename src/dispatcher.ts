@@ -2,10 +2,8 @@
  * @module dispatcher
  */
 
-import getCampaign, { Campaign } from "./campaign";
 import {
   customSession,
-  destroySession,
   hasSession,
   createSession,
   refreshSession
@@ -15,6 +13,7 @@ import { track } from "./tracking";
 import logger from "./logger";
 import { web, as, Type } from "./event";
 import { document } from "./browser";
+import { key } from "./partner";
 import api from "./api";
 import dispatcher from "./dispatcher";
 
@@ -72,6 +71,7 @@ export function Dispatcher(): void {
       },
       "set.connected.partners": (partners: string[]) => track(tenant, partners),
       "set.service.providers": (domains: string[]) => (providers = domains),
+      "set.partner.key": (name: string, value: string) => key(name, value),
       "set.logger.mode": logger.mode,
       "set.metadata.transformer": microdata.setMapper
     };

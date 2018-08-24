@@ -116,12 +116,21 @@ var getCampaign = () => {
 /**
  * @module partner
  */
-const PARTNER_ID_KEY = "__as.partner_id";
-const PARTNER_SID_KEY = "__as.partner_sid";
+const KEY = {
+    PARTNER_ID_KEY: "__as.partner_id",
+    PARTNER_SID_KEY: "__as.partner_sid"
+};
+const key = (name, value) => {
+    if (value) {
+        KEY[name] = value;
+        updatePartnerInfo();
+    }
+    return KEY[name];
+};
 const updatePartnerInfo = () => {
     const uri = Document.location && new URL(Document.location);
-    let partnerId = uri.searchParams.get(PARTNER_ID_KEY);
-    let partnerSId = uri.searchParams.get(PARTNER_SID_KEY);
+    let partnerId = uri.searchParams.get(key("PARTNER_ID_KEY"));
+    let partnerSId = uri.searchParams.get(key("PARTNER_SID_KEY"));
     UTM.forEach((key) => {
         const keyValue = decodeURIComponent(uri.searchParams.get(key) || "");
         if (keyValue) {
@@ -132,16 +141,16 @@ const updatePartnerInfo = () => {
         }
     });
     if (partnerId) {
-        Window.sessionStorage.setItem(PARTNER_ID_KEY, partnerId);
+        Window.sessionStorage.setItem(key("PARTNER_ID_KEY"), partnerId);
     }
     else {
-        Window.sessionStorage.removeItem(PARTNER_ID_KEY);
+        Window.sessionStorage.removeItem(key("PARTNER_ID_KEY"));
     }
     if (partnerSId) {
-        Window.sessionStorage.setItem(PARTNER_SID_KEY, partnerSId);
+        Window.sessionStorage.setItem(key("PARTNER_SID_KEY"), partnerSId);
     }
     else {
-        Window.sessionStorage.removeItem(PARTNER_SID_KEY);
+        Window.sessionStorage.removeItem(key("PARTNER_SID_KEY"));
     }
 };
 const setPartnerInfo = () => {
@@ -151,8 +160,8 @@ const setPartnerInfo = () => {
         updatePartnerInfo();
     }
 };
-const getID = () => Window.sessionStorage.getItem(PARTNER_ID_KEY);
-const getSID = () => Window.sessionStorage.getItem(PARTNER_SID_KEY);
+const getID = () => Window.sessionStorage.getItem(key("PARTNER_ID_KEY"));
+const getSID = () => Window.sessionStorage.getItem(key("PARTNER_SID_KEY"));
 
 /**
  * @module logger
@@ -613,12 +622,12 @@ function track(tenant, domains) {
         if ("href" in target) {
             const destination = new URL(target.href);
             if (~domainsTracked.indexOf(destination.host)) {
-                destination.searchParams.set(PARTNER_ID_KEY, tenant);
-                destination.searchParams.set(PARTNER_SID_KEY, getSession().id);
-                UTM.forEach((key) => {
-                    const value = Window.sessionStorage.getItem(`__as.${key}`);
+                destination.searchParams.set(key("PARTNER_ID_KEY"), tenant);
+                destination.searchParams.set(key("PARTNER_SID_KEY"), getSession().id);
+                UTM.forEach((key$$1) => {
+                    const value = Window.sessionStorage.getItem(`__as.${key$$1}`);
                     if (value) {
-                        destination.searchParams.set(key, value);
+                        destination.searchParams.set(key$$1, value);
                     }
                 });
                 target.href = destination.href;
@@ -626,9 +635,9 @@ function track(tenant, domains) {
         }
         else if ("form" in target) {
             const inputs = ["input", "input"].map(document.createElement);
-            inputs[0].name = PARTNER_ID_KEY;
+            inputs[0].name = key("PARTNER_ID_KEY");
             inputs[0].value = tenant;
-            inputs[1].name = PARTNER_SID_KEY;
+            inputs[1].name = key("PARTNER_SID_KEY");
             inputs[1].value = getSession().id;
             inputs.forEach((input) => {
                 input.type = "hidden";
@@ -972,6 +981,7 @@ function Dispatcher() {
             },
             "set.connected.partners": (partners) => track(tenant, partners),
             "set.service.providers": (domains) => (providers = domains),
+            "set.partner.key": (name, value) => key(name, value),
             "set.logger.mode": logger.mode,
             "set.metadata.transformer": setMapper
         };
