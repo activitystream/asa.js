@@ -956,31 +956,33 @@ function Dispatcher() {
     let tenant = null;
     let providers = [];
     return function Dispatcher(name, ...data) {
+        const setTenantId = (id) => {
+            tenant = id;
+            if (!hasSession()) {
+                const referrer = Document.referrer && new URL(Document.referrer).host;
+                const location = Document.location && new URL(Document.location.toString()).host;
+                logger.log("no session, starting a new one");
+                createSession({
+                    tenant,
+                    referrer: referrer &&
+                        location &&
+                        referrer !== location &&
+                        !~providers.indexOf(referrer)
+                        ? referrer
+                        : null
+                });
+                api.submitEvent(new as.web.session.started());
+            }
+            else {
+                refreshSession({ tenant });
+                api.submitEvent(new as.web.session.resumed());
+                logger.log("session resumed");
+            }
+        };
         const local = {
             "create.custom.session": customSession,
-            "set.tenant.id": (id) => {
-                tenant = id;
-                if (!hasSession()) {
-                    const referrer = Document.referrer && new URL(Document.referrer).host;
-                    const location = Document.location && new URL(Document.location.toString()).host;
-                    logger.log("no session, starting a new one");
-                    createSession({
-                        tenant,
-                        referrer: referrer &&
-                            location &&
-                            referrer !== location &&
-                            !~providers.indexOf(referrer)
-                            ? referrer
-                            : null
-                    });
-                    api.submitEvent(new as.web.session.started());
-                }
-                else {
-                    refreshSession({ tenant });
-                    api.submitEvent(new as.web.session.resumed());
-                    logger.log("session resumed");
-                }
-            },
+            "set.tenant.id": setTenantId,
+            "tenant.id.provided": setTenantId,
             "set.connected.partners": (partners) => track(tenant, partners),
             "set.service.providers": (domains) => (providers = domains),
             "set.partner.key": (name, value) => key(name, value),
@@ -1005,7 +1007,7 @@ function Dispatcher() {
         }
     };
 }
-var dispatcher = (window.asa = new Dispatcher());
+var dispatcher = new Dispatcher();
 
 var boot = () => {
     try {
