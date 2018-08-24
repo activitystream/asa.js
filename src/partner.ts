@@ -5,13 +5,23 @@
 import { window, document } from "./browser";
 import { UTM } from "./campaign";
 
-export const PARTNER_ID_KEY = "__as.partner_id";
-export const PARTNER_SID_KEY = "__as.partner_sid";
+const KEY = {
+  PARTNER_ID_KEY: "__as.partner_id",
+  PARTNER_SID_KEY: "__as.partner_sid"
+};
+
+export const key = (name: string, value?: string): string => {
+  if (value) {
+    KEY[name] = value;
+    updatePartnerInfo();
+  }
+  return KEY[name];
+};
 
 const updatePartnerInfo = () => {
   const uri: URL = document.location && new URL(document.location);
-  let partnerId: string = uri.searchParams.get(PARTNER_ID_KEY);
-  let partnerSId: string = uri.searchParams.get(PARTNER_SID_KEY);
+  let partnerId: string = uri.searchParams.get(key("PARTNER_ID_KEY"));
+  let partnerSId: string = uri.searchParams.get(key("PARTNER_SID_KEY"));
 
   UTM.forEach((key: string) => {
     const keyValue: string = decodeURIComponent(
@@ -25,14 +35,14 @@ const updatePartnerInfo = () => {
   });
 
   if (partnerId) {
-    window.sessionStorage.setItem(PARTNER_ID_KEY, partnerId);
+    window.sessionStorage.setItem(key("PARTNER_ID_KEY"), partnerId);
   } else {
-    window.sessionStorage.removeItem(PARTNER_ID_KEY);
+    window.sessionStorage.removeItem(key("PARTNER_ID_KEY"));
   }
   if (partnerSId) {
-    window.sessionStorage.setItem(PARTNER_SID_KEY, partnerSId);
+    window.sessionStorage.setItem(key("PARTNER_SID_KEY"), partnerSId);
   } else {
-    window.sessionStorage.removeItem(PARTNER_SID_KEY);
+    window.sessionStorage.removeItem(key("PARTNER_SID_KEY"));
   }
 };
 
@@ -46,6 +56,6 @@ export const setPartnerInfo = () => {
 };
 
 export const getID = (): string =>
-  window.sessionStorage.getItem(PARTNER_ID_KEY);
+  window.sessionStorage.getItem(key("PARTNER_ID_KEY"));
 export const getSID = (): string =>
-  window.sessionStorage.getItem(PARTNER_SID_KEY);
+  window.sessionStorage.getItem(key("PARTNER_SID_KEY"));
