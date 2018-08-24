@@ -98,4 +98,4 @@ export function Dispatcher(): void {
   } as any;
 }
 
-export default (window.asa = new Dispatcher());
+export default new Dispatcher();

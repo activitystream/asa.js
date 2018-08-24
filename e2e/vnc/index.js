@@ -2,7 +2,7 @@ import RFB from "@novnc/novnc/core/rfb";
 import socketio from "socket.io-client";
 import COMMAND from "./command";
 
-const CONTROLS = true;
+const CONTROLS = false;
 
 const socket = socketio("http://localhost:8005");
 
