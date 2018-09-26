@@ -16,6 +16,7 @@ import { document } from "./browser";
 import { key } from "./partner";
 import api from "./api";
 import dispatcher from "./dispatcher";
+import { setUTMAliases } from "./campaign";
 
 declare global {
   interface Window {
@@ -76,7 +77,11 @@ export function Dispatcher(): void {
       "set.service.providers": (domains: string[]) => (providers = domains),
       "set.partner.key": (name: string, value: string) => key(name, value),
       "set.logger.mode": logger.mode,
-      "set.metadata.transformer": microdata.setMapper
+      "set.metadata.transformer": microdata.setMapper,
+      "set.utm.aliases": aliases => {
+        setUTMAliases(aliases);
+        refreshSession();
+      }
     };
 
     try {
