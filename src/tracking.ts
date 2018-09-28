@@ -4,7 +4,7 @@
 
 import { getSession } from "./session";
 import * as browser from "./browser";
-import { UTM } from "./campaign";
+import { mapUTM } from "./campaign";
 import { key } from "./partner";
 
 export function track(tenant: string, domains: string[]): void {
@@ -18,7 +18,7 @@ export function track(tenant: string, domains: string[]): void {
         destination.searchParams.set(key("PARTNER_ID_KEY"), tenant);
         destination.searchParams.set(key("PARTNER_SID_KEY"), getSession().id);
 
-        UTM.forEach((key: string) => {
+        mapUTM((key: string) => {
           const value: string = browser.window.sessionStorage.getItem(
             `__as.${key}`
           );

@@ -20,6 +20,13 @@ export default describe("Campaigns", () => {
     return dispatcher;
   };
 
+  const setCustomUTM = (dispatcher: Dispatcher) => {
+    dispatcher("set.utm.aliases", {
+      utm_source: ["my_source_param"],
+      utm_campaign: ["my_campaign_param"]
+    });
+  };
+
   const findEvent = (type: string): Event =>
     events.find((event: Event) => event.type === type);
 
@@ -65,6 +72,33 @@ export default describe("Campaigns", () => {
     expect(event.campaign.campaign).to.equals("testCampaign");
     expect(event.campaign.source).to.equals("testSource");
     expect(event.page.referrer).to.equals("smashbangpow.dk");
+  });
+
+  describe("UTM aliasing", () => {
+    it("has campaign information", () => {
+      locationStub.value(
+        "http://fle.com/place?my_campaign_param=myCampaign&my_source_param=myUTMSource"
+      );
+      referrerStub.value("http://example.com");
+
+      const asa = getNewTab();
+      setCustomUTM(asa);
+
+      asa("as.web.product.viewed", {
+        location: window.location.href,
+        title: document.title
+      });
+
+      asa("as.web.product.searched", {});
+
+      const event: Event = findEvent("as.web.product.searched");
+
+      expect(event).to.be.ok;
+      expect(event.campaign).to.be.an("object");
+      expect(event.campaign.campaign).to.equal("myCampaign");
+      expect(event.campaign.source).to.equal("myUTMSource");
+      expect(event.page.referrer).to.equal("example.com");
+    });
   });
 
   describe("Resume session", () => {

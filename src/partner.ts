@@ -3,7 +3,7 @@
  */
 
 import { window, document } from "./browser";
-import { UTM } from "./campaign";
+import { mapUTM } from "./campaign";
 
 const KEY = {
   PARTNER_ID_KEY: "__as.partner_id",
@@ -23,10 +23,11 @@ const updatePartnerInfo = () => {
   let partnerId: string = uri.searchParams.get(key("PARTNER_ID_KEY"));
   let partnerSId: string = uri.searchParams.get(key("PARTNER_SID_KEY"));
 
-  UTM.forEach((key: string) => {
-    const keyValue: string = decodeURIComponent(
-      uri.searchParams.get(key) || ""
-    );
+  mapUTM((key: string, values: string[]) => {
+    const keyValue =
+      values
+        .map(key => decodeURIComponent(uri.searchParams.get(key) || ""))
+        .find(Boolean) || "";
     if (keyValue) {
       window.sessionStorage.setItem(`__as.${key}`, keyValue);
     } else {
