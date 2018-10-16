@@ -81,19 +81,13 @@ const Document = {
 /**
  * @module campaign
  */
-var UTM;
-(function (UTM) {
-    UTM[UTM["utm_campaign"] = 0] = "utm_campaign";
-    UTM[UTM["utm_medium"] = 1] = "utm_medium";
-    UTM[UTM["utm_source"] = 2] = "utm_source";
-    UTM[UTM["utm_content"] = 3] = "utm_content";
-    UTM[UTM["utm_term"] = 4] = "utm_term";
-    UTM[UTM["length"] = 5] = "length";
-})(UTM || (UTM = {}));
-(function (UTM) {
-    UTM.forEach = Array.prototype.forEach;
-    UTM.map = Array.prototype.map;
-})(UTM || (UTM = {}));
+const UTM = {
+    utm_campaign: ["utm_campaign"],
+    utm_medium: ["utm_medium"],
+    utm_source: ["utm_source"],
+    utm_content: ["utm_content"],
+    utm_term: ["utm_term"]
+};
 class Campaign {
     constructor(campaign, medium, source, content, term) {
         this.campaign = campaign;
@@ -106,11 +100,19 @@ class Campaign {
 var getCampaign = () => {
     const referrer = Document.referrer && new URL(Document.referrer);
     const location = Document.location && new URL(Document.location);
-    const campaign = UTM.map((key) => (referrer && referrer.searchParams.get(key)) ||
+    const campaign = mapUTM((_, value) => value
+        .map(key => (referrer && referrer.searchParams.get(key)) ||
         (location && location.searchParams.get(key)) ||
-        Window.sessionStorage.getItem(`__as.${key}`) ||
-        undefined);
-    return campaign.some(p => !!p) ? new Campaign(...campaign) : null;
+        Window.sessionStorage.getItem(`__as.${key}`))
+        .find(Boolean));
+    console.log("campaign:", campaign);
+    return campaign.some(Boolean) ? new Campaign(...campaign) : null;
+};
+const mapUTM = (fn) => Object.keys(UTM).map(key => fn(key, UTM[key]));
+const setUTMAliases = (aliases) => {
+    Object.keys(aliases).forEach(key => {
+        UTM[key] = UTM[key].concat(aliases[key]);
+    });
 };
 
 /**
@@ -131,8 +133,10 @@ const updatePartnerInfo = () => {
     const uri = Document.location && new URL(Document.location);
     let partnerId = uri.searchParams.get(key("PARTNER_ID_KEY"));
     let partnerSId = uri.searchParams.get(key("PARTNER_SID_KEY"));
-    UTM.forEach((key) => {
-        const keyValue = decodeURIComponent(uri.searchParams.get(key) || "");
+    mapUTM((key, values) => {
+        const keyValue = values
+            .map(key => decodeURIComponent(uri.searchParams.get(key) || ""))
+            .find(Boolean) || "";
         if (keyValue) {
             Window.sessionStorage.setItem(`__as.${key}`, keyValue);
         }
@@ -624,7 +628,7 @@ function track(tenant, domains) {
             if (~domainsTracked.indexOf(destination.host)) {
                 destination.searchParams.set(key("PARTNER_ID_KEY"), tenant);
                 destination.searchParams.set(key("PARTNER_SID_KEY"), getSession().id);
-                UTM.forEach((key$$1) => {
+                mapUTM((key$$1) => {
                     const value = Window.sessionStorage.getItem(`__as.${key$$1}`);
                     if (value) {
                         destination.searchParams.set(key$$1, value);
@@ -891,6 +895,7 @@ const POST = (url, data) => fetch(url, {
 const EVENT = (data) => POST("//inbox.activitystream.com/asa", data);
 const ERROR = (data) => POST("//inbox.activitystream.com/asa/error", data);
 const submitEvent = ev => EVENT({
+    TID: "web.asa",
     ev,
     t: stringifyDate(new Date())
 });
@@ -985,7 +990,11 @@ function Dispatcher() {
             "set.service.providers": (domains) => (providers = domains),
             "set.partner.key": (name, value) => key(name, value),
             "set.logger.mode": logger.mode,
-            "set.metadata.transformer": setMapper
+            "set.metadata.transformer": setMapper,
+            "set.utm.aliases": aliases => {
+                setUTMAliases(aliases);
+                refreshSession();
+            }
         };
         try {
             if (!web[name]) {
