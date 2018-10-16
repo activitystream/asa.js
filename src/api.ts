@@ -34,7 +34,7 @@ const POST = (url: string, data: { [key: string]: any }): Promise<Response> =>
 
 export type AsaError = { code: number };
 
-export type EventRequest = { ev: { [key: string]: any }; t: string };
+export type EventRequest = { ev: { [key: string]: any }; t: string, TID: string };
 export type ErrorRequest = {
   err: AsaError;
   v: string;
@@ -54,6 +54,7 @@ export type ErrorDispatcher = (
 
 const submitEvent: EventDispatcher = ev =>
   EVENT({
+    TID:"web.asa",
     ev,
     t: stringifyDate(new Date())
   });
