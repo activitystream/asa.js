@@ -34,7 +34,11 @@ const POST = (url: string, data: { [key: string]: any }): Promise<Response> =>
 
 export type AsaError = { code: number };
 
-export type EventRequest = { ev: { [key: string]: any }; t: string, tid: string };
+export type EventRequest = {
+  ev: { [key: string]: any };
+  t: string;
+  tid: string;
+};
 export type ErrorRequest = {
   err: AsaError;
   v: string;
@@ -42,9 +46,9 @@ export type ErrorRequest = {
 };
 
 export const EVENT = (data: EventRequest): Promise<Response> =>
-  POST("//inbox.activitystream.com/asa", data);
+  POST("//inbox2.activitystream.com/asa", data);
 export const ERROR = (data: { [key: string]: any }): Promise<Response> =>
-  POST("//inbox.activitystream.com/asa/error", data);
+  POST("//inbox2.activitystream.com/asa/error", data);
 
 export type EventDispatcher = (event: Event) => Promise<Response>;
 export type ErrorDispatcher = (
@@ -54,7 +58,7 @@ export type ErrorDispatcher = (
 
 const submitEvent: EventDispatcher = ev =>
   EVENT({
-    tid:"web.asa",
+    tid: "web.asa",
     ev,
     t: stringifyDate(new Date())
   });
