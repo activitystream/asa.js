@@ -894,10 +894,10 @@ const POST = (url, data) => fetch(url, {
         "Content-Type": "text/plain; charset=UTF-8"
     }
 });
-const EVENT = (data) => POST("//inbox.activitystream.com/asa", data);
-const ERROR = (data) => POST("//inbox.activitystream.com/asa/error", data);
+const EVENT = (data) => POST("//inbox2.activitystream.com/asa", data);
+const ERROR = (data) => POST("//inbox2.activitystream.com/asa/error", data);
 const submitEvent = ev => EVENT({
-    TID: "web.asa",
+    tid: "web.asa",
     ev,
     t: stringifyDate(new Date())
 });
