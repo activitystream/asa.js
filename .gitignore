@@ -2,6 +2,7 @@ node_modules/
 build/*
 e2e/reports/
 e2e/build/
+e2e/cdn/dist/
 !build/index.html
 .rpt2_cache
 .vscode

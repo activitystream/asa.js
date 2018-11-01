@@ -105,7 +105,6 @@ var getCampaign = () => {
         (location && location.searchParams.get(key)) ||
         Window.sessionStorage.getItem(`__as.${key}`))
         .find(Boolean));
-    console.log("campaign:", campaign);
     return campaign.some(Boolean) ? new Campaign(...campaign) : null;
 };
 const mapUTM = (fn) => Object.keys(UTM).map(key => fn(key, UTM[key]));
@@ -565,26 +564,6 @@ const refreshSession = (data) => sessionManager.refreshSession(data);
 /**
  * @module microdata
  */
-const processElement = el => {
-    if (el.hasAttribute("itemscope")) {
-        let map = Array.prototype.reduce.call(el.children, (acc, curr) => (Object.assign({}, acc, { [curr.getAttribute("itemprop")]: processElement(curr) })), {});
-        if (el.getAttribute("itemtype")) {
-            map = {
-                type: el.getAttribute("itemtype"),
-                properties: map
-            };
-        }
-        return map;
-    }
-    else if (el.hasAttribute("itemprop")) {
-        return el.getAttribute("content") || el.innerText || el.src;
-    }
-    else {
-        return {
-            __items: [].map.call(el.children, processElement)
-        };
-    }
-};
 const extractFromHead = () => _mapper(Array.prototype.reduce.call(document.querySelectorAll('head > meta[property^="og:"]'), (acc, curr) => (Object.assign({}, acc, { [curr.getAttribute("property")]: curr.getAttribute("content") })), {
     keywords: document.querySelector('head > meta[name="keywords"]') &&
         document
@@ -602,19 +581,6 @@ const setMapper = mapper => {
             return meta;
         }
     };
-};
-const extract = (selector) => {
-    const elements = typeof selector === "string"
-        ? document.querySelectorAll(selector)
-        : selector;
-    const data = [].map
-        .call(elements, (el) => _mapper(processElement(el), el))
-        .filter((data) => data);
-    return data.length > 1
-        ? {
-            __items: data
-        }
-        : data.pop();
 };
 
 /**
@@ -654,42 +620,11 @@ function track(tenant, domains) {
     document.addEventListener("touchstart", tracker);
 }
 
-/*! *****************************************************************************
-Copyright (c) Microsoft Corporation. All rights reserved.
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use
-this file except in compliance with the License. You may obtain a copy of the
-License at http://www.apache.org/licenses/LICENSE-2.0
-
-THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
-WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
-MERCHANTABLITY OR NON-INFRINGEMENT.
-
-See the Apache Version 2.0 License for specific language governing permissions
-and limitations under the License.
-***************************************************************************** */
-
-function __rest(s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) if (e.indexOf(p[i]) < 0)
-            t[p[i]] = s[p[i]];
-    return t;
-}
-
-var version = "1.1.77";
+var version = "1.1.78";
 
 /**
  * @module event
  */
-const DOMMeta = (selector) => selector &&
-    (selector instanceof HTMLElement ||
-        selector[0] instanceof HTMLElement ||
-        typeof selector === "string")
-    ? selector
-    : false;
 class Event {
     constructor() {
         const { id, referrer, campaign, tenant } = getSession();
@@ -756,23 +691,10 @@ var as;
         let product;
         (function (product_1) {
             class product extends Event {
-                constructor(_a = {
-                    products: null
-                }, ...rest) {
-                    var { products } = _a, data = __rest(_a, ["products"]);
+                constructor(products = []) {
                     super();
-                    if (products)
-                        this.products = products;
-                    if (DOMMeta(data)) {
-                        let meta = extract(data);
-                        if (meta && rest[0])
-                            meta = Object.assign({}, meta, rest[0]);
-                        if (meta)
-                            this.meta = meta;
-                    }
-                    else {
-                        this.meta = Object.assign({}, data, extractFromHead());
-                    }
+                    this.products = products;
+                    this.meta = Object.assign({}, extractFromHead());
                 }
             }
             product_1.product = product;
@@ -821,11 +743,10 @@ var as;
         let payment;
         (function (payment) {
             class completed extends Event {
-                constructor({ orders } = { orders: null }) {
+                constructor(orders = []) {
                     super();
                     this.type = "as.web.payment.completed";
-                    if (orders)
-                        this.orders = orders;
+                    this.orders = orders;
                 }
             }
             payment.completed = completed;

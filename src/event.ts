@@ -118,22 +118,11 @@ export namespace as.web {
     export class product extends Event {
       products?: Product[];
 
-      constructor(
-        { products, ...data }: { products: Product[] } | any = {
-          products: null
-        },
-        ...rest: any[]
-      ) {
+      constructor(products: Product[] = []) {
         super();
-        if (products) this.products = products;
+        this.products = products;
 
-        if (DOMMeta(data)) {
-          let meta = microdata.extract(data);
-          if (meta && rest[0]) meta = { ...meta, ...rest[0] };
-          if (meta) this.meta = meta;
-        } else {
-          this.meta = { ...data, ...microdata.extractFromHead() };
-        }
+        this.meta = { ...microdata.extractFromHead() };
       }
     }
     export namespace availability {
@@ -161,9 +150,9 @@ export namespace as.web {
       type = "as.web.payment.completed";
       orders?: Order[];
 
-      constructor({ orders }: { orders: Order[] } = { orders: null }) {
+      constructor(orders: Order[] = []) {
         super();
-        if (orders) this.orders = orders;
+        this.orders = orders;
       }
     }
   }

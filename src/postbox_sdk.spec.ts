@@ -51,8 +51,10 @@ export default describe("Postbox SDK", () => {
           "og:site_name": "Operaen.no",
           "og:type": "website",
           keywords:
-            "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter",
-          product: {
+            "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter"
+        },
+        products: [
+          {
             description: "SATURDAY NIGHT FEVER - THE MUSICAL",
             type: "Event",
             id: "1-4034344",
@@ -62,26 +64,26 @@ export default describe("Postbox SDK", () => {
             currency: "DKK",
             categories: ["Teater", "Musical"]
           }
-        }
+        ]
       });
 
-      fetchStub.callsFake((input: RequestInfo, init: RequestInit): Promise<
-        Response
-      > => {
-        const body = JSON.parse(init.body as string);
-        if (body.err) {
-          return;
+      fetchStub.callsFake(
+        (input: RequestInfo, init: RequestInit): Promise<Response> => {
+          const body = JSON.parse(init.body as string);
+          if (body.err) {
+            return;
+          }
+          const event: Event = adjustSystemInfo(body.ev);
+          if (event.type === expectation.type) {
+            expect(event).to.eql(expectation);
+            done();
+          }
+          return _fetch(input, init);
         }
-        const event: Event = adjustSystemInfo(body.ev);
-        if (event.type === expectation.type) {
-          expect(event).to.eql(expectation);
-          done();
-        }
-        return _fetch(input, init);
-      });
+      );
 
-      asa("as.web.product.viewed", {
-        product: {
+      asa("as.web.product.viewed", [
+        {
           description: "SATURDAY NIGHT FEVER - THE MUSICAL",
           type: "Event",
           id: "1-4034344",
@@ -91,7 +93,7 @@ export default describe("Postbox SDK", () => {
           currency: "DKK",
           categories: ["Teater", "Musical"]
         }
-      });
+      ]);
     });
   });
 });

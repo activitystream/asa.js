@@ -39,8 +39,6 @@ export default (): Campaign => {
       .find(Boolean)
   );
 
-  console.log("campaign:", campaign);
-
   return campaign.some(Boolean) ? new Campaign(...campaign) : null;
 };
 

@@ -86,4 +86,56 @@ export default describe("Partner", () => {
     expect(event.partner_id).to.be.a("string");
     expect(event.partner_id).to.equal("AS-E2EAUTOTEST-A");
   });
+
+  it("page view message should include all details of the product", () => {
+    const asa = getNewTab();
+    asa("as.web.product.viewed", [
+      {
+        description: "SATURDAY NIGHT FEVER - THE MUSICAL",
+        id: "1-4034344",
+        product_variant: "Floor",
+        price_category: "A",
+        item_price: "222",
+        currency: "DKK",
+        categories: ["Teater", "Musical"]
+      }
+    ]);
+    const event: Event = findEvent("as.web.product.viewed");
+    expect(event.products.length).to.equal(1);
+    expect(event.products[0].description).to.equal(
+      "SATURDAY NIGHT FEVER - THE MUSICAL"
+    );
+    expect(event.products[0].id).to.equal("1-4034344");
+    expect(event.products[0].product_variant).to.equal("Floor");
+    expect(event.products[0].price_category).to.equal("A");
+    expect(event.products[0].item_price).to.equal("222");
+    expect(event.products[0].currency).to.equal("DKK");
+    expect(event.products[0].categories.join(",")).to.equal("Teater,Musical");
+  });
+
+  it("product availabilty message should include all details of the product", () => {
+    const asa = getNewTab();
+    asa("as.web.product.availability.checked", [
+      {
+        description: "SATURDAY NIGHT FEVER - THE MUSICAL",
+        id: "1-4034344",
+        product_variant: "Floor",
+        price_category: "A",
+        item_price: "222",
+        currency: "DKK",
+        categories: ["Teater", "Musical"]
+      }
+    ]);
+    const event: Event = findEvent("as.web.product.availability.checked");
+    expect(event.products.length).to.equal(1);
+    expect(event.products[0].description).to.equal(
+      "SATURDAY NIGHT FEVER - THE MUSICAL"
+    );
+    expect(event.products[0].id).to.equal("1-4034344");
+    expect(event.products[0].product_variant).to.equal("Floor");
+    expect(event.products[0].price_category).to.equal("A");
+    expect(event.products[0].item_price).to.equal("222");
+    expect(event.products[0].currency).to.equal("DKK");
+    expect(event.products[0].categories.join(",")).to.equal("Teater,Musical");
+  });
 });

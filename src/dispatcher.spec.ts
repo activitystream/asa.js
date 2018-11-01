@@ -110,7 +110,8 @@ export default describe("dispatcher", () => {
           "og:type": "website",
           keywords:
             "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter"
-        }
+        },
+        products: []
       });
 
       var request = adjustSystemInfo(
@@ -119,41 +120,6 @@ export default describe("dispatcher", () => {
           keepTitle: true
         })[0]
       );
-      expect(request).to.eql(expectation);
-    });
-  });
-
-  describe("pageview with custom meta", function() {
-    xit("should be a POST with data describing the event", function() {
-      asa("pageview", { a: "s" });
-
-      var expectation = adjustSystemInfo({
-        ev: {
-          type: "custom",
-          event: "sessionStarted",
-          location: "sadfs",
-          tenant: "AS-E2EAUTOTEST-A",
-          title:
-            "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett",
-          meta: {
-            "og:description":
-              "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.",
-            "og:url": "http://operaen.no/",
-            "og:title":
-              "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett",
-            "og:site_name": "Operaen.no",
-            "og:type": "website",
-            keywords:
-              "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter",
-            a: "s"
-          }
-        }
-      });
-
-      var request = getRequests({
-        keepSessionEvents: true,
-        keepTitle: true
-      }).pop();
       expect(request).to.eql(expectation);
     });
   });
@@ -174,7 +140,8 @@ export default describe("dispatcher", () => {
           "og:type": "website",
           keywords:
             "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter"
-        }
+        },
+        products: []
       });
 
       const request = adjustSystemInfo(getRequests({ keepTitle: true }).pop());
@@ -182,9 +149,10 @@ export default describe("dispatcher", () => {
     });
   });
 
+  //Not supported after the change, TBD if we want to support a secound argument for this.
   describe("as.web.product.viewed with custom meta", () => {
-    it("should be a POST with data describing the event", () => {
-      asa("as.web.product.viewed", { a: "s" });
+    xit("should be a POST with data describing the event", () => {
+      asa("as.web.psroduct.viewed", { a: "s" });
 
       const expectation = adjustSystemInfo({
         type: "as.web.product.viewed",
@@ -279,9 +247,9 @@ export default describe("dispatcher", () => {
           "og:type": "website",
           keywords:
             "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter"
-        }
+        },
+        products: []
       });
-
       const request = adjustSystemInfo(getRequests().pop());
       expect(request).to.eql(expectation);
     });
@@ -304,7 +272,8 @@ export default describe("dispatcher", () => {
           "og:type": "website",
           keywords:
             "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter"
-        }
+        },
+        products: []
       });
 
       expect(adjustSystemInfo(getRequests({ keepTitle: false }).pop())).to.eql(
