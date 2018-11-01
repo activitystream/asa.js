@@ -22,7 +22,17 @@
 			asa('set.tenant.id', 'AS-E2EAUTOTEST-A');
 			asa('set.partner.key', 'PARTNER_ID_KEY', 'foo');
 			asa('set.connected.partners', ['siteb.com']);
-			asa('as.web.product.viewed');
+			asa('as.web.product.viewed', [
+				{
+					description: "SATURDAY NIGHT FEVER - THE MUSICAL",
+					id: "1-4034344",
+					product_variant: "Floor",
+					price_category: "A",
+					item_price: "222",
+					currency: "DKK",
+					categories: ["Teater", "Musical"]
+				}
+			]);
 		}
 	</script>
 

@@ -32,6 +32,33 @@ export default {
           .then(r => r.json())
           .then(logs => {
             browser.expect(logs.length).to.equal(2);
+            const productViewd = logs.find(
+              event => event.ev.type === "as.web.product.viewed"
+            );
+            browser.expect(productViewd).to.be.ok;
+            browser
+              .expect(
+                productViewd.ev.products && productViewd.ev.products.length
+              )
+              .to.equal(1);
+            browser
+              .expect(productViewd.ev.products[0].id)
+              .to.equal("1-4034344");
+            browser
+              .expect(productViewd.ev.products[0].product_variant)
+              .to.equal("Floor");
+            browser
+              .expect(productViewd.ev.products[0].price_category)
+              .to.equal("A");
+            browser
+              .expect(productViewd.ev.products[0].item_price)
+              .to.equal("222");
+            browser
+              .expect(productViewd.ev.products[0].currency)
+              .to.equal("DKK");
+            browser
+              .expect(productViewd.ev.products[0].categories.join(","))
+              .to.equal("Teater,Musical");
             done();
           })
           .catch(console.error)
@@ -279,7 +306,17 @@ export default {
                 browser.expect(d.ev.campaign.medium).to.equal("Email");
                 browser.expect(d.ev.campaign.term).to.equal("February2017");
               });
-            browser.expect(eventLogs.length).to.equal(4);
+            console.log(
+              JSON.stringify(
+                eventLogs.map(d => ({
+                  type: d.ev.type,
+                  url: d.ev.page.url
+                })),
+                true,
+                2
+              )
+            );
+            browser.expect(eventLogs.length).to.equal(6);
             done();
           })
           .catch(console.error)
