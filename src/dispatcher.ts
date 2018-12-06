@@ -11,7 +11,7 @@ import {
 import * as microdata from "./microdata";
 import { track } from "./tracking";
 import logger from "./logger";
-import { web, as, Type } from "./event";
+import { web, Type, webEvent } from "./event";
 import { document } from "./browser";
 import { key } from "./partner";
 import api from "./api";
@@ -36,10 +36,10 @@ export interface Dispatcher {
 }
 
 export function Dispatcher(): void {
-  let tenant: string = null;
+  let tenant: string | null = null;
   let providers: string[] = [];
 
-  return function Dispatcher(name?: Type, ...data: any[]) {
+  return function Dispatcher(name: string, ...data: any[]) {
     const setTenantId = (id: string) => {
       tenant = id;
       if (!hasSession()) {
@@ -59,10 +59,10 @@ export function Dispatcher(): void {
               ? referrer
               : null
         });
-        api.submitEvent(new as.web.session.started());
+        api.submitEvent(webEvent("as.web.session.started"));
       } else {
         refreshSession({ tenant });
-        api.submitEvent(new as.web.session.resumed());
+        api.submitEvent(webEvent("as.web.session.resumed"));
         logger.log("session resumed");
       }
     };
@@ -73,7 +73,8 @@ export function Dispatcher(): void {
       "create.custom.session": customSession,
       "set.tenant.id": setTenantId,
       "tenant.id.provided": setTenantId,
-      "set.connected.partners": (partners: string[]) => track(tenant, partners),
+      "set.connected.partners": (partners: string[]) =>
+        track(tenant || "", partners),
       "set.service.providers": (domains: string[]) => (providers = domains),
       "set.partner.key": (name: string, value: string) => key(name, value),
       "set.logger.mode": logger.mode,
@@ -87,12 +88,12 @@ export function Dispatcher(): void {
     try {
       if (!web[name]) {
         if (local[name]) {
-          local[name].call(this, ...data);
+          local[name](...data);
         }
         return;
       }
 
-      api.submitEvent(new web[name](...data));
+      api.submitEvent(web[name](...data));
     } catch (error) {
       logger.force("inbox exception:", error);
       api.submitError(error, {

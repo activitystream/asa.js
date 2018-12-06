@@ -5,6 +5,7 @@ import { Dispatcher } from "./dispatcher";
 import api from "./api";
 import { createSession, destroySession } from "./session";
 import { Event } from "./event";
+import { Campaign } from "./campaign";
 
 const locationStub: sinon.SinonStub = sinon.stub(document, "location");
 const referrerStub: sinon.SinonStub = sinon.stub(document, "referrer");
@@ -28,7 +29,7 @@ export default describe("Campaigns", () => {
   };
 
   const findEvent = (type: string): Event =>
-    events.find((event: Event) => event.type === type);
+    events.find((event: Event) => event.type === type) as Event;
 
   const emptyEvents = () => {
     while (events.length) events.pop();
@@ -68,9 +69,10 @@ export default describe("Campaigns", () => {
     const event: Event = findEvent("as.web.product.searched");
 
     expect(event).to.be.ok;
-    expect(event.campaign).to.be.an("object");
-    expect(event.campaign.campaign).to.equals("testCampaign");
-    expect(event.campaign.source).to.equals("testSource");
+    const campaign = event.campaign as Campaign;
+    expect(campaign).to.be.an("object");
+    expect(campaign.campaign).to.equals("testCampaign");
+    expect(campaign.source).to.equals("testSource");
     expect(event.page.referrer).to.equals("smashbangpow.dk");
   });
 
@@ -94,9 +96,10 @@ export default describe("Campaigns", () => {
       const event: Event = findEvent("as.web.product.searched");
 
       expect(event).to.be.ok;
-      expect(event.campaign).to.be.an("object");
-      expect(event.campaign.campaign).to.equal("myCampaign");
-      expect(event.campaign.source).to.equal("myUTMSource");
+      const campaign = event.campaign as Campaign;
+      expect(campaign).to.be.an("object");
+      expect(campaign.campaign).to.equal("myCampaign");
+      expect(campaign.source).to.equal("myUTMSource");
       expect(event.page.referrer).to.equal("example.com");
     });
   });
@@ -126,8 +129,10 @@ export default describe("Campaigns", () => {
       const event = findEvent("as.web.product.searched");
 
       expect(event).to.be.ok;
-      expect(event.campaign.campaign).to.equals("testCampaign1");
-      expect(event.campaign.source).to.equals("testSource1");
+      const campaign = event.campaign as Campaign;
+      expect(campaign).to.be.an("object");
+      expect(campaign.campaign).to.equals("testCampaign1");
+      expect(campaign.source).to.equals("testSource1");
       expect(event.page.referrer).to.equals("flipflop.dk");
     });
 
@@ -182,8 +187,10 @@ export default describe("Campaigns", () => {
 
       const event: Event = findEvent("as.web.product.searched");
       expect(event).to.be.ok;
-      expect(event.campaign.campaign).to.equals("testCampaign");
-      expect(event.campaign.source).to.equals("testSource");
+      const campaign = event.campaign as Campaign;
+      expect(campaign).to.be.an("object");
+      expect(campaign.campaign).to.equals("testCampaign");
+      expect(campaign.source).to.equals("testSource");
       expect(event.page.referrer).to.equals("smashbangpow.dk");
     });
 
@@ -216,8 +223,10 @@ export default describe("Campaigns", () => {
 
       const event = findEvent("as.web.product.searched");
       expect(event).to.be.ok;
-      expect(event.campaign.campaign).to.equals("testCampaign");
-      expect(event.campaign.source).to.equals("testSource");
+      const campaign = event.campaign as Campaign;
+      expect(campaign).to.be.an("object");
+      expect(campaign.campaign).to.equals("testCampaign");
+      expect(campaign.source).to.equals("testSource");
       expect(event.page.referrer).to.equals("smashbangpow.dk");
     });
 

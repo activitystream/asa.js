@@ -20,8 +20,8 @@ export const key = (name: string, value?: string): string => {
 
 const updatePartnerInfo = () => {
   const uri: URL = document.location && new URL(document.location);
-  let partnerId: string = uri.searchParams.get(key("PARTNER_ID_KEY"));
-  let partnerSId: string = uri.searchParams.get(key("PARTNER_SID_KEY"));
+  let partnerId: string = uri.searchParams.get(key("PARTNER_ID_KEY")) || "";
+  let partnerSId: string = uri.searchParams.get(key("PARTNER_SID_KEY")) || "";
 
   mapUTM((key: string, values: string[]) => {
     const keyValue =
@@ -57,6 +57,6 @@ export const setPartnerInfo = () => {
 };
 
 export const getID = (): string =>
-  window.sessionStorage.getItem(key("PARTNER_ID_KEY"));
+  window.sessionStorage.getItem(key("PARTNER_ID_KEY")) || "";
 export const getSID = (): string =>
-  window.sessionStorage.getItem(key("PARTNER_SID_KEY"));
+  window.sessionStorage.getItem(key("PARTNER_SID_KEY")) || "";

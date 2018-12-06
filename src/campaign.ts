@@ -12,14 +12,12 @@ export const UTM = {
   utm_term: ["utm_term"]
 };
 
-export class Campaign {
-  constructor(
-    public campaign?: string,
-    public medium?: string,
-    public source?: string,
-    public content?: string,
-    public term?: string
-  ) {}
+export interface Campaign {
+  campaign?: string;
+  medium?: string;
+  source?: string;
+  content?: string;
+  term?: string;
 }
 
 export default (): Campaign => {
@@ -28,20 +26,20 @@ export default (): Campaign => {
   const location: URL | undefined =
     document.location && new URL(document.location);
 
-  const campaign = mapUTM((_, value) =>
-    value
+  const campaign: Campaign = {};
+  mapUTM((key, value) => {
+    const val = value
       .map(
         key =>
           (referrer && referrer.searchParams.get(key)) ||
           (location && location.searchParams.get(key)) ||
           window.sessionStorage.getItem(`__as.${key}`)
       )
-      .find(Boolean)
-  );
+      .find(Boolean);
+    if (val) campaign[key] = val;
+  });
 
-  console.log("campaign:", campaign);
-
-  return campaign.some(Boolean) ? new Campaign(...campaign) : null;
+  return campaign;
 };
 
 export const mapUTM = <T>(fn: (key: string, value: string[]) => T) =>

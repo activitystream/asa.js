@@ -22,7 +22,7 @@ export default describe("Partner", () => {
   };
 
   const findEvent = (type: string): Event =>
-    events.find((event: Event) => event.type === type);
+    events.find((event: Event) => event.type === type) as Event;
 
   beforeEach(() => {
     events = [];

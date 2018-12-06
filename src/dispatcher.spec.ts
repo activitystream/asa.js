@@ -17,7 +17,7 @@ const getNewTab = () => {
 };
 
 export default describe("dispatcher", () => {
-  let requests = [];
+  let requests: any[] = [];
   let asa: Dispatcher;
   let submitEventStub: sinon.SinonStub;
   const getRequests = ({
@@ -70,7 +70,7 @@ export default describe("dispatcher", () => {
 
   before(() => {
     submitEventStub = sinon.stub(api, "submitEvent");
-    submitEventStub.value(ev => {
+    submitEventStub.value((ev: any) => {
       requests.push(ev);
     });
   });

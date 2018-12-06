@@ -65,20 +65,20 @@ export default describe("Postbox SDK", () => {
         }
       });
 
-      fetchStub.callsFake((input: RequestInfo, init: RequestInit): Promise<
-        Response
-      > => {
-        const body = JSON.parse(init.body as string);
-        if (body.err) {
-          return;
+      fetchStub.callsFake(
+        (input: RequestInfo, init: RequestInit): Promise<Response> => {
+          const body = JSON.parse(init.body as string);
+          if (body.err) {
+            return Promise.reject(body.err);
+          }
+          const event: Event = adjustSystemInfo(body.ev);
+          if (event.type === expectation.type) {
+            expect(event).to.eql(expectation);
+            done();
+          }
+          return _fetch(input, init);
         }
-        const event: Event = adjustSystemInfo(body.ev);
-        if (event.type === expectation.type) {
-          expect(event).to.eql(expectation);
-          done();
-        }
-        return _fetch(input, init);
-      });
+      );
 
       asa("as.web.product.viewed", {
         product: {
