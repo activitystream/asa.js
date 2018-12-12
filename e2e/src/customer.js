@@ -269,17 +269,13 @@ export default {
         getLogs()
           .then(r => r.json())
           .then(eventLogs => {
-            eventLogs
-              .filter(d => d.type === "as.web.product.viewed")
-              .forEach(d => {
-                browser
-                  .expect(d.ev.campaign.campaign)
-                  .to.equal("My_Newsletter");
-                browser.expect(d.ev.campaign.source).to.equal("Newsletter");
-                browser.expect(d.ev.campaign.medium).to.equal("Email");
-                browser.expect(d.ev.campaign.term).to.equal("February2017");
-              });
-            browser.expect(eventLogs.length).to.equal(4);
+            eventLogs.forEach(d => {
+              browser.expect(d.ev.campaign.campaign).to.equal("My_Newsletter");
+              browser.expect(d.ev.campaign.source).to.equal("Newsletter");
+              browser.expect(d.ev.campaign.medium).to.equal("Email");
+              browser.expect(d.ev.campaign.term).to.equal("February2017");
+            });
+            browser.expect(eventLogs.length).to.equal(6);
             done();
           })
           .catch(console.error)
