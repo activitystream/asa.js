@@ -22,7 +22,7 @@ export default describe("Partner", () => {
   };
 
   const findEvent = (type: string): Event =>
-    events.find((event: Event) => event.type === type);
+    events.find((event: Event) => event.type === type) as Event;
 
   beforeEach(() => {
     events = [];
@@ -53,12 +53,8 @@ export default describe("Partner", () => {
     referrerStub.value("http://siteb.com");
     setPartnerInfo();
     const asa = getNewTab();
-    asa("as.web.product.viewed", {
-      location: window.location.href,
-      title: document.title
-    });
-    asa("as.web.product.searched", {});
-    const event: Event = findEvent("as.web.product.searched");
+    asa("as.web.product.viewed", ["Product/1"]);
+    const event: Event = findEvent("as.web.product.viewed");
 
     expect(event).to.be.ok;
     expect(event.partner_id).to.be.a("string");
@@ -75,12 +71,8 @@ export default describe("Partner", () => {
     referrerStub.value("http://siteb.com");
     setPartnerInfo();
     const asa = getNewTab();
-    asa("as.web.product.viewed", {
-      location: window.location.href,
-      title: document.title
-    });
-    asa("as.web.product.searched", {});
-    const event: Event = findEvent("as.web.product.searched");
+    asa("as.web.product.viewed", ["Product/1"]);
+    const event: Event = findEvent("as.web.product.viewed");
 
     expect(event).to.be.ok;
     expect(event.partner_id).to.be.a("string");

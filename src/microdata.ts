@@ -88,8 +88,9 @@ const processElement = el => {
   }
 };
 
-export const extractFromHead = () =>
-  _mapper(
+export const extractFromHead = (): { [key: string]: string } => {
+  const keywords = document.querySelector('head > meta[name="keywords"]');
+  return _mapper(
     Array.prototype.reduce.call(
       document.querySelectorAll('head > meta[property^="og:"]'),
       (acc, curr) => ({
@@ -97,14 +98,11 @@ export const extractFromHead = () =>
         [curr.getAttribute("property")]: curr.getAttribute("content")
       }),
       {
-        keywords:
-          document.querySelector('head > meta[name="keywords"]') &&
-          document
-            .querySelector('head > meta[name="keywords"]')
-            .getAttribute("content")
+        keywords: keywords && keywords.getAttribute("content")
       }
     )
   );
+};
 
 export const noMapper = (m, n?) => m;
 

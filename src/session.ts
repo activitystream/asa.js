@@ -13,7 +13,7 @@ const SESSION_EXPIRE_TIMEOUT = 30 * 60 * 1000;
 const SESSION_COOKIE_NAME = "__asa_session";
 
 const persistence = {
-  get(id: string): string {
+  get(id: string): string | null {
     try {
       return Baker.getItem(id);
     } catch (e) {
@@ -98,7 +98,7 @@ export class SessionManager implements SessionManager {
   }
 
   getSession(): Session {
-    return JSON.parse(sessionStore.getItem(SESSION_COOKIE_NAME));
+    return JSON.parse(sessionStore.getItem(SESSION_COOKIE_NAME) || "{}");
   }
 
   refreshSession(data?: Data) {

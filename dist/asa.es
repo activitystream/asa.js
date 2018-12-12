@@ -88,25 +88,20 @@ const UTM = {
     utm_content: ["utm_content"],
     utm_term: ["utm_term"]
 };
-class Campaign {
-    constructor(campaign, medium, source, content, term) {
-        this.campaign = campaign;
-        this.medium = medium;
-        this.source = source;
-        this.content = content;
-        this.term = term;
-    }
-}
 var getCampaign = () => {
     const referrer = Document.referrer && new URL(Document.referrer);
     const location = Document.location && new URL(Document.location);
-    const campaign = mapUTM((_, value) => value
-        .map(key => (referrer && referrer.searchParams.get(key)) ||
-        (location && location.searchParams.get(key)) ||
-        Window.sessionStorage.getItem(`__as.${key}`))
-        .find(Boolean));
-    console.log("campaign:", campaign);
-    return campaign.some(Boolean) ? new Campaign(...campaign) : null;
+    const campaign = {};
+    mapUTM((key, value) => {
+        const val = value
+            .map(key => (referrer && referrer.searchParams.get(key)) ||
+            (location && location.searchParams.get(key)) ||
+            Window.sessionStorage.getItem(`__as.${key}`))
+            .find(Boolean);
+        if (val)
+            campaign[key.substr(4)] = val;
+    });
+    return campaign;
 };
 const mapUTM = (fn) => Object.keys(UTM).map(key => fn(key, UTM[key]));
 const setUTMAliases = (aliases) => {
@@ -131,8 +126,8 @@ const key = (name, value) => {
 };
 const updatePartnerInfo = () => {
     const uri = Document.location && new URL(Document.location);
-    let partnerId = uri.searchParams.get(key("PARTNER_ID_KEY"));
-    let partnerSId = uri.searchParams.get(key("PARTNER_SID_KEY"));
+    let partnerId = uri.searchParams.get(key("PARTNER_ID_KEY")) || "";
+    let partnerSId = uri.searchParams.get(key("PARTNER_SID_KEY")) || "";
     mapUTM((key, values) => {
         const keyValue = values
             .map(key => decodeURIComponent(uri.searchParams.get(key) || ""))
@@ -164,8 +159,8 @@ const setPartnerInfo = () => {
         updatePartnerInfo();
     }
 };
-const getID = () => Window.sessionStorage.getItem(key("PARTNER_ID_KEY"));
-const getSID = () => Window.sessionStorage.getItem(key("PARTNER_SID_KEY"));
+const getID = () => Window.sessionStorage.getItem(key("PARTNER_ID_KEY")) || "";
+const getSID = () => Window.sessionStorage.getItem(key("PARTNER_SID_KEY")) || "";
 
 /**
  * @module logger
@@ -535,7 +530,7 @@ class SessionManager {
         return sessionStore.removeItem(SESSION_COOKIE_NAME);
     }
     getSession() {
-        return JSON.parse(sessionStore.getItem(SESSION_COOKIE_NAME));
+        return JSON.parse(sessionStore.getItem(SESSION_COOKIE_NAME) || "{}");
     }
     refreshSession(data) {
         const campaign = getCampaign();
@@ -565,32 +560,12 @@ const refreshSession = (data) => sessionManager.refreshSession(data);
 /**
  * @module microdata
  */
-const processElement = el => {
-    if (el.hasAttribute("itemscope")) {
-        let map = Array.prototype.reduce.call(el.children, (acc, curr) => (Object.assign({}, acc, { [curr.getAttribute("itemprop")]: processElement(curr) })), {});
-        if (el.getAttribute("itemtype")) {
-            map = {
-                type: el.getAttribute("itemtype"),
-                properties: map
-            };
-        }
-        return map;
-    }
-    else if (el.hasAttribute("itemprop")) {
-        return el.getAttribute("content") || el.innerText || el.src;
-    }
-    else {
-        return {
-            __items: [].map.call(el.children, processElement)
-        };
-    }
+const extractFromHead = () => {
+    const keywords = document.querySelector('head > meta[name="keywords"]');
+    return _mapper(Array.prototype.reduce.call(document.querySelectorAll('head > meta[property^="og:"]'), (acc, curr) => (Object.assign({}, acc, { [curr.getAttribute("property")]: curr.getAttribute("content") })), {
+        keywords: keywords && keywords.getAttribute("content")
+    }));
 };
-const extractFromHead = () => _mapper(Array.prototype.reduce.call(document.querySelectorAll('head > meta[property^="og:"]'), (acc, curr) => (Object.assign({}, acc, { [curr.getAttribute("property")]: curr.getAttribute("content") })), {
-    keywords: document.querySelector('head > meta[name="keywords"]') &&
-        document
-            .querySelector('head > meta[name="keywords"]')
-            .getAttribute("content")
-}));
 const noMapper = (m, n) => m;
 let _mapper = noMapper;
 const setMapper = mapper => {
@@ -603,27 +578,18 @@ const setMapper = mapper => {
         }
     };
 };
-const extract = (selector) => {
-    const elements = typeof selector === "string"
-        ? document.querySelectorAll(selector)
-        : selector;
-    const data = [].map
-        .call(elements, (el) => _mapper(processElement(el), el))
-        .filter((data) => data);
-    return data.length > 1
-        ? {
-            __items: data
-        }
-        : data.pop();
-};
 
 /**
  * @module tracking
  */
+const isAnchor = (target) => target && "href" in target;
+const isFormElement = (target) => target && "form" in target;
 function track(tenant, domains) {
     const domainsTracked = domains;
     const tracker = ({ target }) => {
-        if ("href" in target) {
+        if (!target)
+            return;
+        if (isAnchor(target)) {
             const destination = new URL(target.href);
             if (~domainsTracked.indexOf(destination.host)) {
                 destination.searchParams.set(key("PARTNER_ID_KEY"), tenant);
@@ -637,7 +603,7 @@ function track(tenant, domains) {
                 target.href = destination.href;
             }
         }
-        else if ("form" in target) {
+        else if (isFormElement(target)) {
             const inputs = ["input", "input"].map(document.createElement);
             inputs[0].name = key("PARTNER_ID_KEY");
             inputs[0].value = tenant;
@@ -645,7 +611,7 @@ function track(tenant, domains) {
             inputs[1].value = getSession().id;
             inputs.forEach((input) => {
                 input.type = "hidden";
-                target.form.appendChild(input);
+                target.form && target.form.appendChild(input);
             });
         }
     };
@@ -654,221 +620,66 @@ function track(tenant, domains) {
     document.addEventListener("touchstart", tracker);
 }
 
-/*! *****************************************************************************
-Copyright (c) Microsoft Corporation. All rights reserved.
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use
-this file except in compliance with the License. You may obtain a copy of the
-License at http://www.apache.org/licenses/LICENSE-2.0
-
-THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
-WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
-MERCHANTABLITY OR NON-INFRINGEMENT.
-
-See the Apache Version 2.0 License for specific language governing permissions
-and limitations under the License.
-***************************************************************************** */
-
-function __rest(s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) if (e.indexOf(p[i]) < 0)
-            t[p[i]] = s[p[i]];
-    return t;
-}
-
-var version = "1.1.77";
+var version = "1.1.78";
 
 /**
  * @module event
  */
-const DOMMeta = (selector) => selector &&
-    (selector instanceof HTMLElement ||
-        selector[0] instanceof HTMLElement ||
-        typeof selector === "string")
-    ? selector
-    : false;
-class Event {
-    constructor() {
-        const { id, referrer, campaign, tenant } = getSession();
-        const partner_id = getID();
-        const partner_sid = getSID();
-        this.origin = Window.location.origin;
-        this.occurred = new Date();
-        if (campaign)
-            this.campaign = campaign;
-        this.user = {
-            did: getUser(),
-            sid: id
-        };
-        this.page = {
-            url: Window.location.href
-        };
-        if (referrer)
-            this.page.referrer = referrer;
-        this.tenant = tenant;
-        if (partner_id)
-            this.partner_id = partner_id;
-        if (partner_sid)
-            this.partner_sid = partner_sid;
-        this.v = version;
-    }
-    toJSON() {
-        return JSON.parse(JSON.stringify(Object.assign({}, this)));
-    }
-    [Symbol.toPrimitive]() {
-        return this.type;
-    }
-}
+const webEvent = (type) => {
+    const { id, referrer, campaign, tenant } = getSession();
+    const meta = extractFromHead();
+    const partner_id = getID();
+    const partner_sid = getSID();
+    const origin = Window.location.origin;
+    const occurred = new Date();
+    const page = { url: Window.location.href, referrer };
+    const title = document.title.toString();
+    return {
+        type,
+        partner_id,
+        partner_sid,
+        origin,
+        occurred,
+        campaign,
+        title,
+        user: { did: getUser(), sid: id },
+        page,
+        meta,
+        tenant,
+        v: version
+    };
+};
 var IDType;
 (function (IDType) {
     IDType["Email"] = "Email";
 })(IDType || (IDType = {}));
-var as;
-(function (as) {
-    var web;
-    (function (web) {
-        let order;
-        (function (order) {
-            class reviewed extends Event {
-                constructor() {
-                    super(...arguments);
-                    this.type = "as.web.order.reviewed";
-                }
-            }
-            order.reviewed = reviewed;
-        })(order = web.order || (web.order = {}));
-        let customer;
-        (function (customer) {
-            let account;
-            (function (account) {
-                class provided extends Event {
-                    constructor() {
-                        super(...arguments);
-                        this.type = "as.web.customer.account.provided";
-                    }
-                }
-                account.provided = provided;
-            })(account = customer.account || (customer.account = {}));
-        })(customer = web.customer || (web.customer = {}));
-        let product;
-        (function (product_1) {
-            class product extends Event {
-                constructor(_a = {
-                    products: null
-                }, ...rest) {
-                    var { products } = _a, data = __rest(_a, ["products"]);
-                    super();
-                    if (products)
-                        this.products = products;
-                    if (DOMMeta(data)) {
-                        let meta = extract(data);
-                        if (meta && rest[0])
-                            meta = Object.assign({}, meta, rest[0]);
-                        if (meta)
-                            this.meta = meta;
-                    }
-                    else {
-                        this.meta = Object.assign({}, data, extractFromHead());
-                    }
-                }
-            }
-            product_1.product = product;
-            let availability;
-            (function (availability) {
-                class checked extends product {
-                    constructor() {
-                        super(...arguments);
-                        this.type = "as.web.product.availability.checked";
-                    }
-                }
-                availability.checked = checked;
-            })(availability = product_1.availability || (product_1.availability = {}));
-            class carted extends product {
-                constructor() {
-                    super(...arguments);
-                    this.type = "as.web.product.carted";
-                }
-            }
-            product_1.carted = carted;
-            class searched extends product {
-                constructor() {
-                    super(...arguments);
-                    this.type = "as.web.product.searched";
-                }
-            }
-            product_1.searched = searched;
-            let shipping;
-            (function (shipping) {
-                class selected extends product {
-                    constructor() {
-                        super(...arguments);
-                        this.type = "as.web.product.shipping.selected";
-                    }
-                }
-                shipping.selected = selected;
-            })(shipping = product_1.shipping || (product_1.shipping = {}));
-            class viewed extends product {
-                constructor() {
-                    super(...arguments);
-                    this.type = "as.web.product.viewed";
-                }
-            }
-            product_1.viewed = viewed;
-        })(product = web.product || (web.product = {}));
-        let payment;
-        (function (payment) {
-            class completed extends Event {
-                constructor({ orders } = { orders: null }) {
-                    super();
-                    this.type = "as.web.payment.completed";
-                    if (orders)
-                        this.orders = orders;
-                }
-            }
-            payment.completed = completed;
-        })(payment = web.payment || (web.payment = {}));
-        let session;
-        (function (session_1) {
-            class session extends as.web.product.product {
-                constructor() {
-                    super(...arguments);
-                    this.location = new URL(document.location.toString()).href;
-                    this.title = document.title.toString();
-                    this.session = getSession();
-                }
-            }
-            session_1.session = session;
-            class started extends session {
-                constructor() {
-                    super(...arguments);
-                    this.type = "as.web.session.started";
-                }
-            }
-            session_1.started = started;
-            class resumed extends session {
-                constructor() {
-                    super(...arguments);
-                    this.type = "as.web.session.resumed";
-                }
-            }
-            session_1.resumed = resumed;
-        })(session = web.session || (web.session = {}));
-    })(web = as.web || (as.web = {}));
-})(as || (as = {}));
+const paymentEvent = (orders) => {
+    const event = webEvent("as.web.payment.completed");
+    event.orders = orders.map(o => {
+        if (typeof o === "string")
+            return o;
+        if (o.type)
+            return o.type + "/" + o.id;
+        return o.id;
+    });
+    return event;
+};
+const productEvent = (productids) => {
+    const event = webEvent("as.web.product.viewed");
+    event.products = productids.map(p => {
+        if (typeof p === "string")
+            return p;
+        if (p.type)
+            return p.type + "/" + p.id;
+        return p.id;
+    });
+    return event;
+};
 const web = {
-    "as.web.session.started": as.web.session.started,
-    "as.web.session.resumed": as.web.session.resumed,
-    "as.web.customer.account.provided": as.web.customer.account.provided,
-    "as.web.order.reviewed": as.web.order.reviewed,
-    "as.web.product.availability.checked": as.web.product.availability.checked,
-    "as.web.product.carted": as.web.product.carted,
-    "as.web.product.searched": as.web.product.searched,
-    "as.web.product.shipping.selected": as.web.product.shipping.selected,
-    "as.web.product.viewed": as.web.product.viewed,
-    "as.web.payment.completed": as.web.payment.completed
+    "as.web.session.started": () => webEvent("as.web.session.started"),
+    "as.web.session.resumed": () => webEvent("as.web.session.resumed"),
+    "as.web.product.viewed": productEvent,
+    "as.web.payment.completed": paymentEvent
 };
 
 /**
@@ -974,11 +785,11 @@ function Dispatcher() {
                         ? referrer
                         : null
                 });
-                api.submitEvent(new as.web.session.started());
+                api.submitEvent(webEvent("as.web.session.started"));
             }
             else {
                 refreshSession({ tenant });
-                api.submitEvent(new as.web.session.resumed());
+                api.submitEvent(webEvent("as.web.session.resumed"));
                 logger.log("session resumed");
             }
         };
@@ -986,7 +797,7 @@ function Dispatcher() {
             "create.custom.session": customSession,
             "set.tenant.id": setTenantId,
             "tenant.id.provided": setTenantId,
-            "set.connected.partners": (partners) => track(tenant, partners),
+            "set.connected.partners": (partners) => track(tenant || "", partners),
             "set.service.providers": (domains) => (providers = domains),
             "set.partner.key": (name, value) => key(name, value),
             "set.logger.mode": logger.mode,
@@ -999,11 +810,11 @@ function Dispatcher() {
         try {
             if (!web[name]) {
                 if (local[name]) {
-                    local[name].call(this, ...data);
+                    local[name](...data);
                 }
                 return;
             }
-            api.submitEvent(new web[name](...data));
+            api.submitEvent(web[name](...data));
         }
         catch (error) {
             logger.force("inbox exception:", error);

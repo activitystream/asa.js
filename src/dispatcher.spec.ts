@@ -17,7 +17,7 @@ const getNewTab = () => {
 };
 
 export default describe("dispatcher", () => {
-  let requests = [];
+  let requests: any[] = [];
   let asa: Dispatcher;
   let submitEventStub: sinon.SinonStub;
   const getRequests = ({
@@ -54,6 +54,9 @@ export default describe("dispatcher", () => {
   }) => {
     return {
       ...event,
+      partner_id: "",
+      partner_sid: "",
+      campaign: event.campaign || {},
       v: version,
       location: "asdf",
       occurred: new Date("1997-01-01"),
@@ -70,7 +73,7 @@ export default describe("dispatcher", () => {
 
   before(() => {
     submitEventStub = sinon.stub(api, "submitEvent");
-    submitEventStub.value(ev => {
+    submitEventStub.value((ev: any) => {
       requests.push(ev);
     });
   });
@@ -88,12 +91,12 @@ export default describe("dispatcher", () => {
 
   describe("default as.web.session.started", function() {
     it("should send session started", function() {
-      asa("as.web.product.viewed");
+      asa("as.web.product.viewed", ["Product/1"]);
 
       expect(requests.length).to.equal(2);
     });
     it("should be a POST with data describing the event", function() {
-      asa("as.web.product.viewed");
+      asa("as.web.product.viewed", ["Product/1"]);
       var expectation = adjustSystemInfo({
         type: "as.web.session.started",
         location: "sadfs",
@@ -119,48 +122,167 @@ export default describe("dispatcher", () => {
           keepTitle: true
         })[0]
       );
-      expect(request).to.eql(expectation);
-    });
-  });
-
-  describe("pageview with custom meta", function() {
-    xit("should be a POST with data describing the event", function() {
-      asa("pageview", { a: "s" });
-
-      var expectation = adjustSystemInfo({
-        ev: {
-          type: "custom",
-          event: "sessionStarted",
-          location: "sadfs",
-          tenant: "AS-E2EAUTOTEST-A",
-          title:
-            "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett",
-          meta: {
-            "og:description":
-              "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.",
-            "og:url": "http://operaen.no/",
-            "og:title":
-              "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett",
-            "og:site_name": "Operaen.no",
-            "og:type": "website",
-            keywords:
-              "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter",
-            a: "s"
-          }
-        }
-      });
-
-      var request = getRequests({
-        keepSessionEvents: true,
-        keepTitle: true
-      }).pop();
-      expect(request).to.eql(expectation);
+      deepEqual(expectation, request);
     });
   });
 
   describe("default as.web.product.viewed", () => {
     it("should be a POST with data describing the event", () => {
-      asa("as.web.product.viewed");
+      asa("as.web.product.viewed", ["Product/1"]);
+      const expectation = adjustSystemInfo({
+        type: "as.web.product.viewed",
+        tenant: "AS-E2EAUTOTEST-A",
+        products: ["Product/1"],
+        meta: {
+          "og:description":
+            "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.",
+          "og:url": "http://operaen.no/",
+          "og:title":
+            "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett",
+          "og:site_name": "Operaen.no",
+          "og:type": "website",
+          keywords:
+            "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter"
+        }
+      });
+
+      const request = adjustSystemInfo(getRequests({ keepTitle: true }).pop());
+      deepEqual(expectation, request);
+    });
+
+    it("supports Product list as argument", () => {
+      asa("as.web.product.viewed", [
+        {
+          id: "Product/1"
+        }
+      ]);
+
+      const expectation = adjustSystemInfo({
+        type: "as.web.product.viewed",
+        tenant: "AS-E2EAUTOTEST-A",
+        products: ["Product/1"],
+        meta: {
+          "og:description":
+            "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.",
+          "og:url": "http://operaen.no/",
+          "og:title":
+            "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett",
+          "og:site_name": "Operaen.no",
+          "og:type": "website",
+          keywords:
+            "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter"
+        }
+      });
+
+      const request = adjustSystemInfo(getRequests({ keepTitle: true }).pop());
+      deepEqual(expectation, request);
+    });
+
+    it("supports product list with type as argument", () => {
+      asa("as.web.product.viewed", [
+        {
+          type: "Product",
+          id: "1"
+        }
+      ]);
+
+      const expectation = adjustSystemInfo({
+        type: "as.web.product.viewed",
+        tenant: "AS-E2EAUTOTEST-A",
+        products: ["Product/1"],
+        meta: {
+          "og:description":
+            "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.",
+          "og:url": "http://operaen.no/",
+          "og:title":
+            "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett",
+          "og:site_name": "Operaen.no",
+          "og:type": "website",
+          keywords:
+            "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter"
+        }
+      });
+
+      const request = adjustSystemInfo(getRequests({ keepTitle: true }).pop());
+      deepEqual(expectation, request);
+    });
+  });
+
+  describe("as.web.payment.completed", () => {
+    it("supports a string list as an argument", () => {
+      asa("as.web.payment.completed", ["Order/1"]);
+      const expectation = adjustSystemInfo({
+        type: "as.web.payment.completed",
+        tenant: "AS-E2EAUTOTEST-A",
+        orders: ["Order/1"],
+        meta: {
+          "og:description":
+            "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.",
+          "og:url": "http://operaen.no/",
+          "og:title":
+            "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett",
+          "og:site_name": "Operaen.no",
+          "og:type": "website",
+          keywords:
+            "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter"
+        }
+      });
+
+      const request = adjustSystemInfo(getRequests({ keepTitle: true }).pop());
+      deepEqual(expectation, request);
+    });
+
+    it("supports a Order list as an argument", () => {
+      asa("as.web.payment.completed", [{ id: "Order/1" }]);
+      const expectation = adjustSystemInfo({
+        type: "as.web.payment.completed",
+        tenant: "AS-E2EAUTOTEST-A",
+        orders: ["Order/1"],
+        meta: {
+          "og:description":
+            "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.",
+          "og:url": "http://operaen.no/",
+          "og:title":
+            "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett",
+          "og:site_name": "Operaen.no",
+          "og:type": "website",
+          keywords:
+            "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter"
+        }
+      });
+
+      const request = adjustSystemInfo(getRequests({ keepTitle: true }).pop());
+      deepEqual(expectation, request);
+    });
+
+    it("supports a Order list with type as an argument", () => {
+      asa("as.web.payment.completed", [{ type: "Order", id: "1" }]);
+      const expectation = adjustSystemInfo({
+        type: "as.web.payment.completed",
+        tenant: "AS-E2EAUTOTEST-A",
+        orders: ["Order/1"],
+        meta: {
+          "og:description":
+            "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.",
+          "og:url": "http://operaen.no/",
+          "og:title":
+            "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett",
+          "og:site_name": "Operaen.no",
+          "og:type": "website",
+          keywords:
+            "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter"
+        }
+      });
+
+      const request = adjustSystemInfo(getRequests({ keepTitle: true }).pop());
+      deepEqual(expectation, request);
+    });
+  });
+
+  describe("as.web.product.viewed with custom meta", () => {
+    it("should be a POST with data describing the event", () => {
+      asa("as.web.product.viewed", ["Product/1"]);
+
       const expectation = adjustSystemInfo({
         type: "as.web.product.viewed",
         tenant: "AS-E2EAUTOTEST-A",
@@ -178,81 +300,7 @@ export default describe("dispatcher", () => {
       });
 
       const request = adjustSystemInfo(getRequests({ keepTitle: true }).pop());
-      expect(request).to.eql(expectation);
-    });
-  });
-
-  describe("as.web.product.viewed with custom meta", () => {
-    it("should be a POST with data describing the event", () => {
-      asa("as.web.product.viewed", { a: "s" });
-
-      const expectation = adjustSystemInfo({
-        type: "as.web.product.viewed",
-        tenant: "AS-E2EAUTOTEST-A",
-        meta: {
-          "og:description":
-            "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.",
-          "og:url": "http://operaen.no/",
-          "og:title":
-            "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett",
-          "og:site_name": "Operaen.no",
-          "og:type": "website",
-          keywords:
-            "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter",
-          a: "s"
-        }
-      });
-
-      const request = adjustSystemInfo(getRequests({ keepTitle: true }).pop());
-      expect(request).to.eql(expectation);
-    });
-  });
-
-  xdescribe("commerce events catalog", () => {
-    const entity = (a?) => a;
-    const item = (a?) => a;
-    const location = (a?) => a;
-    const rel = (a?) => a;
-    const commerce = (a?) => a;
-    const HOSTED_AT = "HOSTED_AT";
-    const PART_OF = "PART_OF";
-    const MANUFACTURED_BY = "MANUFACTURED_BY";
-
-    it("should send item carted event", () => {
-      // variant 1
-      asa("as.web.product.carted", {
-        aspects: [
-          commerce(
-            item()
-              .involves(
-                "CARTED",
-                entity("EvenDate/123123123").relations(
-                  rel().link(
-                    HOSTED_AT,
-                    entity("Venue/Operaen").aspects(location("12323,34553434"))
-                  ),
-                  rel().link(PART_OF, "Event/Mads Langer"),
-                  rel().link(MANUFACTURED_BY, "Performer/Mads Langer")
-                )
-              )
-              .itemCount(2)
-              .itemPrice(123.5)
-              .currency("DKK")
-          )
-        ]
-      });
-
-      // variant 2
-      asa("as.web.product.carted", {
-        item: "EventDate/23423423",
-        venue: "Venue/Operaen",
-        producedBy: "Producer/Operaen",
-        hostedAt: "Venue/Operaen",
-        count: 2,
-        title: "Mads Langer",
-        price: 123.5,
-        currency: "DKK"
-      });
+      deepEqual(expectation, request);
     });
   });
 
@@ -264,7 +312,7 @@ export default describe("dispatcher", () => {
           "/test.html?utm_campaign=testCampaign&utm_source=testSource"
       );
       const asa = getNewTab();
-      asa("as.web.product.viewed");
+      asa("as.web.product.viewed", ["Product/1"]);
       const expectation = adjustSystemInfo({
         type: "as.web.product.viewed",
         campaign: { campaign: "testCampaign", source: "testSource" },
@@ -283,13 +331,13 @@ export default describe("dispatcher", () => {
       });
 
       const request = adjustSystemInfo(getRequests().pop());
-      expect(request).to.eql(expectation);
+      deepEqual(expectation, request);
     });
   });
 
   describe("experiment miniAjax", () => {
     it("should be a POST with data describing the event", () => {
-      asa("as.web.product.viewed");
+      asa("as.web.product.viewed", ["Product/1"]);
 
       const expectation = adjustSystemInfo({
         type: "as.web.product.viewed",
@@ -307,52 +355,10 @@ export default describe("dispatcher", () => {
         }
       });
 
-      expect(adjustSystemInfo(getRequests({ keepTitle: false }).pop())).to.eql(
-        expectation
+      deepEqual(
+        expectation,
+        adjustSystemInfo(getRequests({ keepTitle: false }).pop())
       );
-    });
-  });
-
-  xdescribe("batching - the implementation is shitty", () => {
-    it("should have both events", done => {
-      api.batchOn();
-      const batchingDispatcher = new Dispatcher();
-      batchingDispatcher.transport = data => {
-        api.batchEvent(data);
-        return batchingDispatcher;
-      };
-      batchingDispatcher("as.web.product.viewed", { a: "s" });
-      batchingDispatcher("as.web.product.viewed", { a: "d" });
-
-      setTimeout(() => {
-        api.batchOff();
-        // var secondLastExpectation = adjustSystemInfo({ "ev": { "type": "as.web.product.viewed", "page": "/test.html", "location": "sadfs", "title": "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett", "meta": { "og:description": "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.", "og:url": "http://operaen.no/", "og:title": "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett", "og:site_name": "Operaen.no", "og:type": "website", "keywords": "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter", "a": "s" } } });
-        const lastExpectation = adjustSystemInfo({
-          ev: {
-            type: "as.web.product.viewed",
-            page: "/test.html",
-            location: "sadfs",
-            tenant: "AS-E2EAUTOTEST-A",
-            title:
-              "Opera, Ballett og Konserter | Operaen \\ Den Norske Opera & Ballett",
-            meta: {
-              "og:description":
-                "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.",
-              "og:url": "http://operaen.no/",
-              "og:title":
-                "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett",
-              "og:site_name": "Operaen.no",
-              "og:type": "website",
-              keywords:
-                "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter",
-              a: "d"
-            }
-          }
-        });
-
-        expect(getRequests().pop()).to.eql(lastExpectation);
-        done();
-      }, 700);
     });
   });
 
@@ -366,7 +372,7 @@ export default describe("dispatcher", () => {
         }),
         () => {}
       );
-      asa("as.web.product.viewed");
+      asa("as.web.product.viewed", ["Product/1"]);
 
       expect(getRequests({ keepSession: true }).pop().user.sid).to.equal(
         "my_session"
@@ -374,3 +380,26 @@ export default describe("dispatcher", () => {
     });
   });
 });
+
+export const deepEqual = (expect: any, actual: any) => {
+  const keys1 = Object.keys(expect);
+  for (const key of keys1) {
+    let equals = false;
+    if ({}.toString.call(expect[key]) === "[object Object]") {
+      equals = deepEqual(expect[key], actual[key]);
+    } else if (Array.isArray(expect[key])) {
+      equals = deepEqual(expect[key], actual[key]);
+    } else if ({}.toString.call(expect[key]) === "[object Date]") {
+      equals = +expect[key] === +actual[key];
+    } else {
+      equals = expect[key] === actual[key];
+    }
+    if (!equals) {
+      debugger;
+      console.error("Expected", expect[key], " to equal ", actual[key]);
+      console.error("Expected", expect, " to deeply equal ", actual);
+      throw new Error("Expected" + expect + " to deeply equal " + actual);
+    }
+  }
+  return true;
+};
