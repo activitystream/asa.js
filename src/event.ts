@@ -46,12 +46,15 @@ export const webEvent = (type: string): Event => {
   const origin = window.location.origin;
   const occurred = new Date();
   const page = { url: window.location.href, referrer };
+  const title = document.title.toString();
   return {
     type,
     partner_id,
     partner_sid,
     origin,
     occurred,
+    campaign,
+    title,
     user: { did: user.getUser(), sid: id },
     page,
     meta,
@@ -64,13 +67,12 @@ export type Currency = string;
 export type Money = number;
 
 export interface Product {
-  description: string;
-  type: "ExternalEvent";
+  type?: string;
   id: string;
-  categories: string[];
 }
 
 export interface Order {
+  type?: string;
   id: string;
 }
 
@@ -85,13 +87,21 @@ export interface ID {
 
 const paymentEvent = (orders: Array<string | Order>): PaymentEvent => {
   const event = webEvent("as.web.payment.completed") as PaymentEvent;
-  event.orders = orders.map(o => (typeof o === "string" ? o : o.id));
+  event.orders = orders.map(o => {
+    if (typeof o === "string") return o;
+    if (o.type) return o.type + "/" + o.id;
+    return o.id;
+  });
   return event;
 };
 
 const productEvent = (productids: Array<string | Product>): ProductEvent => {
   const event = webEvent("as.web.product.viewed") as ProductEvent;
-  event.products = productids.map(p => (typeof p === "string" ? p : p.id));
+  event.products = productids.map(p => {
+    if (typeof p === "string") return p;
+    if (p.type) return p.type + "/" + p.id;
+    return p.id;
+  });
   return event;
 };
 

@@ -7,7 +7,7 @@ export default options => ({
     const RED = "\x1B[0;31m";
     const NONE = "\x1B[0m";
 
-    puppeteer.launch().then(browser =>
+    puppeteer.launch(options.puppeteer).then(browser =>
       browser.newPage().then(page =>
         page
           .on("console", msg => {

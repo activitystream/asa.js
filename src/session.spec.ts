@@ -52,7 +52,7 @@ export default describe("session", () => {
         try {
           refreshSession();
           const timeout2 = getSession().t;
-          expect(timeout1).to.be.not.equals(timeout2);
+          expect(timeout1).to.not.be.equals(timeout2);
           done();
         } catch (e) {
           done(e);

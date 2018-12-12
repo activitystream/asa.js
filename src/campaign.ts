@@ -36,7 +36,7 @@ export default (): Campaign => {
           window.sessionStorage.getItem(`__as.${key}`)
       )
       .find(Boolean);
-    if (val) campaign[key] = val;
+    if (val) campaign[key.substr(4)] = val;
   });
 
   return campaign;

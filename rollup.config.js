@@ -68,6 +68,11 @@ MAKE.TEST = () =>
         headers: { "Access-Control-Expose-Headers": "SourceMap,X-SourceMap" }
       }),
       puppeteer({
+        // If puppeteer doesn't automatically find your chrome, uncomment this line and
+        // enter your chrome path using `$ which google-chrome` or `$ which chrome`
+        // puppeteer: {
+        //   executablePath: "/usr/sbin/google-chrome-stable"
+        // },
         url: "http://localhost:10001"
       })
     ])

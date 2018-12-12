@@ -61,12 +61,8 @@ export default describe("Campaigns", () => {
     );
     referrerStub.value("http://smashbangpow.dk");
     const asa = getNewTab();
-    asa("as.web.product.viewed", {
-      location: window.location.href,
-      title: document.title
-    });
-    asa("as.web.product.searched", {});
-    const event: Event = findEvent("as.web.product.searched");
+    asa("as.web.product.viewed", ["Product/1"]);
+    const event: Event = findEvent("as.web.product.viewed");
 
     expect(event).to.be.ok;
     const campaign = event.campaign as Campaign;
@@ -86,14 +82,9 @@ export default describe("Campaigns", () => {
       const asa = getNewTab();
       setCustomUTM(asa);
 
-      asa("as.web.product.viewed", {
-        location: window.location.href,
-        title: document.title
-      });
+      asa("as.web.product.viewed", ["Product/1"]);
 
-      asa("as.web.product.searched", {});
-
-      const event: Event = findEvent("as.web.product.searched");
+      const event: Event = findEvent("as.web.product.viewed");
 
       expect(event).to.be.ok;
       const campaign = event.campaign as Campaign;
@@ -111,11 +102,7 @@ export default describe("Campaigns", () => {
       );
       referrerStub.value("http://smashbangpow.dk");
       const tab1 = getNewTab();
-      tab1("as.web.product.viewed", {
-        location: window.location.href,
-        title: document.title
-      });
-      tab1("as.web.product.searched", {});
+      tab1("as.web.product.viewed", ["Product/1"]);
 
       locationStub.value(
         "http://flo.com/place?utm_campaign=testCampaign1&utm_source=testSource1"
@@ -124,9 +111,8 @@ export default describe("Campaigns", () => {
 
       emptyEvents();
       const tab2 = getNewTab();
-      tab2("as.web.product.viewed");
-      tab2("as.web.product.searched", {});
-      const event = findEvent("as.web.product.searched");
+      tab2("as.web.product.viewed", ["Product/1"]);
+      const event = findEvent("as.web.product.viewed");
 
       expect(event).to.be.ok;
       const campaign = event.campaign as Campaign;
@@ -142,11 +128,7 @@ export default describe("Campaigns", () => {
       );
       referrerStub.value("http://smashbangpow.dk");
       const tab1 = getNewTab();
-      tab1("as.web.product.viewed", {
-        location: window.location.href,
-        title: document.title
-      });
-      tab1("as.web.product.searched", {});
+      tab1("as.web.product.viewed", ["Product/1"]);
 
       locationStub.value("http://fle.com/place");
       referrerStub.value("");
@@ -154,13 +136,12 @@ export default describe("Campaigns", () => {
       emptyEvents();
 
       const tab2 = getNewTab();
-      tab2("as.web.product.viewed");
-      tab2("as.web.product.searched");
-      const event = findEvent("as.web.product.searched");
+      tab2("as.web.product.viewed", ["Product/1"]);
+      const event = findEvent("as.web.product.viewed");
 
       expect(event).to.be.ok;
-      expect(event.campaign).to.be.undefined;
-      expect(event.page.referrer).to.be.undefined;
+      expect(event.campaign).to.deep.equal({});
+      expect(event.page.referrer).to.equal(null);
     });
 
     it("campaign info should persist through following steps on a site", () => {
@@ -170,22 +151,14 @@ export default describe("Campaigns", () => {
       referrerStub.value("http://smashbangpow.dk");
       const asa = getNewTab();
       asa("set.service.providers", ["http://paymentgw.gw"]);
-      asa("as.web.product.viewed", {
-        location: window.location.href,
-        title: document.title
-      });
-      asa("as.web.product.searched", {});
+      asa("as.web.product.viewed", ["Product/1"]);
 
       locationStub.value("http://fle.com/place2");
       referrerStub.value("http://fle.com/place");
       emptyEvents();
-      asa("as.web.product.viewed", {
-        location: window.location.href,
-        title: document.title
-      });
-      asa("as.web.product.searched", {});
+      asa("as.web.product.viewed", ["Product/1"]);
 
-      const event: Event = findEvent("as.web.product.searched");
+      const event: Event = findEvent("as.web.product.viewed");
       expect(event).to.be.ok;
       const campaign = event.campaign as Campaign;
       expect(campaign).to.be.an("object");
@@ -201,27 +174,21 @@ export default describe("Campaigns", () => {
       referrerStub.value("http://smashbangpow.dk");
       const asa = getNewTab();
       asa("set.service.providers", ["http://paymentgw.gw"]);
-      asa("as.web.product.viewed", {
-        location: window.location.href,
-        title: document.title
-      });
-      asa("as.web.product.searched", {});
+      asa("as.web.product.viewed", ["Product/1"]);
 
       locationStub.value("http://fle.com/place2");
       referrerStub.value("http://fle.com/place");
       asa("set.service.providers", ["http://paymentgw.gw"]);
-      asa("as.web.product.viewed", {});
-      asa("as.web.product.searched", {});
+      asa("as.web.product.viewed", ["Product/1"]);
 
       locationStub.value("http://fle.com/place3");
       referrerStub.value("http://paymentgw.gw");
 
       emptyEvents();
       asa("set.service.providers", ["http://paymentgw.gw"]);
-      asa("as.web.product.viewed", {});
-      asa("as.web.product.searched", {});
+      asa("as.web.product.viewed", ["Product/1"]);
 
-      const event = findEvent("as.web.product.searched");
+      const event = findEvent("as.web.product.viewed");
       expect(event).to.be.ok;
       const campaign = event.campaign as Campaign;
       expect(campaign).to.be.an("object");
