@@ -20,9 +20,8 @@
 
 		window.onload = () => {
 			asa('set.tenant.id', 'AS-E2EAUTOTEST-A');
-			asa('set.partner.key', 'PARTNER_ID_KEY', 'foo');
 			asa('set.connected.partners', ['siteb.com']);
-			asa('as.web.product.viewed');
+			asa('as.web.product.viewed', ['Product/1']);
 		}
 	</script>
 
@@ -47,7 +46,7 @@
 		<a href="#" onclick="dataLayer.push({event : 'viewedsection', section_id : 'section123'})">Push in data layer (triggers ASA sectionview)</a>
 	</p>
 	<p>
-		<a id="_offer1" href="#" onclick="asa('as.web.product.viewed', 'offer1')">Scrape metadata</a>
+		<a id="_offer1" href="#" onclick="asa('as.web.product.viewed', ['Offer1/'])">Scrape metadata</a>
 	</p>
 	<p>
 		<a id="_read_more" href="http://sitea.com/readmore">Scrape metadata</a>

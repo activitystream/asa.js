@@ -22,9 +22,9 @@ export function track(tenant: string, domains: string[]): void {
       if (~domainsTracked.indexOf(destination.host)) {
         destination.searchParams.set(key("PARTNER_ID_KEY"), tenant);
         destination.searchParams.set(key("PARTNER_SID_KEY"), getSession().id);
-
+        const campaign = getSession().campaign || {};
         mapUTM((key: string) => {
-          const value = browser.window.sessionStorage.getItem(`__as.${key}`);
+          const value = campaign[key.substr(4)];
           if (value) {
             destination.searchParams.set(key, value);
           }
