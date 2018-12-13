@@ -70,9 +70,11 @@ MAKE.TEST = () =>
       puppeteer({
         // If puppeteer doesn't automatically find your chrome, uncomment this line and
         // enter your chrome path using `$ which google-chrome` or `$ which chrome`
-        puppeteer: {
-          executablePath: "/usr/sbin/google-chrome-stable"
-        },
+        puppeteer: process.env.BROWSER
+          ? {
+              executablePath: process.env.BROWSER
+            }
+          : undefined,
         url: "http://localhost:10001"
       })
     ])
