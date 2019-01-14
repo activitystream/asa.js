@@ -1,5 +1,3 @@
-import inbox from "./dispatcher";
-
 const Window: {
   sessionStorage: Storage;
   location: Location;

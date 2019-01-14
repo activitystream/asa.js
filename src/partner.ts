@@ -2,61 +2,56 @@
  * @module partner
  */
 
-import { window, document } from "./browser";
 import { mapUTM } from "./campaign";
 
-const KEY = {
+export const KEY = {
   PARTNER_ID_KEY: "__as.partner_id",
   PARTNER_SID_KEY: "__as.partner_sid"
 };
 
-export const key = (name: string, value?: string): string => {
-  if (value) {
-    KEY[name] = value;
-    updatePartnerInfo();
-  }
-  return KEY[name];
-};
+interface PartnerAttrs {
+  location: URL;
+  referrer?: URL;
+  storage: Storage;
+}
 
-const updatePartnerInfo = () => {
-  const uri: URL = document.location && new URL(document.location);
-  let partnerId: string = uri.searchParams.get(key("PARTNER_ID_KEY")) || "";
-  let partnerSId: string = uri.searchParams.get(key("PARTNER_SID_KEY")) || "";
+const updatePartnerInfo = ({ location, storage }: PartnerAttrs) => {
+  let partnerId: string = location.searchParams.get(KEY.PARTNER_ID_KEY) || "";
+  let partnerSId: string = location.searchParams.get(KEY.PARTNER_SID_KEY) || "";
 
   mapUTM((key: string, values: string[]) => {
     const keyValue =
       values
-        .map(key => decodeURIComponent(uri.searchParams.get(key) || ""))
+        .map(key => decodeURIComponent(location.searchParams.get(key) || ""))
         .find(Boolean) || "";
     if (keyValue) {
-      window.sessionStorage.setItem(`__as.${key}`, keyValue);
+      storage.setItem(`__as.${key}`, keyValue);
     } else {
-      window.sessionStorage.removeItem(`__as.${key}`);
+      storage.removeItem(`__as.${key}`);
     }
   });
 
   if (partnerId) {
-    window.sessionStorage.setItem(key("PARTNER_ID_KEY"), partnerId);
+    storage.setItem(KEY.PARTNER_ID_KEY, partnerId);
   } else {
-    window.sessionStorage.removeItem(key("PARTNER_ID_KEY"));
+    storage.removeItem(KEY.PARTNER_ID_KEY);
   }
   if (partnerSId) {
-    window.sessionStorage.setItem(key("PARTNER_SID_KEY"), partnerSId);
+    storage.setItem(KEY.PARTNER_SID_KEY, partnerSId);
   } else {
-    window.sessionStorage.removeItem(key("PARTNER_SID_KEY"));
+    storage.removeItem(KEY.PARTNER_SID_KEY);
   }
 };
 
-export const setPartnerInfo = () => {
-  const referrer: string = document.referrer && new URL(document.referrer).host;
-  const currentHost: string =
-    document.location && new URL(document.location).host;
+export const setPartnerInfo = (attrs: PartnerAttrs) => {
+  const referrer = attrs.referrer && attrs.referrer.host;
+  const currentHost = attrs.location.host;
   if (referrer && referrer !== currentHost) {
-    updatePartnerInfo();
+    updatePartnerInfo(attrs);
   }
 };
 
-export const getID = (): string =>
-  window.sessionStorage.getItem(key("PARTNER_ID_KEY")) || "";
-export const getSID = (): string =>
-  window.sessionStorage.getItem(key("PARTNER_SID_KEY")) || "";
+export const getID = (storage: Storage): string =>
+  storage.getItem(KEY.PARTNER_ID_KEY) || "";
+export const getSID = (storage: Storage): string =>
+  storage.getItem(KEY.PARTNER_SID_KEY) || "";

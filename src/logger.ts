@@ -2,18 +2,18 @@
  * @module logger
  */
 
-// old ie
-if (!console) {
-  (<any>window.console) = {};
-}
-if (!console.log) {
-  window.console.log = () => {};
-}
+const log = (...message: any[]) => {
+  try {
+    console.log(...message);
+  } catch (e) {
+    // swallow error
+  }
+};
 
 export class Logger {
   static none(...args: any[]): void {}
   static console(...args: any[]) {
-    console.log("js", ...args);
+    log("js", ...args);
   }
 
   private _logger: typeof Logger.none | typeof Logger.console = Logger.none;

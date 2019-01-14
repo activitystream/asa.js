@@ -1,6 +1,7 @@
 import "promise-polyfill/src/polyfill";
 import { URLSearchParams } from "whatwg-url";
 import "whatwg-fetch";
+import { storageAPI } from "./storage";
 
 declare global {
   interface String {
@@ -39,21 +40,6 @@ if (window.localStorage) {
     localStorage.localStorage = 1;
     delete localStorage.localStorage;
   } catch (e) {
-    const storageAPI = () => {
-      const store = {};
-      return {
-        setItem(prop, value) {
-          store[prop] = value;
-        },
-        getItem(prop) {
-          return store[prop];
-        },
-        removeItem(prop) {
-          delete store[prop];
-        }
-      };
-    };
-
     const _localStorage = storageAPI();
     const _sessionStorage = storageAPI();
 

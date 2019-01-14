@@ -2,16 +2,21 @@
  * @module tracking
  */
 
-import { getSession } from "./session";
-import * as browser from "./browser";
+import { SessionManager } from "./session";
 import { mapUTM } from "./campaign";
-import { key } from "./partner";
+import { KEY } from "./partner";
+
+interface TrackAttrs {
+  tenant: string;
+  domains: string[];
+  session: SessionManager;
+}
 
 const isAnchor = (target: any): target is HTMLAnchorElement =>
   target && "href" in target;
 const isFormElement = (target: any): target is HTMLInputElement =>
   target && "form" in target;
-export function track(tenant: string, domains: string[]): void {
+export function track({ session, tenant, domains }: TrackAttrs): void {
   const domainsTracked: string[] = domains;
   const tracker = ({
     target
@@ -20,9 +25,12 @@ export function track(tenant: string, domains: string[]): void {
     if (isAnchor(target)) {
       const destination: URL = new URL(target.href);
       if (~domainsTracked.indexOf(destination.host)) {
-        destination.searchParams.set(key("PARTNER_ID_KEY"), tenant);
-        destination.searchParams.set(key("PARTNER_SID_KEY"), getSession().id);
-        const campaign = getSession().campaign || {};
+        destination.searchParams.set(KEY.PARTNER_ID_KEY, tenant);
+        destination.searchParams.set(
+          KEY.PARTNER_SID_KEY,
+          session.getSession().id
+        );
+        const campaign = session.getSession().campaign || {};
         mapUTM((key: string) => {
           const value = campaign[key.substr(4)];
           if (value) {
@@ -35,10 +43,10 @@ export function track(tenant: string, domains: string[]): void {
       const inputs: HTMLInputElement[] = ["input", "input"].map(
         document.createElement as any
       );
-      inputs[0].name = key("PARTNER_ID_KEY");
+      inputs[0].name = KEY.PARTNER_ID_KEY;
       inputs[0].value = tenant;
-      inputs[1].name = key("PARTNER_SID_KEY");
-      inputs[1].value = getSession().id;
+      inputs[1].name = KEY.PARTNER_SID_KEY;
+      inputs[1].value = session.getSession().id;
       inputs.forEach((input: HTMLInputElement) => {
         input.type = "hidden";
         target.form && target.form.appendChild(input);

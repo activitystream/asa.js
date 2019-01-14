@@ -3,9 +3,9 @@ import sinon from "sinon";
 import { document } from "./browser";
 import { Dispatcher } from "./dispatcher";
 import api from "./api";
-import { createSession, destroySession } from "./session";
 import { Event } from "./event";
 import { Campaign } from "./campaign";
+import { storageAPI } from "./storage";
 
 const locationStub: sinon.SinonStub = sinon.stub(document, "location");
 const referrerStub: sinon.SinonStub = sinon.stub(document, "referrer");
@@ -15,8 +15,12 @@ export default describe("Campaigns", () => {
   let events: Event[] = [];
 
   const getNewTab = () => {
-    const dispatcher: Dispatcher = new Dispatcher();
-    destroySession();
+    const dispatcher: Dispatcher = Dispatcher({
+      location: new URL(document.location),
+      referrer: document.referrer && new URL(document.referrer),
+      storage: storageAPI(),
+      title: ""
+    });
     dispatcher("set.tenant.id", "AS-E2EAUTOTEST-A");
     return dispatcher;
   };
@@ -141,7 +145,7 @@ export default describe("Campaigns", () => {
 
       expect(event).to.be.ok;
       expect(event.campaign).to.deep.equal({});
-      expect(event.page.referrer).to.equal(null);
+      expect(event.page.referrer).to.be.undefined;
     });
 
     it("campaign info should persist through following steps on a site", () => {

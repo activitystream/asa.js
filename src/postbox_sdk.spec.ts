@@ -3,6 +3,7 @@ import { Dispatcher } from "./dispatcher";
 
 import { Event } from "./event";
 import { deepEqual } from "./dispatcher.spec";
+import { storageAPI } from "./storage";
 
 const DATE: Date = new Date();
 
@@ -10,7 +11,14 @@ const _fetch = window.fetch;
 
 export default describe("Postbox SDK", () => {
   let fetchStub: sinon.SinonStub;
-  let asa: Dispatcher = new Dispatcher();
+  const attrs = {
+    location: new URL(window.location.toString()),
+    referrer: new URL(document.referrer || "http://example.com"),
+    title: "",
+    storage: storageAPI()
+  };
+  const asa = Dispatcher(attrs);
+  asa("set.tenant.id", "TEST_TENANT");
 
   const adjustSystemInfo = (data: {}): Event => {
     const event: Event = { ...data } as Event;
@@ -35,26 +43,15 @@ export default describe("Postbox SDK", () => {
       const expectation: Event = adjustSystemInfo({
         type: "as.web.product.viewed",
         occurred: "time",
-        origin: window.location.origin,
+        origin: attrs.location.origin,
         user: {
           did: "device_id",
           sid: "session_id"
         },
         page: {
-          url: window.location.href
+          url: attrs.location.href
         },
-        products: ["Event/1-4034344"],
-        meta: {
-          "og:description":
-            "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.",
-          "og:url": "http://operaen.no/",
-          "og:title":
-            "Opera, Ballett og Konserter | Operaen  \\ Den Norske Opera & Ballett",
-          "og:site_name": "Operaen.no",
-          "og:type": "website",
-          keywords:
-            "Den Norske Opera & Ballett, operaen, ballett, nasjonalballetten, nasjonaloperaen, operahuset, konserter, operakoret, operaorkestret, Operaen, forestillinger, operabutikken, opera, Oslo, oslo opera, operaballetten, konserter"
-        }
+        products: ["Event/1-4034344"]
       });
 
       fetchStub.callsFake(
@@ -75,13 +72,7 @@ export default describe("Postbox SDK", () => {
 
       asa("as.web.product.viewed", [
         {
-          description: "SATURDAY NIGHT FEVER - THE MUSICAL",
-          id: "Event/1-4034344",
-          product_variant: "Floor",
-          price_category: "A",
-          item_price: "222",
-          currency: "DKK",
-          categories: ["Teater", "Musical"]
+          id: "Event/1-4034344"
         }
       ]);
     });

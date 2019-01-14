@@ -3,15 +3,14 @@
  */
 
 import * as microdata from "./microdata";
-import { getSession, Session } from "./session";
+import { Session, SessionManager } from "./session";
 import { version } from "../package.json";
-import * as user from "./user";
-import { window } from "./browser";
+import { UserManager } from "./user";
 import * as partner from "./partner";
 import { Campaign } from "./campaign";
 
 export interface Event {
-  type: Type;
+  type: EventType;
   origin: string;
   occurred: Date;
   campaign?: Campaign;
@@ -38,15 +37,28 @@ interface ProductEvent extends Event {
   products: string[];
 }
 
-export const webEvent = (type: string): Event => {
-  const { id, referrer, campaign, tenant }: Session = getSession();
+interface EventAttrs {
+  location: URL;
+  title: string;
+  storage: Storage;
+  user: UserManager;
+  session: SessionManager;
+}
+
+export const webEvent = (
+  { location, title, storage, user, session }: EventAttrs,
+  type: EventType
+): Event => {
+  const { id, referrer, campaign, tenant }: Session = session.getSession();
   const meta = microdata.extractFromHead();
-  const partner_id: string = partner.getID();
-  const partner_sid: string = partner.getSID();
-  const origin = window.location.origin;
+  const partner_id: string = partner.getID(storage);
+  const partner_sid: string = partner.getSID(storage);
+  const origin = location.origin;
   const occurred = new Date();
-  const page = { url: window.location.href, referrer };
-  const title = document.title.toString();
+  const page = {
+    url: location.href,
+    referrer: referrer ? referrer.hostname : undefined
+  };
   return {
     type,
     partner_id,
@@ -85,8 +97,11 @@ export interface ID {
   id: string;
 }
 
-const paymentEvent = (orders: Array<string | Order>): PaymentEvent => {
-  const event = webEvent("as.web.payment.completed") as PaymentEvent;
+const paymentEvent = (
+  attrs: EventAttrs,
+  orders: Array<string | Order>
+): PaymentEvent => {
+  const event = webEvent(attrs, "as.web.payment.completed") as PaymentEvent;
   event.orders = orders.map(o => {
     if (typeof o === "string") return o;
     if (o.type) return o.type + "/" + o.id;
@@ -95,8 +110,11 @@ const paymentEvent = (orders: Array<string | Order>): PaymentEvent => {
   return event;
 };
 
-const productEvent = (productids: Array<string | Product>): ProductEvent => {
-  const event = webEvent("as.web.product.viewed") as ProductEvent;
+const productEvent = (
+  attrs: EventAttrs,
+  productids: Array<string | Product>
+): ProductEvent => {
+  const event = webEvent(attrs, "as.web.product.viewed") as ProductEvent;
   event.products = productids.map(p => {
     if (typeof p === "string") return p;
     if (p.type) return p.type + "/" + p.id;
@@ -105,13 +123,13 @@ const productEvent = (productids: Array<string | Product>): ProductEvent => {
   return event;
 };
 
-export const web: {
-  [name: string]: (...args: any[]) => Event;
-} = {
-  "as.web.session.started": () => webEvent("as.web.session.started"),
-  "as.web.session.resumed": () => webEvent("as.web.session.resumed"),
+export const web = {
+  "as.web.session.started": (attrs: EventAttrs) =>
+    webEvent(attrs, "as.web.session.started"),
+  "as.web.session.resumed": (attrs: EventAttrs) =>
+    webEvent(attrs, "as.web.session.resumed"),
   "as.web.product.viewed": productEvent,
   "as.web.payment.completed": paymentEvent
 };
 
-export type Type = keyof typeof web;
+export type EventType = keyof typeof web;

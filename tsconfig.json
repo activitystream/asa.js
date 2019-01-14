@@ -2,10 +2,10 @@
   "compilerOptions": {
     "sourceMap": true,
     "noImplicitAny": false,
-    "module": "es6",
-    "target": "es6",
+    "module": "esnext",
+    "target": "esnext",
     "allowJs": true,
-    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "outDir": "build",
     "experimentalDecorators": true,
     "strict": true

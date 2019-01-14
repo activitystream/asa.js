@@ -2,8 +2,6 @@
  * @module campaign
  */
 
-import { window, document } from "./browser";
-
 export const UTM = {
   utm_campaign: ["utm_campaign"],
   utm_medium: ["utm_medium"],
@@ -20,20 +18,21 @@ export interface Campaign {
   term?: string;
 }
 
-export default (): Campaign => {
-  const referrer: URL | undefined =
-    document.referrer && new URL(document.referrer);
-  const location: URL | undefined =
-    document.location && new URL(document.location);
+interface CampaignAttrs {
+  location: URL;
+  referrer?: URL;
+  storage: Storage;
+}
 
+export default ({ referrer, location, storage }: CampaignAttrs): Campaign => {
   const campaign: Campaign = {};
   mapUTM((key, value) => {
     const val = value
       .map(
         key =>
           (referrer && referrer.searchParams.get(key)) ||
-          (location && location.searchParams.get(key)) ||
-          window.sessionStorage.getItem(`__as.${key}`)
+          location.searchParams.get(key) ||
+          storage.getItem(`__as.${key}`)
       )
       .find(Boolean);
     if (val) campaign[key.substr(4)] = val;

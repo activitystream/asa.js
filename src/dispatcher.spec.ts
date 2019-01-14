@@ -4,14 +4,17 @@ import * as browser from "./browser";
 import { Dispatcher } from "./dispatcher";
 import api from "./api";
 import { Event } from "./event";
-import { destroySession } from "./session";
-import * as user from "./user";
 import { version } from "../package.json";
+import { storageAPI } from "./storage";
 
 const locationStub = sinon.stub(browser.document, "location");
 const getNewTab = () => {
-  const dispatcher: Dispatcher = new Dispatcher();
-  destroySession();
+  const dispatcher = Dispatcher({
+    location: new URL(browser.document.location.toString()),
+    referrer: document.referrer ? new URL(document.referrer) : undefined,
+    storage: storageAPI(),
+    title: document.title
+  });
   dispatcher("set.tenant.id", "AS-E2EAUTOTEST-A");
   return dispatcher;
 };
@@ -79,7 +82,6 @@ export default describe("dispatcher", () => {
   });
 
   beforeEach(() => {
-    user.clearUser();
     locationStub.restore();
     requests = [];
     asa = getNewTab();
@@ -364,14 +366,17 @@ export default describe("dispatcher", () => {
 
   describe("custom session management", () => {
     it("should allow devs to provide their own session id", () => {
-      asa(
-        "create.custom.session",
-        () => false,
-        () => ({
-          id: "my_session"
-        }),
-        () => {}
-      );
+      asa("create.custom.session", {
+        createSession() {},
+        refreshSession() {},
+        destroySession() {},
+        hasSession: () => false,
+        getSession: () => ({
+          id: "my_session",
+          tenant: "",
+          t: 0
+        })
+      });
       asa("as.web.product.viewed", ["Product/1"]);
 
       expect(getRequests({ keepSession: true }).pop().user.sid).to.equal(

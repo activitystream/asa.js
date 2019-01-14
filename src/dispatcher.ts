@@ -2,21 +2,15 @@
  * @module dispatcher
  */
 
-import {
-  customSession,
-  hasSession,
-  createSession,
-  refreshSession
-} from "./session";
+import { createSessionManager, SessionManager } from "./session";
 import * as microdata from "./microdata";
 import { track } from "./tracking";
 import logger from "./logger";
-import { web, Type, webEvent } from "./event";
-import { document } from "./browser";
-import { key } from "./partner";
+import { web, EventType, webEvent, Product, Order } from "./event";
+import { KEY, setPartnerInfo } from "./partner";
 import api from "./api";
-import dispatcher from "./dispatcher";
-import { setUTMAliases } from "./campaign";
+import { setUTMAliases, UTM } from "./campaign";
+import { createUserManager } from "./user";
 
 declare global {
   interface Window {
@@ -25,75 +19,108 @@ declare global {
 }
 
 export interface Dispatcher {
-  id: string;
-
-  (name?: Type, ...data: any[]): Dispatcher;
-
-  setTenant(tenant: string): void;
-  getTenant(): string;
-  setProviders(providers: string[]): void;
-  getProviders(): string[];
+  (type: "create.custom.session", sessionManager: SessionManager): void;
+  (type: "set.tenant.id", id: string): void;
+  (type: "tenant.id.provided", id: string): void;
+  (type: "set.connected.partners", partners: string[]): void;
+  (type: "set.service.providers", domains: string[]): void;
+  (type: "set.partner.key", name: string, value: string): void;
+  (type: "set.logger.mode", mode: boolean): void;
+  (type: "set.metadata.transformer", mapper: any): void;
+  (type: "set.utm.aliases", aliases: Partial<typeof UTM>): void;
+  (type: "as.web.product.viewed", product: Array<string | Product>): void;
+  (type: "as.web.payment.completed", order: Array<string | Order>): void;
 }
 
-export function Dispatcher(): void {
-  let tenant: string | null = null;
+export interface DispatcherAttrs {
+  location: URL;
+  referrer?: URL;
+  storage: Storage;
+  title: string;
+}
+
+export function Dispatcher(attrs: DispatcherAttrs): Dispatcher {
+  let tenant: string = "";
   let providers: string[] = [];
+  const isPartner = (host: string) => providers.indexOf(host) > -1;
 
-  return function Dispatcher(name: string, ...data: any[]) {
-    const setTenantId = (id: string) => {
-      tenant = id;
-      if (!hasSession()) {
-        const referrer: string =
-          document.referrer && new URL(document.referrer).host;
-        const location: string =
-          document.location && new URL(document.location.toString()).host;
+  const user = createUserManager(attrs);
 
-        logger.log("no session, starting a new one");
-        createSession({
-          tenant,
-          referrer:
-            referrer &&
-            location &&
-            referrer !== location &&
-            !~providers.indexOf(referrer)
-              ? referrer
-              : null
-        });
-        api.submitEvent(webEvent("as.web.session.started"));
-      } else {
-        refreshSession({ tenant });
-        api.submitEvent(webEvent("as.web.session.resumed"));
-        logger.log("session resumed");
-      }
-    };
+  let session = createSessionManager({
+    ...attrs,
+    user,
+    tenant: "",
+    isPartner: attrs.referrer ? isPartner(attrs.referrer.hostname) : false
+  });
 
-    const local: {
-      [name: string]: (...data: any[]) => void;
-    } = {
-      "create.custom.session": customSession,
-      "set.tenant.id": setTenantId,
-      "tenant.id.provided": setTenantId,
-      "set.connected.partners": (partners: string[]) =>
-        track(tenant || "", partners),
-      "set.service.providers": (domains: string[]) => (providers = domains),
-      "set.partner.key": (name: string, value: string) => key(name, value),
-      "set.logger.mode": logger.mode,
-      "set.metadata.transformer": microdata.setMapper,
-      "set.utm.aliases": aliases => {
-        setUTMAliases(aliases);
-        refreshSession();
-      }
-    };
+  const eventAttrs = {
+    ...attrs,
+    user,
+    session
+  };
 
+  const setTenantId = (id: string) => {
+    tenant = id;
+    if (!session.hasSession()) {
+      logger.log("no session, starting a new one");
+      session.createSession({
+        ...attrs,
+        tenant,
+        user,
+        isPartner: attrs.referrer ? isPartner(attrs.referrer.hostname) : false
+      });
+      api.submitEvent(webEvent(eventAttrs, "as.web.session.started"));
+    } else {
+      session.refreshSession({
+        ...attrs,
+        tenant,
+        user,
+        isPartner: attrs.referrer ? isPartner(attrs.referrer.hostname) : false
+      });
+      api.submitEvent(webEvent(eventAttrs, "as.web.session.resumed"));
+      logger.log("session resumed");
+    }
+  };
+
+  const types = {
+    "create.custom.session": (sessionManager: SessionManager) => {
+      session = sessionManager;
+      eventAttrs.session = session;
+    },
+    "set.tenant.id": setTenantId,
+    "tenant.id.provided": setTenantId,
+    "set.connected.partners": (partners: string[]) =>
+      track({ session, tenant: tenant || "", domains: partners }),
+    "set.service.providers": (domains: string[]) => (providers = domains),
+    "set.partner.key": (name: string, value: string) => {
+      KEY[name] = value;
+      setPartnerInfo(eventAttrs);
+    },
+    "set.logger.mode": logger.mode,
+    "set.metadata.transformer": microdata.setMapper,
+    "set.utm.aliases": (aliases: Partial<typeof UTM>) => {
+      setUTMAliases(aliases);
+      session.refreshSession({
+        ...attrs,
+        tenant,
+        user,
+        isPartner: attrs.referrer ? isPartner(attrs.referrer.hostname) : false
+      });
+    }
+  };
+
+  type Type = keyof typeof types | EventType;
+
+  return function Dispatcher(type: Type, ...data: any[]) {
     try {
-      if (!web[name]) {
-        if (local[name]) {
-          local[name](...data);
+      if (!(type in web)) {
+        if (type in types) {
+          types[type](...data);
         }
         return;
       }
 
-      api.submitEvent(web[name](...data));
+      api.submitEvent(web[type](eventAttrs, ...data));
     } catch (error) {
       logger.force("inbox exception:", error);
       api.submitError(error, {
@@ -101,7 +128,5 @@ export function Dispatcher(): void {
         arguments: [event, ...data]
       });
     }
-  } as any;
+  };
 }
-
-export default new Dispatcher();

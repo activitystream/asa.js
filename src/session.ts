@@ -2,143 +2,108 @@
  * @module session
  */
 
-import * as user from "./user";
 import { hex_sha1, uid } from "./sha1";
 import Baker from "./baker";
 import getCampaign, { Campaign } from "./campaign";
-import { getDomain } from "./user";
-import { document } from "./browser";
+import { UserManager } from "./user";
 
 const SESSION_EXPIRE_TIMEOUT = 30 * 60 * 1000;
 const SESSION_COOKIE_NAME = "__asa_session";
 
-const persistence = {
-  get(id: string): string | null {
-    try {
-      return Baker.getItem(id);
-    } catch (e) {
-      throw new Error(
-        `Error while trying to get item from session cookie:${id}`
-      );
-    }
-  },
-  set(id: string, value: string): boolean {
-    try {
-      return Baker.setItem(id, value, Infinity, "/");
-    } catch (e) {
-      throw new Error(
-        `Error while trying to set item to session cookie: "${id}" <- ${value}`
-      );
-    }
-  },
-  remove: (id: string): void => {
-    try {
-      Baker.removeItem(id);
-    } catch (e) {
-      throw new Error(
-        `Error while trying to remove item from session cookie: "${id}`
-      );
-    }
-  }
-};
-
-const store = {
-  hasItem: persistence.get,
-  getItem: persistence.get,
-  setItem: persistence.set,
-  removeItem: persistence.remove
-};
-
-const sessionStore = store;
-
-export interface Data {
-  [k: string]: any;
+export interface SessionAttrs {
+  location: URL;
+  referrer?: URL;
+  storage: Storage;
+  isPartner: boolean;
+  user: UserManager;
+  tenant: string;
+  data?: { [key: string]: string | undefined };
 }
 
-export interface Session extends Data {
+export interface Session {
   id: string;
   tenant: string;
   campaign?: Campaign;
-  referrer?: string;
+  referrer?: URL;
   t: number;
+  data?: { [key: string]: string | undefined };
 }
 
 export interface SessionManager {
   hasSession(): boolean;
-  createSession(data?: Data): void;
+  createSession(data: SessionAttrs): void;
   destroySession(): void;
   getSession(): Session;
-  refreshSession(): void;
+  refreshSession(data: SessionAttrs): void;
 }
 
-export class SessionManager implements SessionManager {
-  hasSession() {
+export const createSessionManager = (attrs: SessionAttrs): SessionManager => {
+  const { storage, user, location } = attrs;
+
+  return {
+    hasSession,
+    getSession,
+    createSession,
+    destroySession,
+    refreshSession
+  };
+
+  function getSession(): Session {
+    let session: Session;
+    try {
+      session = JSON.parse((storage.getItem(
+        SESSION_COOKIE_NAME
+      ) as any) as string);
+    } catch (e) {
+      session = {
+        id: "",
+        tenant: "",
+        t: 0
+      };
+    }
+
+    session.referrer = session.referrer && new URL(session.referrer.toString());
+
+    return session;
+  }
+
+  function createSession(data: SessionAttrs & { [key: string]: string }) {
+    const campaign = getCampaign(attrs);
+    storage.setItem(
+      SESSION_COOKIE_NAME,
+      JSON.stringify({
+        ...data,
+        ...(campaign && { campaign }),
+        id: `${hex_sha1(location.host)}.${hex_sha1(
+          `${user.getUser()}.${uid()}`
+        )}`,
+        t: Date.now() + SESSION_EXPIRE_TIMEOUT
+      })
+    );
+  }
+
+  function destroySession() {
+    storage.removeItem(SESSION_COOKIE_NAME);
+  }
+
+  function refreshSession(data: SessionAttrs) {
+    const campaign: Campaign = getCampaign(data);
+    const oldSession = getSession();
+    const session: Session = {
+      ...oldSession,
+      ...(campaign && { campaign }),
+      ...data,
+      data: { ...(oldSession.data || {}), ...(data.data || {}) },
+      t: Date.now() + SESSION_EXPIRE_TIMEOUT
+    };
+
+    storage.setItem(SESSION_COOKIE_NAME, JSON.stringify(session));
+  }
+  function hasSession() {
     try {
       return !!(getSession().t > Date.now());
     } catch (e) {
       return false;
     }
   }
-
-  createSession(data?: Data): void {
-    const campaign: Campaign = getCampaign();
-    sessionStore.setItem(
-      SESSION_COOKIE_NAME,
-      JSON.stringify({
-        ...data,
-        ...(campaign && { campaign }),
-        id: `${getDomain()}.${hex_sha1(`${user.getUser()}.${uid()}`)}`,
-        t: Date.now() + SESSION_EXPIRE_TIMEOUT
-      })
-    );
-  }
-
-  destroySession() {
-    return sessionStore.removeItem(SESSION_COOKIE_NAME);
-  }
-
-  getSession(): Session {
-    return JSON.parse(sessionStore.getItem(SESSION_COOKIE_NAME) || "{}");
-  }
-
-  refreshSession(data?: Data) {
-    const campaign: Campaign = getCampaign();
-    const session: Session = {
-      ...this.getSession(),
-      ...(campaign && { campaign }),
-      ...data,
-      t: Date.now() + SESSION_EXPIRE_TIMEOUT
-    };
-
-    sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(session));
-  }
-}
-let sessionManager: SessionManager = new SessionManager();
-export const customSession = (
-  hasSession: () => boolean,
-  getSession: () => Session,
-  createSession: (data: Data) => void
-): void => {
-  sessionManager = new class extends SessionManager {
-    hasSession() {
-      return hasSession();
-    }
-    getSession() {
-      return getSession();
-    }
-    createSession(data: Data) {
-      createSession(data);
-    }
-  }();
 };
-export const resetManager = () => {
-  sessionManager = new SessionManager();
-};
-
-export const getSession = (): Session => sessionManager.getSession();
-export const createSession = (data?: Data) =>
-  sessionManager.createSession(data);
-export const hasSession = () => sessionManager.hasSession();
-export const refreshSession = (data?: Data) =>
-  sessionManager.refreshSession(data);
-export const destroySession = () => sessionManager.destroySession();

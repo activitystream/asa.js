@@ -3,36 +3,62 @@
  */
 
 import { hex_sha1, uid } from "./sha1";
-import * as browser from "./browser";
-import Baker from "./baker";
 
 const USER_ID_COOKIE = "__as_user";
+interface UserAttrs {
+  storage: Storage;
+  location: URL;
+}
 
-let isNew = false;
+export interface UserManager {
+  getUser(): string;
+  setUser(id?: string): string;
+  clearUser(): void;
+  getHash(): string;
+  isUserNew(): boolean;
+}
 
-const generateUser = () => `${getDomain()}.${hex_sha1(uid())}`;
+export const createUserManager = ({
+  storage,
+  location
+}: UserAttrs): UserManager => {
+  let isNew = false;
 
-export const clearUser = () => Baker.removeItem(USER_ID_COOKIE);
-export const setUser = () => {
-  const id = generateUser();
-  Baker.setItem(USER_ID_COOKIE, id, Infinity, "/");
-  isNew = true;
-  return id;
-};
+  return {
+    getUser,
+    setUser,
+    clearUser,
+    getHash,
+    isUserNew
+  };
 
-export const getUser = () => {
-  let user = Baker.getItem(USER_ID_COOKIE);
+  function setUser(id?: string) {
+    if (!id) id = generateUser(location.host, uid());
+    storage.setItem(USER_ID_COOKIE, id);
+    isNew = true;
+    return id;
+  }
+  function clearUser() {
+    storage.removeItem(USER_ID_COOKIE);
+  }
+  function getUser() {
+    let user = storage.getItem(USER_ID_COOKIE);
+    // migrations
+    if (!user || user.length > 70 || user.length < 40) {
+      user = setUser();
+    }
 
-  // migrations
-  if (!user || user.length > 70 || user.length < 40) {
-    user = setUser();
+    return user;
   }
 
-  return user;
+  function getHash() {
+    return getUser().split(".")[1];
+  }
+
+  function isUserNew() {
+    return isNew;
+  }
 };
 
-export const getDomain = () => hex_sha1(browser.window.location.host);
-
-export const getHash = (): string => getUser().split(".")[1];
-
-export const isUserNew = () => isNew;
+const generateUser = (domain: string, id: number) =>
+  `${hex_sha1(domain)}.${hex_sha1(id)}`;
