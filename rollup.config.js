@@ -6,7 +6,7 @@ import serve from "rollup-plugin-serve";
 import typescript from "rollup-plugin-typescript2";
 import json from "rollup-plugin-json";
 import babel from "rollup-plugin-babel";
-import uglify from "rollup-plugin-uglify";
+import { uglify } from "rollup-plugin-uglify";
 import livereload from "rollup-plugin-livereload";
 import puppeteer from "./rollup-plugin-puppeteer";
 
@@ -115,7 +115,9 @@ MAKE.PRODUCTION = () => [
     }),
     plugins: DEFAULT.plugins.concat([
       babel({
-        include: ["src/**"]
+        runtimeHelpers: true,
+        sourceMap: true,
+        extensions: [".ts", ".js"]
       }),
       uglify()
     ])

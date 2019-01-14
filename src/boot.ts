@@ -10,7 +10,7 @@ export default (): void => {
     const queue: QueueItem[] = (window.asa && window.asa["q"]) || [];
     const attrs = {
       location: new URL(document.location.toString()),
-      referrer: new URL(document.referrer.toString()),
+      referrer: document.referrer ? new URL(document.referrer) : undefined,
       storage: sessionStorage,
       title: document.title
     };

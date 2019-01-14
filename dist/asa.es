@@ -2,6 +2,30 @@ import 'promise-polyfill/src/polyfill';
 import { URLSearchParams } from 'whatwg-url';
 import 'whatwg-fetch';
 
+const storageAPI = () => {
+    let store = {};
+    return {
+        setItem(prop, value) {
+            store[prop] = value;
+        },
+        getItem(prop) {
+            return store[prop];
+        },
+        removeItem(prop) {
+            delete store[prop];
+        },
+        clear() {
+            store = {};
+        },
+        key(index) {
+            return store[Object.keys(store)[index]];
+        },
+        get length() {
+            return Object.keys(store).length;
+        }
+    };
+};
+
 if (!String.prototype.trim) {
     String.prototype.trim = function () {
         return this.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, "");
@@ -30,20 +54,6 @@ if (window.localStorage) {
         delete localStorage.localStorage;
     }
     catch (e) {
-        const storageAPI = () => {
-            const store = {};
-            return {
-                setItem(prop, value) {
-                    store[prop] = value;
-                },
-                getItem(prop) {
-                    return store[prop];
-                },
-                removeItem(prop) {
-                    delete store[prop];
-                }
-            };
-        };
         const _localStorage = storageAPI();
         const _sessionStorage = storageAPI();
         Object.defineProperties(window, {
@@ -69,15 +79,6 @@ if (!window.URL) {
     });
 }
 
-const Window = {
-    sessionStorage: window.sessionStorage,
-    location: window.location
-};
-const Document = {
-    location: document.location,
-    referrer: document.referrer
-};
-
 /**
  * @module campaign
  */
@@ -88,15 +89,13 @@ const UTM = {
     utm_content: ["utm_content"],
     utm_term: ["utm_term"]
 };
-var getCampaign = () => {
-    const referrer = Document.referrer && new URL(Document.referrer);
-    const location = Document.location && new URL(Document.location);
+var getCampaign = ({ referrer, location, storage }) => {
     const campaign = {};
     mapUTM((key, value) => {
         const val = value
             .map(key => (referrer && referrer.searchParams.get(key)) ||
-            (location && location.searchParams.get(key)) ||
-            Window.sessionStorage.getItem(`__as.${key}`))
+            location.searchParams.get(key) ||
+            storage.getItem(`__as.${key}`))
             .find(Boolean);
         if (val)
             campaign[key.substr(4)] = val;
@@ -117,68 +116,61 @@ const KEY = {
     PARTNER_ID_KEY: "__as.partner_id",
     PARTNER_SID_KEY: "__as.partner_sid"
 };
-const key = (name, value) => {
-    if (value) {
-        KEY[name] = value;
-        updatePartnerInfo();
-    }
-    return KEY[name];
-};
-const updatePartnerInfo = () => {
-    const uri = Document.location && new URL(Document.location);
-    let partnerId = uri.searchParams.get(key("PARTNER_ID_KEY")) || "";
-    let partnerSId = uri.searchParams.get(key("PARTNER_SID_KEY")) || "";
+const updatePartnerInfo = ({ location, storage }) => {
+    let partnerId = location.searchParams.get(KEY.PARTNER_ID_KEY) || "";
+    let partnerSId = location.searchParams.get(KEY.PARTNER_SID_KEY) || "";
     mapUTM((key, values) => {
         const keyValue = values
-            .map(key => decodeURIComponent(uri.searchParams.get(key) || ""))
+            .map(key => decodeURIComponent(location.searchParams.get(key) || ""))
             .find(Boolean) || "";
         if (keyValue) {
-            Window.sessionStorage.setItem(`__as.${key}`, keyValue);
+            storage.setItem(`__as.${key}`, keyValue);
         }
         else {
-            Window.sessionStorage.removeItem(`__as.${key}`);
+            storage.removeItem(`__as.${key}`);
         }
     });
     if (partnerId) {
-        Window.sessionStorage.setItem(key("PARTNER_ID_KEY"), partnerId);
+        storage.setItem(KEY.PARTNER_ID_KEY, partnerId);
     }
     else {
-        Window.sessionStorage.removeItem(key("PARTNER_ID_KEY"));
+        storage.removeItem(KEY.PARTNER_ID_KEY);
     }
     if (partnerSId) {
-        Window.sessionStorage.setItem(key("PARTNER_SID_KEY"), partnerSId);
+        storage.setItem(KEY.PARTNER_SID_KEY, partnerSId);
     }
     else {
-        Window.sessionStorage.removeItem(key("PARTNER_SID_KEY"));
+        storage.removeItem(KEY.PARTNER_SID_KEY);
     }
 };
-const setPartnerInfo = () => {
-    const referrer = Document.referrer && new URL(Document.referrer).host;
-    const currentHost = Document.location && new URL(Document.location).host;
+const setPartnerInfo = (attrs) => {
+    const referrer = attrs.referrer && attrs.referrer.host;
+    const currentHost = attrs.location.host;
     if (referrer && referrer !== currentHost) {
-        updatePartnerInfo();
+        updatePartnerInfo(attrs);
     }
 };
-const getID = () => Window.sessionStorage.getItem(key("PARTNER_ID_KEY")) || "";
-const getSID = () => Window.sessionStorage.getItem(key("PARTNER_SID_KEY")) || "";
+const getID = (storage) => storage.getItem(KEY.PARTNER_ID_KEY) || "";
+const getSID = (storage) => storage.getItem(KEY.PARTNER_SID_KEY) || "";
 
 /**
  * @module logger
  */
-// old ie
-if (!console) {
-    window.console = {};
-}
-if (!console.log) {
-    window.console.log = () => { };
-}
+const log = (...message) => {
+    try {
+        console.log(...message);
+    }
+    catch (e) {
+        // swallow error
+    }
+};
 class Logger {
     constructor() {
         this._logger = Logger.none;
     }
     static none(...args) { }
     static console(...args) {
-        console.log("js", ...args);
+        log("js", ...args);
     }
     mode(mode) {
         this._logger = mode ? Logger.console : Logger.none;
@@ -367,154 +359,60 @@ function bit_rol(num, cnt) {
     return (num << cnt) | (num >>> (32 - cnt));
 }
 
-/*\
-|*|
-|*|  :: cookies.js ::
-|*|
-|*|  A complete cookies reader/writer framework with full unicode support.
-|*|
-|*|  Revision #3 - July 13th, 2017
-|*|
-|*|  https://developer.mozilla.org/en-US/docs/Web/API/document.cookie
-|*|  https://developer.mozilla.org/User:fusionchess
-|*|  https://github.com/madmurphy/cookies.js
-|*|
-|*|  This framework is released under the GNU Public License, version 3 or later.
-|*|  http://www.gnu.org/licenses/gpl-3.0-standalone.html
-|*|
-|*|  Syntaxes:
-|*|
-|*|  * docCookies.setItem(name, value[, end[, path[, domain[, secure]]]])
-|*|  * docCookies.getItem(name)
-|*|  * docCookies.removeItem(name[, path[, domain]])
-|*|  * docCookies.hasItem(name)
-|*|  * docCookies.keys()
-|*|
-\*/
-var Baker = {
-    getItem(sKey) {
-        if (!sKey) {
-            return null;
-        }
-        return (decodeURIComponent(document.cookie.replace(new RegExp(`(?:(?:^|.*;)\\s*${encodeURIComponent(sKey).replace(/[\-\.\+\*]/g, "\\$&")}\\s*\\=\\s*([^;]*).*$)|^.*$`), "$1")) || null);
-    },
-    setItem(sKey, sValue, vEnd, sPath, sDomain, bSecure) {
-        if (!sKey || /^(?:expires|max\-age|path|domain|secure)$/i.test(sKey)) {
-            return false;
-        }
-        let sExpires = "";
-        if (vEnd) {
-            switch (vEnd.constructor) {
-                case Number:
-                    sExpires =
-                        vEnd === Infinity
-                            ? "; expires=Fri, 31 Dec 9999 23:59:59 GMT"
-                            : `; max-age=${vEnd}`;
-                    /*
-                      Note: Despite officially defined in RFC 6265, the use of `max-age` is not compatible with any
-                      version of Internet Explorer, Edge and some mobile browsers. Therefore passing a number to
-                      the end parameter might not work as expected. A possible solution might be to convert the the
-                      relative time to an absolute time. For instance, replacing the previous line with:
-                      */
-                    /*
-                      sExpires = vEnd === Infinity ? "; expires=Fri, 31 Dec 9999 23:59:59 GMT" : "; expires=" + (new Date(vEnd * 1e3 + Date.now())).toUTCString();
-                      */
-                    break;
-                case String:
-                    sExpires = `; expires=${vEnd}`;
-                    break;
-                case Date:
-                    sExpires = `; expires=${vEnd.toUTCString()}`;
-                    break;
-            }
-        }
-        document.cookie = `${encodeURIComponent(sKey)}=${encodeURIComponent(sValue)}${sExpires}${sDomain ? `; domain=${sDomain}` : ""}${sPath ? `; path=${sPath}` : ""}${bSecure ? "; secure" : ""}`;
-        return true;
-    },
-    removeItem(sKey, sPath, sDomain) {
-        if (!this.hasItem(sKey)) {
-            return false;
-        }
-        document.cookie = `${encodeURIComponent(sKey)}=; expires=Thu, 01 Jan 1970 00:00:00 GMT${sDomain ? `; domain=${sDomain}` : ""}${sPath ? `; path=${sPath}` : ""}`;
-        return true;
-    },
-    hasItem(sKey) {
-        if (!sKey || /^(?:expires|max\-age|path|domain|secure)$/i.test(sKey)) {
-            return false;
-        }
-        return new RegExp(`(?:^|;\\s*)${encodeURIComponent(sKey).replace(/[\-\.\+\*]/g, "\\$&")}\\s*\\=`).test(document.cookie);
-    },
-    keys() {
-        const aKeys = document.cookie
-            .replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "")
-            .split(/\s*(?:\=[^;]*)?;\s*/);
-        for (let nLen = aKeys.length, nIdx = 0; nIdx < nLen; nIdx++) {
-            aKeys[nIdx] = decodeURIComponent(aKeys[nIdx]);
-        }
-        return aKeys;
-    }
-};
-
-/**
- * @module user
- */
-const USER_ID_COOKIE = "__as_user";
-const generateUser = () => `${getDomain()}.${hex_sha1(uid())}`;
-const setUser = () => {
-    const id = generateUser();
-    Baker.setItem(USER_ID_COOKIE, id, Infinity, "/");
-    return id;
-};
-const getUser = () => {
-    let user = Baker.getItem(USER_ID_COOKIE);
-    // migrations
-    if (!user || user.length > 70 || user.length < 40) {
-        user = setUser();
-    }
-    return user;
-};
-const getDomain = () => hex_sha1(Window.location.host);
-
 /**
  * @module session
  */
 const SESSION_EXPIRE_TIMEOUT = 30 * 60 * 1000;
 const SESSION_COOKIE_NAME = "__asa_session";
-const persistence = {
-    get(id) {
+const createSessionManager = (attrs) => {
+    const { storage, user, location } = attrs;
+    return {
+        hasSession,
+        getSession,
+        createSession,
+        destroySession,
+        refreshSession
+    };
+    function getSession() {
+        let session;
         try {
-            return Baker.getItem(id);
+            session = JSON.parse(storage.getItem(SESSION_COOKIE_NAME));
         }
         catch (e) {
-            throw new Error(`Error while trying to get item from session cookie:${id}`);
+            session = {
+                id: "",
+                tenant: "",
+                t: 0
+            };
         }
-    },
-    set(id, value) {
-        try {
-            return Baker.setItem(id, value, Infinity, "/");
-        }
-        catch (e) {
-            throw new Error(`Error while trying to set item to session cookie: "${id}" <- ${value}`);
-        }
-    },
-    remove: (id) => {
-        try {
-            Baker.removeItem(id);
-        }
-        catch (e) {
-            throw new Error(`Error while trying to remove item from session cookie: "${id}`);
-        }
+        session.referrer = session.referrer && new URL(session.referrer.toString());
+        return session;
     }
-};
-const store = {
-    hasItem: persistence.get,
-    getItem: persistence.get,
-    setItem: persistence.set,
-    removeItem: persistence.remove
-};
-const sessionStore = store;
-class SessionManager {
-    hasSession() {
+    function createSession(data) {
+        const campaign = getCampaign(attrs);
+        storage.setItem(SESSION_COOKIE_NAME, JSON.stringify({
+            ...data,
+            ...(campaign && { campaign }),
+            id: `${hex_sha1(location.host)}.${hex_sha1(`${user.getUser()}.${uid()}`)}`,
+            t: Date.now() + SESSION_EXPIRE_TIMEOUT
+        }));
+    }
+    function destroySession() {
+        storage.removeItem(SESSION_COOKIE_NAME);
+    }
+    function refreshSession(data) {
+        const campaign = getCampaign(data);
+        const oldSession = getSession();
+        const session = {
+            ...oldSession,
+            ...(campaign && { campaign }),
+            ...data,
+            data: { ...(oldSession.data || {}), ...(data.data || {}) },
+            t: Date.now() + SESSION_EXPIRE_TIMEOUT
+        };
+        storage.setItem(SESSION_COOKIE_NAME, JSON.stringify(session));
+    }
+    function hasSession() {
         try {
             return !!(getSession().t > Date.now());
         }
@@ -522,47 +420,17 @@ class SessionManager {
             return false;
         }
     }
-    createSession(data) {
-        const campaign = getCampaign();
-        sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(Object.assign({}, data, (campaign && { campaign }), { id: `${getDomain()}.${hex_sha1(`${getUser()}.${uid()}`)}`, t: Date.now() + SESSION_EXPIRE_TIMEOUT })));
-    }
-    destroySession() {
-        return sessionStore.removeItem(SESSION_COOKIE_NAME);
-    }
-    getSession() {
-        return JSON.parse(sessionStore.getItem(SESSION_COOKIE_NAME) || "{}");
-    }
-    refreshSession(data) {
-        const campaign = getCampaign();
-        const session = Object.assign({}, this.getSession(), (campaign && { campaign }), data, { t: Date.now() + SESSION_EXPIRE_TIMEOUT });
-        sessionStore.setItem(SESSION_COOKIE_NAME, JSON.stringify(session));
-    }
-}
-let sessionManager = new SessionManager();
-const customSession = (hasSession, getSession, createSession) => {
-    sessionManager = new class extends SessionManager {
-        hasSession() {
-            return hasSession();
-        }
-        getSession() {
-            return getSession();
-        }
-        createSession(data) {
-            createSession(data);
-        }
-    }();
 };
-const getSession = () => sessionManager.getSession();
-const createSession = (data) => sessionManager.createSession(data);
-const hasSession = () => sessionManager.hasSession();
-const refreshSession = (data) => sessionManager.refreshSession(data);
 
 /**
  * @module microdata
  */
 const extractFromHead = () => {
     const keywords = document.querySelector('head > meta[name="keywords"]');
-    return _mapper(Array.prototype.reduce.call(document.querySelectorAll('head > meta[property^="og:"]'), (acc, curr) => (Object.assign({}, acc, { [curr.getAttribute("property")]: curr.getAttribute("content") })), {
+    return _mapper(Array.prototype.reduce.call(document.querySelectorAll('head > meta[property^="og:"]'), (acc, curr) => ({
+        ...acc,
+        [curr.getAttribute("property")]: curr.getAttribute("content")
+    }), {
         keywords: keywords && keywords.getAttribute("content")
     }));
 };
@@ -584,7 +452,7 @@ const setMapper = mapper => {
  */
 const isAnchor = (target) => target && "href" in target;
 const isFormElement = (target) => target && "form" in target;
-function track(tenant, domains) {
+function track({ session, tenant, domains }) {
     const domainsTracked = domains;
     const tracker = ({ target }) => {
         if (!target)
@@ -592,13 +460,13 @@ function track(tenant, domains) {
         if (isAnchor(target)) {
             const destination = new URL(target.href);
             if (~domainsTracked.indexOf(destination.host)) {
-                destination.searchParams.set(key("PARTNER_ID_KEY"), tenant);
-                destination.searchParams.set(key("PARTNER_SID_KEY"), getSession().id);
-                const campaign = getSession().campaign || {};
-                mapUTM((key$$1) => {
-                    const value = campaign[key$$1.substr(4)];
+                destination.searchParams.set(KEY.PARTNER_ID_KEY, tenant);
+                destination.searchParams.set(KEY.PARTNER_SID_KEY, session.getSession().id);
+                const campaign = session.getSession().campaign || {};
+                mapUTM((key) => {
+                    const value = campaign[key.substr(4)];
                     if (value) {
-                        destination.searchParams.set(key$$1, value);
+                        destination.searchParams.set(key, value);
                     }
                 });
                 target.href = destination.href;
@@ -606,10 +474,10 @@ function track(tenant, domains) {
         }
         else if (isFormElement(target)) {
             const inputs = ["input", "input"].map(document.createElement);
-            inputs[0].name = key("PARTNER_ID_KEY");
+            inputs[0].name = KEY.PARTNER_ID_KEY;
             inputs[0].value = tenant;
-            inputs[1].name = key("PARTNER_SID_KEY");
-            inputs[1].value = getSession().id;
+            inputs[1].name = KEY.PARTNER_SID_KEY;
+            inputs[1].value = session.getSession().id;
             inputs.forEach((input) => {
                 input.type = "hidden";
                 target.form && target.form.appendChild(input);
@@ -621,20 +489,22 @@ function track(tenant, domains) {
     document.addEventListener("touchstart", tracker);
 }
 
-var version = "1.1.78";
+var version = "2.0.0";
 
 /**
  * @module event
  */
-const webEvent = (type) => {
-    const { id, referrer, campaign, tenant } = getSession();
+const webEvent = ({ location, title, storage, user, session }, type) => {
+    const { id, referrer, campaign, tenant } = session.getSession();
     const meta = extractFromHead();
-    const partner_id = getID();
-    const partner_sid = getSID();
-    const origin = Window.location.origin;
+    const partner_id = getID(storage);
+    const partner_sid = getSID(storage);
+    const origin = location.origin;
     const occurred = new Date();
-    const page = { url: Window.location.href, referrer };
-    const title = document.title.toString();
+    const page = {
+        url: location.href,
+        referrer: referrer ? referrer.hostname : undefined
+    };
     return {
         type,
         partner_id,
@@ -643,7 +513,7 @@ const webEvent = (type) => {
         occurred,
         campaign,
         title,
-        user: { did: getUser(), sid: id },
+        user: { did: user.getUser(), sid: id },
         page,
         meta,
         tenant,
@@ -654,8 +524,8 @@ var IDType;
 (function (IDType) {
     IDType["Email"] = "Email";
 })(IDType || (IDType = {}));
-const paymentEvent = (orders) => {
-    const event = webEvent("as.web.payment.completed");
+const paymentEvent = (attrs, orders) => {
+    const event = webEvent(attrs, "as.web.payment.completed");
     event.orders = orders.map(o => {
         if (typeof o === "string")
             return o;
@@ -665,8 +535,8 @@ const paymentEvent = (orders) => {
     });
     return event;
 };
-const productEvent = (productids) => {
-    const event = webEvent("as.web.product.viewed");
+const productEvent = (attrs, productids) => {
+    const event = webEvent(attrs, "as.web.product.viewed");
     event.products = productids.map(p => {
         if (typeof p === "string")
             return p;
@@ -677,8 +547,8 @@ const productEvent = (productids) => {
     return event;
 };
 const web = {
-    "as.web.session.started": () => webEvent("as.web.session.started"),
-    "as.web.session.resumed": () => webEvent("as.web.session.resumed"),
+    "as.web.session.started": (attrs) => webEvent(attrs, "as.web.session.started"),
+    "as.web.session.resumed": (attrs) => webEvent(attrs, "as.web.session.resumed"),
     "as.web.product.viewed": productEvent,
     "as.web.payment.completed": paymentEvent
 };
@@ -765,57 +635,121 @@ class API {
 var api = new API();
 
 /**
+ * @module user
+ */
+const USER_ID_COOKIE = "__as_user";
+const createUserManager = ({ storage, location }) => {
+    let isNew = false;
+    return {
+        getUser,
+        setUser,
+        clearUser,
+        getHash,
+        isUserNew
+    };
+    function setUser(id) {
+        if (!id)
+            id = generateUser(location.host, uid());
+        storage.setItem(USER_ID_COOKIE, id);
+        isNew = true;
+        return id;
+    }
+    function clearUser() {
+        storage.removeItem(USER_ID_COOKIE);
+    }
+    function getUser() {
+        let user = storage.getItem(USER_ID_COOKIE);
+        // migrations
+        if (!user || user.length > 70 || user.length < 40) {
+            user = setUser();
+        }
+        return user;
+    }
+    function getHash() {
+        return getUser().split(".")[1];
+    }
+    function isUserNew() {
+        return isNew;
+    }
+};
+const generateUser = (domain, id) => `${hex_sha1(domain)}.${hex_sha1(id)}`;
+
+/**
  * @module dispatcher
  */
-function Dispatcher() {
-    let tenant = null;
+function Dispatcher(attrs) {
+    let tenant = "";
     let providers = [];
-    return function Dispatcher(name, ...data) {
-        const setTenantId = (id) => {
-            tenant = id;
-            if (!hasSession()) {
-                const referrer = Document.referrer && new URL(Document.referrer).host;
-                const location = Document.location && new URL(Document.location.toString()).host;
-                logger.log("no session, starting a new one");
-                createSession({
-                    tenant,
-                    referrer: referrer &&
-                        location &&
-                        referrer !== location &&
-                        !~providers.indexOf(referrer)
-                        ? referrer
-                        : null
-                });
-                api.submitEvent(webEvent("as.web.session.started"));
-            }
-            else {
-                refreshSession({ tenant });
-                api.submitEvent(webEvent("as.web.session.resumed"));
-                logger.log("session resumed");
-            }
-        };
-        const local = {
-            "create.custom.session": customSession,
-            "set.tenant.id": setTenantId,
-            "tenant.id.provided": setTenantId,
-            "set.connected.partners": (partners) => track(tenant || "", partners),
-            "set.service.providers": (domains) => (providers = domains),
-            "set.partner.key": (name, value) => key(name, value),
-            "set.logger.mode": logger.mode,
-            "set.metadata.transformer": setMapper,
-            "set.utm.aliases": aliases => {
-                setUTMAliases(aliases);
-                refreshSession();
-            }
-        };
+    const isPartner = (host) => providers.indexOf(host) > -1;
+    const user = createUserManager(attrs);
+    let session = createSessionManager({
+        ...attrs,
+        user,
+        tenant: "",
+        isPartner: attrs.referrer ? isPartner(attrs.referrer.hostname) : false
+    });
+    const eventAttrs = {
+        ...attrs,
+        user,
+        session
+    };
+    const setTenantId = (id) => {
+        tenant = id;
+        if (!session.hasSession()) {
+            logger.log("no session, starting a new one");
+            session.createSession({
+                ...attrs,
+                tenant,
+                user,
+                isPartner: attrs.referrer ? isPartner(attrs.referrer.hostname) : false
+            });
+            api.submitEvent(webEvent(eventAttrs, "as.web.session.started"));
+        }
+        else {
+            session.refreshSession({
+                ...attrs,
+                tenant,
+                user,
+                isPartner: attrs.referrer ? isPartner(attrs.referrer.hostname) : false
+            });
+            api.submitEvent(webEvent(eventAttrs, "as.web.session.resumed"));
+            logger.log("session resumed");
+        }
+    };
+    const types = {
+        "create.custom.session": (sessionManager) => {
+            session = sessionManager;
+            eventAttrs.session = session;
+        },
+        "set.tenant.id": setTenantId,
+        "tenant.id.provided": setTenantId,
+        "set.connected.partners": (partners) => track({ session, tenant: tenant || "", domains: partners }),
+        "set.service.providers": (domains) => (providers = domains),
+        "set.partner.key": (name, value) => {
+            KEY[name] = value;
+            setPartnerInfo(eventAttrs);
+        },
+        "set.logger.mode": logger.mode,
+        "set.metadata.transformer": setMapper,
+        "set.utm.aliases": (aliases) => {
+            setUTMAliases(aliases);
+            session.refreshSession({
+                ...attrs,
+                tenant,
+                user,
+                isPartner: attrs.referrer ? isPartner(attrs.referrer.hostname) : false
+            });
+        }
+    };
+    return function Dispatcher(type, ...data) {
         try {
-            if (!web[name]) {
-                if (local[name]) {
-                    local[name](...data);
+            if (!(type in web)) {
+                if (type in types) {
+                    types[type](...data);
                 }
                 return;
             }
-            api.submitEvent(web[name](...data));
+            api.submitEvent(web[type](eventAttrs, ...data));
         }
         catch (error) {
             logger.force("inbox exception:", error);
@@ -826,14 +760,21 @@ function Dispatcher() {
         }
     };
 }
-var dispatcher = new Dispatcher();
 
 var boot = () => {
     try {
         const queue = (window.asa && window.asa["q"]) || [];
-        window.asa = dispatcher;
-        setPartnerInfo();
-        queue.forEach((args) => dispatcher.apply(null, args));
+        const attrs = {
+            location: new URL(document.location.toString()),
+            referrer: document.referrer ? new URL(document.referrer) : undefined,
+            storage: sessionStorage,
+            title: document.title
+        };
+        window.asa = Dispatcher(attrs);
+        setPartnerInfo(attrs);
+        queue.forEach(
+        // @ts-ignore: We trust this
+        (args) => window.asa(...args));
     }
     catch (e) {
         logger.force("exception during init: ", e);

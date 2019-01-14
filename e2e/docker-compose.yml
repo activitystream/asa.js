@@ -1,5 +1,7 @@
 inbox:
   build: inbox
+  volumes:
+    - ../dist:/src/dist
   ports:
     - 6050:80
 
@@ -31,7 +33,6 @@ selenium:
     - 8000:8000
     - 5900:5900
     - 4444:4444
-
 # seleniumfirefox:
 #     image: selenium/standalone-firefox-debug
 #     links:
