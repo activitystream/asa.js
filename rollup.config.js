@@ -61,7 +61,6 @@ MAKE.TEST = () =>
     }),
     external: ["mocha", "it", "describe"],
     plugins: DEFAULT.plugins.concat([
-      globals(),
       builtins(),
       serve({
         contentBase: ["build"],
@@ -121,6 +120,37 @@ MAKE.PRODUCTION = () => [
       }),
       uglify()
     ])
+  }),
+  Object.assign({}, DEFAULT, {
+    input: "server/server.ts",
+    globals: {
+      "node-fetch": "fetch"
+    },
+    external: [
+      "path",
+      "fs",
+      "http",
+      "url",
+      "crypto",
+      "events",
+      "net",
+      "querystring",
+      "buffer",
+      "util",
+      "zlib"
+    ],
+    output: Object.assign({}, DEFAULT.output, {
+      format: "cjs",
+      file: "dist/server.js"
+    }),
+    plugins: [
+      typescript(),
+      resolve({
+        node: true
+      }),
+      commonjs(),
+      json()
+    ]
   }),
   Object.assign({}, DEFAULT, {
     input: "src/index.ts",

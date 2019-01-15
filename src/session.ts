@@ -3,7 +3,6 @@
  */
 
 import { hex_sha1, uid } from "./sha1";
-import Baker from "./baker";
 import getCampaign, { Campaign } from "./campaign";
 import { UserManager } from "./user";
 

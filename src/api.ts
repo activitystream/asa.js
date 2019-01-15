@@ -46,9 +46,9 @@ export type ErrorRequest = {
 };
 
 export const EVENT = (data: EventRequest): Promise<Response> =>
-  POST("//inbox2.activitystream.com/asa", data);
+  POST("https://inbox2.activitystream.com/asa", data);
 export const ERROR = (data: { [key: string]: any }): Promise<Response> =>
-  POST("//inbox2.activitystream.com/asa/error", data);
+  POST("https://inbox2.activitystream.com/asa/error", data);
 
 export type EventDispatcher = (event: Event) => Promise<Response>;
 export type ErrorDispatcher = (

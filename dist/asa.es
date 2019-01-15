@@ -494,9 +494,8 @@ var version = "2.0.0";
 /**
  * @module event
  */
-const webEvent = ({ location, title, storage, user, session }, type) => {
+const webEvent = ({ location, title, storage, user, session, meta }, type) => {
     const { id, referrer, campaign, tenant } = session.getSession();
-    const meta = extractFromHead();
     const partner_id = getID(storage);
     const partner_sid = getSID(storage);
     const origin = location.origin;
@@ -574,8 +573,8 @@ const POST = (url, data) => fetch(url, {
         "Content-Type": "text/plain; charset=UTF-8"
     }
 });
-const EVENT = (data) => POST("//inbox2.activitystream.com/asa", data);
-const ERROR = (data) => POST("//inbox2.activitystream.com/asa/error", data);
+const EVENT = (data) => POST("https://inbox2.activitystream.com/asa", data);
+const ERROR = (data) => POST("https://inbox2.activitystream.com/asa/error", data);
 const submitEvent = ev => EVENT({
     tid: "web.asa",
     ev,
@@ -693,6 +692,12 @@ function Dispatcher(attrs) {
         user,
         session
     };
+    try {
+        eventAttrs.meta = extractFromHead();
+    }
+    catch (e) {
+        // swallow error, since this will fail on the server
+    }
     const setTenantId = (id) => {
         tenant = id;
         if (!session.hasSession()) {

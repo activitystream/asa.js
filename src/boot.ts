@@ -3,6 +3,12 @@ import logger from "./logger";
 import { Dispatcher } from "./dispatcher";
 import api from "./api";
 
+declare global {
+  interface Window {
+    asa: Dispatcher;
+  }
+}
+
 export type QueueItem = [string, any, any];
 
 export default (): void => {

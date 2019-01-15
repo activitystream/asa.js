@@ -6,17 +6,11 @@ import { createSessionManager, SessionManager } from "./session";
 import * as microdata from "./microdata";
 import { track } from "./tracking";
 import logger from "./logger";
-import { web, EventType, webEvent, Product, Order } from "./event";
+import { web, EventType, webEvent, Product, Order, EventAttrs } from "./event";
 import { KEY, setPartnerInfo } from "./partner";
 import api from "./api";
 import { setUTMAliases, UTM } from "./campaign";
 import { createUserManager } from "./user";
-
-declare global {
-  interface Window {
-    asa: Dispatcher;
-  }
-}
 
 export interface Dispatcher {
   (type: "create.custom.session", sessionManager: SessionManager): void;
@@ -34,7 +28,7 @@ export interface Dispatcher {
 
 export interface DispatcherAttrs {
   location: URL;
-  referrer?: URL;
+  referrer?: URL | undefined;
   storage: Storage;
   title: string;
 }
@@ -53,11 +47,17 @@ export function Dispatcher(attrs: DispatcherAttrs): Dispatcher {
     isPartner: attrs.referrer ? isPartner(attrs.referrer.hostname) : false
   });
 
-  const eventAttrs = {
+  const eventAttrs: EventAttrs = {
     ...attrs,
     user,
     session
   };
+
+  try {
+    eventAttrs.meta = microdata.extractFromHead();
+  } catch (e) {
+    // swallow error, since this will fail on the server
+  }
 
   const setTenantId = (id: string) => {
     tenant = id;

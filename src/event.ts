@@ -2,7 +2,6 @@
  * @module event
  */
 
-import * as microdata from "./microdata";
 import { Session, SessionManager } from "./session";
 import { version } from "../package.json";
 import { UserManager } from "./user";
@@ -37,20 +36,20 @@ interface ProductEvent extends Event {
   products: string[];
 }
 
-interface EventAttrs {
+export interface EventAttrs {
   location: URL;
   title: string;
   storage: Storage;
   user: UserManager;
   session: SessionManager;
+  meta?: { [key: string]: string };
 }
 
 export const webEvent = (
-  { location, title, storage, user, session }: EventAttrs,
+  { location, title, storage, user, session, meta }: EventAttrs,
   type: EventType
 ): Event => {
   const { id, referrer, campaign, tenant }: Session = session.getSession();
-  const meta = microdata.extractFromHead();
   const partner_id: string = partner.getID(storage);
   const partner_sid: string = partner.getSID(storage);
   const origin = location.origin;
