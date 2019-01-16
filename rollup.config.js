@@ -63,7 +63,7 @@ MAKE.PRODUCTION = () => [
     ])
   }),
   Object.assign({}, DEFAULT, {
-    input: "server/server.ts",
+    input: "server/index.ts",
     globals: {
       "node-fetch": "fetch"
     },
@@ -78,7 +78,9 @@ MAKE.PRODUCTION = () => [
       "querystring",
       "buffer",
       "util",
-      "zlib"
+      "zlib",
+      "stream",
+      "tty"
     ],
     output: Object.assign({}, DEFAULT.output, {
       format: "cjs",
