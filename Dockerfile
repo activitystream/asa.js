@@ -7,7 +7,7 @@ ADD package.json yarn.lock ./
 RUN npm i -g yarn
 RUN yarn
 
-ADD .babelrc rollup-plugin-puppeteer.js rollup.config.js tsconfig.json ./
+ADD .babelrc rollup.config.js tsconfig.json ./
 ADD server ./server
 ADD src ./src
 
