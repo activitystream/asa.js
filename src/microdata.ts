@@ -60,27 +60,38 @@ const collectProperties = ({ children }: HTMLElement, item) => {
   });
 };
 
-const processElement = el => {
+const reduce = <T, V>(fn: (acc: V, item: T) => V, initial: V) => (
+  list: ArrayLike<T>
+): V =>
+  // @ts-ignore
+  Array.prototype.reduce.call(list, fn, initial);
+const processElement = (el: HTMLElement) => {
   if (el.hasAttribute("itemscope")) {
-    let map = Array.prototype.reduce.call(
-      el.children,
-      (acc, curr) => ({
-        ...acc,
-        [curr.getAttribute("itemprop")]: processElement(curr)
-      }),
+    const properties = reduce(
+      (acc: { [key: string]: string }, curr: HTMLElement) => {
+        return {
+          ...acc,
+          ["" + curr.getAttribute("itemprop")]: processElement(curr)
+        };
+      },
       {}
-    );
+    )((el.children as any) as ArrayLike<HTMLElement>);
 
-    if (el.getAttribute("itemtype")) {
-      map = {
-        type: el.getAttribute("itemtype"),
-        properties: map
+    const type = el.getAttribute("itemtype");
+    if (type) {
+      return {
+        type,
+        properties
       };
     }
-
-    return map;
+    return properties;
   } else if (el.hasAttribute("itemprop")) {
-    return el.getAttribute("content") || el.innerText || el.src;
+    return (
+      el.getAttribute("content") ||
+      el.innerText ||
+      el.innerHTML ||
+      (el as any).src
+    );
   } else {
     return {
       __items: [].map.call(el.children, processElement)
@@ -118,7 +129,7 @@ export const setMapper = mapper => {
   };
 };
 
-export const extract = (selector: string): {} => {
+export const extract = (selector: string | NodeList): {} => {
   const elements: NodeList =
     typeof selector === "string"
       ? document.querySelectorAll(selector)

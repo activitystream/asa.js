@@ -1,11 +1,12 @@
 import * as m from "./microdata";
-import { expect } from "chai";
 
 export default describe("microdata", () => {
   it("should extract metadata from DOM element with a single metadata root", () => {
     const data = m.extract("#offer1");
 
-    expect(data).to.deep.equal({
+    console.log(data);
+
+    expect(data).toEqual({
       type: "http://schema.org/Offer",
       properties: {
         name: "Blend-O-Matic",
@@ -21,7 +22,7 @@ export default describe("microdata", () => {
   it("should extract metadata from DOM element with multiple metadata roots", () => {
     const data = m.extract("#multiple_meta_items");
 
-    expect(data).to.deep.equal({
+    expect(data).toEqual({
       __items: [
         {
           type: "http://schema.org/Offer",
@@ -60,7 +61,7 @@ export default describe("microdata", () => {
   it("should extract metadata from document HEAD", () => {
     const data = m.extractFromHead();
 
-    expect(data).to.deep.equal({
+    expect(data).toEqual({
       "og:description":
         "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.",
       "og:url": "http://operaen.no/",
@@ -79,7 +80,7 @@ export default describe("microdata", () => {
         c: "d"
       }));
       const data = m.extractFromHead();
-      expect(data).to.deep.equal({ c: "d" });
+      expect(data).toEqual({ c: "d" });
     });
     it("should be able to convert metadata", () => {
       m.setMapper(meta => ({
@@ -87,26 +88,26 @@ export default describe("microdata", () => {
         d: meta["og:description"]
       }));
       const data = m.extractFromHead();
-      expect(data).to.deep.equal({
+      expect(data).toEqual({
         c: "d",
         d:
           "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud."
       });
     });
     it('should be "transparent" mappig using the noMapper', () => {
-      expect(m.noMapper("dfd")).to.equal("dfd");
+      expect(m.noMapper("dfd")).toBe("dfd");
     });
     it("should provide metadata and DOM tree root element it was extracted from", done => {
       m.setMapper((meta: any, el) => {
-        expect(el.getAttribute("id")).to.equal("offer1");
-        expect(el.getAttribute("data-event-id")).to.equal("123");
+        expect(el.getAttribute("id")).toBe("offer1");
+        expect(el.getAttribute("data-event-id")).toBe("123");
         done();
       });
       m.extract("#offer1");
     });
     it("should provide only metadata and no DOM tree root element when extracting from HEAD", done => {
       m.setMapper((meta, el) => {
-        expect(el).to.be.undefined;
+        expect(el).toBeUndefined();
         done();
       });
       m.extractFromHead();
@@ -116,7 +117,7 @@ export default describe("microdata", () => {
         throw Error();
       });
       const headerMeta = m.extractFromHead();
-      expect(headerMeta).to.deep.equal({
+      expect(headerMeta).toEqual({
         "og:description":
           "Velkommen til Den Norske Opera & Ballett. Her finner du informasjon om våre forestillinger, opera, ballett, konserter og andre kulturtilbud.",
         "og:url": "http://operaen.no/",

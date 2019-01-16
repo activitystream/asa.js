@@ -24,18 +24,19 @@ jobs:
       - image: circleci/node:8-browsers
     steps:
       - checkout
+
       - run:
-        name: Install yarn
-        command: npm install -g yarn
+          name: install-yarn
+          command: "sudo npm install -g yarn"
 
       - restore_cache:
-        name: Restore Yarn Package Cache
-        keys:
-          # Yarn cache if available
-          - yarn-packages-{{checksum "yarn.lock"}}
+          name: Restore Yarn Package Cache
+          keys:
+            # Yarn cache if available
+            - yarn-packages-{{checksum "yarn.lock"}}
       - run:
-        name: Install dependencies
-        command: yarn install --frozen-lockfile
+          name: Install dependencies
+          command: yarn install --frozen-lockfile
 
       - save_cache:
           name: Save Yarn Package Cache
@@ -44,18 +45,21 @@ jobs:
             - ~/.cache/yarn
 
       - run: if [ -z "${NODE_ENV:-}" ]; then export NODE_ENV=test; fi
+
       - run: export PATH="~/activitystream/asa.js/node_modules/.bin:$PATH"
 
-      # Test
-      #   This would typically be a build job when using workflows, possibly combined with build
-      # The following line was run implicitly in your 1.0 builds based on what CircleCI inferred about the structure of your project. In 2.0 you need to be explicit about which commands should be run. In some cases you can discard inferred commands if they are not relevant to your project.
       - run:
-        name: test
-        command: yarn test
+          name: test
+          command: yarn test --coverage --runInBand --reporters=default --reporters=jest-junit
+          environment:
+            JEST_JUNIT_OUTPUT: "reports/junit/js-test-results.xml"
 
       - store_artifacts: # special step to save test results as as artifact
           # Upload test summary for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
-          path: test-results.xml
+          path: reports
           prefix: tests
+      - store_artifacts:
+          path: coverage
+          prefix: coverage
       - store_test_results: # for display in Test Summary: https://circleci.com/docs/2.0/collect-test-data/
-          path: test-results.xml
+          path: reports

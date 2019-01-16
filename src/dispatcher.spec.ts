@@ -74,7 +74,7 @@ export default describe("dispatcher", () => {
     };
   };
 
-  before(() => {
+  beforeEach(() => {
     submitEventStub = sinon.stub(api, "submitEvent");
     submitEventStub.value((ev: any) => {
       requests.push(ev);
@@ -87,7 +87,7 @@ export default describe("dispatcher", () => {
     asa = getNewTab();
   });
 
-  after(() => {
+  afterEach(() => {
     submitEventStub.restore();
   });
 

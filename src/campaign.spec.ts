@@ -48,14 +48,14 @@ export default describe("Campaigns", () => {
     referrerStub.restore();
   });
 
-  before(() => {
+  beforeEach(() => {
     submitEventStub = sinon.stub(api, "submitEvent");
     submitEventStub.value(ev => {
       events.push(ev);
     });
   });
 
-  after(() => {
+  afterEach(() => {
     submitEventStub.restore();
   });
 

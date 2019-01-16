@@ -7,3 +7,5 @@ e2e/build/
 .vscode
 *.log
 *.code-workspace
+coverage/
+reports/

@@ -30,11 +30,11 @@ export default describe("Postbox SDK", () => {
     return event;
   };
 
-  before(() => {
+  beforeEach(() => {
     fetchStub = sinon.stub(window, "fetch");
   });
 
-  after(() => {
+  afterEach(() => {
     fetchStub.restore();
   });
 
@@ -57,7 +57,6 @@ export default describe("Postbox SDK", () => {
       fetchStub.callsFake(
         (input: RequestInfo, init: RequestInit): Promise<any> => {
           const requestBody = JSON.parse("" + init.body);
-          console.log(requestBody);
           if (requestBody.err) {
             return Promise.reject(requestBody.err);
           }

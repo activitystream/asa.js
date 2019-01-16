@@ -18,7 +18,7 @@ export default describe("session", () => {
     isPartner: false,
     tenant: "testererer"
   };
-  before(() => {
+  beforeEach(() => {
     session = createSessionManager(sessionAttrs);
   });
 

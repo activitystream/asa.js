@@ -1,16 +1,11 @@
 import resolve from "rollup-plugin-node-resolve";
-import builtins from "rollup-plugin-node-builtins";
-import globals from "rollup-plugin-node-globals";
 import commonjs from "rollup-plugin-commonjs";
-import serve from "rollup-plugin-serve";
 import typescript from "rollup-plugin-typescript2";
 import json from "rollup-plugin-json";
 import babel from "rollup-plugin-babel";
 import { uglify } from "rollup-plugin-uglify";
-import livereload from "rollup-plugin-livereload";
-import puppeteer from "./rollup-plugin-puppeteer";
 
-const ENV = ["DEVELOPMENT", "PRODUCTION", "TEST"].reduce(
+const ENV = ["DEVELOPMENT", "PRODUCTION"].reduce(
   (acc, curr) => {
     const obj = Object.assign({}, acc);
     obj[curr] = !!process.env[curr];
@@ -51,60 +46,6 @@ const DEFAULT = {
 };
 
 const MAKE = {};
-
-MAKE.TEST = () =>
-  Object.assign({}, DEFAULT, {
-    input: "src/index.spec.ts",
-    output: Object.assign({}, DEFAULT.output, {
-      file: "build/asa.js",
-      sourcemap: true
-    }),
-    external: ["mocha", "it", "describe"],
-    plugins: DEFAULT.plugins.concat([
-      builtins(),
-      serve({
-        contentBase: ["build"],
-        headers: { "Access-Control-Expose-Headers": "SourceMap,X-SourceMap" }
-      }),
-      puppeteer({
-        // If puppeteer doesn't automatically find your chrome, uncomment this line and
-        // enter your chrome path using `$ which google-chrome` or `$ which chrome`
-        puppeteer: process.env.BROWSER
-          ? {
-              executablePath: process.env.BROWSER
-            }
-          : undefined,
-        url: "http://localhost:10001"
-      })
-    ])
-  });
-
-MAKE.DEVELOPMENT = () =>
-  Object.assign({}, DEFAULT, {
-    input: "src/index.spec.ts",
-    output: Object.assign({}, DEFAULT.output, {
-      file: "build/asa.js",
-      sourcemap: true
-    }),
-    external: ["mocha", "it", "describe"],
-    watch: {
-      chokidar: false,
-      include: "src/**",
-      exclude: "node_modules/**"
-    },
-    plugins: DEFAULT.plugins.concat([
-      globals(),
-      builtins(),
-      serve({
-        open: true,
-        contentBase: ["build"],
-        headers: { "Access-Control-Expose-Headers": "SourceMap,X-SourceMap" }
-      }),
-      livereload({
-        watch: "build"
-      })
-    ])
-  });
 
 MAKE.PRODUCTION = () => [
   Object.assign({}, DEFAULT, {
