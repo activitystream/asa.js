@@ -679,6 +679,7 @@ const generateUser = (domain, id) => `${hex_sha1(domain)}.${hex_sha1(id)}`;
 function Dispatcher(attrs) {
     let tenant = "";
     let providers = [];
+    let sessionEvents = true;
     const isPartner = (host) => providers.indexOf(host) > -1;
     const user = createUserManager(attrs);
     let session = createSessionManager({
@@ -708,7 +709,9 @@ function Dispatcher(attrs) {
                 user,
                 isPartner: attrs.referrer ? isPartner(attrs.referrer.hostname) : false
             });
-            api.submitEvent(webEvent(eventAttrs, "as.web.session.started"));
+            if (sessionEvents) {
+                api.submitEvent(webEvent(eventAttrs, "as.web.session.started"));
+            }
         }
         else {
             session.refreshSession({
@@ -717,11 +720,14 @@ function Dispatcher(attrs) {
                 user,
                 isPartner: attrs.referrer ? isPartner(attrs.referrer.hostname) : false
             });
-            api.submitEvent(webEvent(eventAttrs, "as.web.session.resumed"));
+            if (sessionEvents) {
+                api.submitEvent(webEvent(eventAttrs, "as.web.session.resumed"));
+            }
             logger.log("session resumed");
         }
     };
     const types = {
+        "set.session.events.enabled": (enabled) => (sessionEvents = enabled),
         "create.custom.session": (sessionManager) => {
             session = sessionManager;
             eventAttrs.session = session;
