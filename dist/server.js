@@ -9,12 +9,13 @@ var tty = _interopDefault(require('tty'));
 var fs = _interopDefault(require('fs'));
 var net = _interopDefault(require('net'));
 var buffer = _interopDefault(require('buffer'));
-var stream = _interopDefault(require('stream'));
+var Stream = _interopDefault(require('stream'));
 var zlib = _interopDefault(require('zlib'));
 var querystring = _interopDefault(require('querystring'));
-var url = _interopDefault(require('url'));
+var Url = _interopDefault(require('url'));
 var http = _interopDefault(require('http'));
 var crypto = _interopDefault(require('crypto'));
+var https = _interopDefault(require('https'));
 
 var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
@@ -2249,7 +2250,7 @@ if (1 !== fd && 2 !== fd) {
   util.deprecate(function(){}, 'except for stderr(2) and stdout(1), any other usage of DEBUG_FD is deprecated. Override debug.log if you want to use a different log function (https://git.io/debug_fd)')();
 }
 
-var stream$$1 = 1 === fd ? process.stdout :
+var stream = 1 === fd ? process.stdout :
              2 === fd ? process.stderr :
              createWritableStdioStream(fd);
 
@@ -2311,7 +2312,7 @@ function formatArgs(args) {
  */
 
 function log() {
-  return stream$$1.write(util.format.apply(util, arguments) + '\n');
+  return stream.write(util.format.apply(util, arguments) + '\n');
 }
 
 /**
@@ -2350,33 +2351,33 @@ function load() {
  */
 
 function createWritableStdioStream (fd) {
-  var stream$$1;
+  var stream;
   var tty_wrap = process.binding('tty_wrap');
 
   // Note stream._type is used for test-module-load-list.js
 
   switch (tty_wrap.guessHandleType(fd)) {
     case 'TTY':
-      stream$$1 = new tty.WriteStream(fd);
-      stream$$1._type = 'tty';
+      stream = new tty.WriteStream(fd);
+      stream._type = 'tty';
 
       // Hack to have stream not keep the event loop alive.
       // See https://github.com/joyent/node/issues/1726
-      if (stream$$1._handle && stream$$1._handle.unref) {
-        stream$$1._handle.unref();
+      if (stream._handle && stream._handle.unref) {
+        stream._handle.unref();
       }
       break;
 
     case 'FILE':
       var fs$$1 = fs;
-      stream$$1 = new fs$$1.SyncWriteStream(fd, { autoClose: false });
-      stream$$1._type = 'fs';
+      stream = new fs$$1.SyncWriteStream(fd, { autoClose: false });
+      stream._type = 'fs';
       break;
 
     case 'PIPE':
     case 'TCP':
       var net$$1 = net;
-      stream$$1 = new net$$1.Socket({
+      stream = new net$$1.Socket({
         fd: fd,
         readable: false,
         writable: true
@@ -2386,14 +2387,14 @@ function createWritableStdioStream (fd) {
       // stream from an existing fd which is writable only. But for now
       // we'll just add this hack and set the `readable` member to false.
       // Test: ./node test/fixtures/echo.js < /etc/passwd
-      stream$$1.readable = false;
-      stream$$1.read = null;
-      stream$$1._type = 'pipe';
+      stream.readable = false;
+      stream.read = null;
+      stream._type = 'pipe';
 
       // FIXME Hack to have stream not keep the event loop alive.
       // See https://github.com/joyent/node/issues/1726
-      if (stream$$1._handle && stream$$1._handle.unref) {
-        stream$$1._handle.unref();
+      if (stream._handle && stream._handle.unref) {
+        stream._handle.unref();
       }
       break;
 
@@ -2403,11 +2404,11 @@ function createWritableStdioStream (fd) {
   }
 
   // For supporting legacy API we put the FD here.
-  stream$$1.fd = fd;
+  stream.fd = fd;
 
-  stream$$1._isStdio = true;
+  stream._isStdio = true;
 
-  return stream$$1;
+  return stream;
 }
 
 /**
@@ -6594,7 +6595,7 @@ for (var i = 0; i < modules.length; i++) {
 });
 
 var Buffer$7 = buffer.Buffer,
-    Transform = stream.Transform;
+    Transform = Stream.Transform;
 
 
 // == Exports ==================================================================
@@ -6885,7 +6886,7 @@ var extendNode = function (iconv) {
 
         // -- Readable -------------------------------------------------------------
         if (iconv.supportsStreams) {
-            var Readable = stream.Readable;
+            var Readable = Stream.Readable;
 
             original.ReadableSetEncoding = Readable.prototype.setEncoding;
             Readable.prototype.setEncoding = function setEncoding(enc, options) {
@@ -6919,7 +6920,7 @@ var extendNode = function (iconv) {
         Buffer$8.prototype.write = original.BufferWrite;
 
         if (iconv.supportsStreams) {
-            var Readable = stream.Readable;
+            var Readable = Stream.Readable;
 
             Readable.prototype.setEncoding = original.ReadableSetEncoding;
             delete Readable.prototype.collect;
@@ -7097,8 +7098,8 @@ var unpipe_1 = unpipe;
  * @private
  */
 
-function hasPipeDataListeners(stream$$1) {
-  var listeners = stream$$1.listeners('data');
+function hasPipeDataListeners(stream) {
+  var listeners = stream.listeners('data');
 
   for (var i = 0; i < listeners.length; i++) {
     if (listeners[i].name === 'ondata') {
@@ -7116,24 +7117,24 @@ function hasPipeDataListeners(stream$$1) {
  * @public
  */
 
-function unpipe(stream$$1) {
-  if (!stream$$1) {
+function unpipe(stream) {
+  if (!stream) {
     throw new TypeError('argument stream is required')
   }
 
-  if (typeof stream$$1.unpipe === 'function') {
+  if (typeof stream.unpipe === 'function') {
     // new-style
-    stream$$1.unpipe();
+    stream.unpipe();
     return
   }
 
   // Node.js 0.8 hack
-  if (!hasPipeDataListeners(stream$$1)) {
+  if (!hasPipeDataListeners(stream)) {
     return
   }
 
   var listener;
-  var listeners = stream$$1.listeners('close');
+  var listeners = stream.listeners('close');
 
   for (var i = 0; i < listeners.length; i++) {
     listener = listeners[i];
@@ -7143,7 +7144,7 @@ function unpipe(stream$$1) {
     }
 
     // invoke the listener
-    listener.call(stream$$1);
+    listener.call(stream);
   }
 }
 
@@ -7204,7 +7205,7 @@ function getDecoder (encoding) {
  * @public
  */
 
-function getRawBody (stream$$1, options, callback) {
+function getRawBody (stream, options, callback) {
   var done = callback;
   var opts = options || {};
 
@@ -7245,11 +7246,11 @@ function getRawBody (stream$$1, options, callback) {
 
   if (done) {
     // classic callback style
-    return readStream(stream$$1, encoding, length, limit, done)
+    return readStream(stream, encoding, length, limit, done)
   }
 
   return new Promise(function executor (resolve, reject) {
-    readStream(stream$$1, encoding, length, limit, function onRead (err, buf) {
+    readStream(stream, encoding, length, limit, function onRead (err, buf) {
       if (err) return reject(err)
       resolve(buf);
     });
@@ -7263,13 +7264,13 @@ function getRawBody (stream$$1, options, callback) {
  * @private
  */
 
-function halt (stream$$1) {
+function halt (stream) {
   // unpipe everything from the stream
-  unpipe_1(stream$$1);
+  unpipe_1(stream);
 
   // pause stream
-  if (typeof stream$$1.pause === 'function') {
-    stream$$1.pause();
+  if (typeof stream.pause === 'function') {
+    stream.pause();
   }
 }
 
@@ -7284,7 +7285,7 @@ function halt (stream$$1) {
  * @public
  */
 
-function readStream (stream$$1, encoding, length, limit, callback) {
+function readStream (stream, encoding, length, limit, callback) {
   var complete = false;
   var sync = true;
 
@@ -7305,8 +7306,8 @@ function readStream (stream$$1, encoding, length, limit, callback) {
   //   stream._decoder: streams1
   //   state.encoding: streams2
   //   state.decoder: streams2, specifically < 0.10.6
-  var state = stream$$1._readableState;
-  if (stream$$1._decoder || (state && (state.encoding || state.decoder))) {
+  var state = stream._readableState;
+  if (stream._decoder || (state && (state.encoding || state.decoder))) {
     // developer error
     return done(httpErrors(500, 'stream encoding should not be set', {
       type: 'stream.encoding.set'
@@ -7327,11 +7328,11 @@ function readStream (stream$$1, encoding, length, limit, callback) {
     : [];
 
   // attach listeners
-  stream$$1.on('aborted', onAborted);
-  stream$$1.on('close', cleanup);
-  stream$$1.on('data', onData);
-  stream$$1.on('end', onEnd);
-  stream$$1.on('error', onEnd);
+  stream.on('aborted', onAborted);
+  stream.on('close', cleanup);
+  stream.on('data', onData);
+  stream.on('end', onEnd);
+  stream.on('error', onEnd);
 
   // mark sync section complete
   sync = false;
@@ -7358,7 +7359,7 @@ function readStream (stream$$1, encoding, length, limit, callback) {
 
       if (args[0]) {
         // halt the stream on error
-        halt(stream$$1);
+        halt(stream);
       }
 
       callback.apply(null, args);
@@ -7417,11 +7418,11 @@ function readStream (stream$$1, encoding, length, limit, callback) {
   function cleanup () {
     buffer$$1 = null;
 
-    stream$$1.removeListener('aborted', onAborted);
-    stream$$1.removeListener('data', onData);
-    stream$$1.removeListener('end', onEnd);
-    stream$$1.removeListener('error', onEnd);
-    stream$$1.removeListener('close', cleanup);
+    stream.removeListener('aborted', onAborted);
+    stream.removeListener('data', onData);
+    stream.removeListener('end', onEnd);
+    stream.removeListener('error', onEnd);
+    stream.removeListener('close', cleanup);
   }
 }
 
@@ -7740,7 +7741,7 @@ var read_1 = read;
 function read (req, res, next, parse, debug, options) {
   var length;
   var opts = options;
-  var stream$$1;
+  var stream;
 
   // flag as parsed
   req._body = true;
@@ -7753,9 +7754,9 @@ function read (req, res, next, parse, debug, options) {
 
   try {
     // get the content stream
-    stream$$1 = contentstream(req, debug, opts.inflate);
-    length = stream$$1.length;
-    stream$$1.length = undefined;
+    stream = contentstream(req, debug, opts.inflate);
+    length = stream.length;
+    stream.length = undefined;
   } catch (err) {
     return next(err)
   }
@@ -7776,7 +7777,7 @@ function read (req, res, next, parse, debug, options) {
 
   // read body
   debug('read body');
-  rawBody(stream$$1, opts, function (error, body) {
+  rawBody(stream, opts, function (error, body) {
     if (error) {
       var _error;
 
@@ -7792,7 +7793,7 @@ function read (req, res, next, parse, debug, options) {
       }
 
       // read off entire request
-      stream$$1.resume();
+      stream.resume();
       onFinished_1(req, function onfinished () {
         next(httpErrors(400, _error));
       });
@@ -7846,7 +7847,7 @@ function read (req, res, next, parse, debug, options) {
 function contentstream (req, debug, inflate) {
   var encoding = (req.headers['content-encoding'] || 'identity').toLowerCase();
   var length = req.headers['content-length'];
-  var stream$$1;
+  var stream;
 
   debug('content-encoding "%s"', encoding);
 
@@ -7859,18 +7860,18 @@ function contentstream (req, debug, inflate) {
 
   switch (encoding) {
     case 'deflate':
-      stream$$1 = zlib.createInflate();
+      stream = zlib.createInflate();
       debug('inflate body');
-      req.pipe(stream$$1);
+      req.pipe(stream);
       break
     case 'gzip':
-      stream$$1 = zlib.createGunzip();
+      stream = zlib.createGunzip();
       debug('gunzip body');
-      req.pipe(stream$$1);
+      req.pipe(stream);
       break
     case 'identity':
-      stream$$1 = req;
-      stream$$1.length = length;
+      stream = req;
+      stream.length = length;
       break
     default:
       throw httpErrors(415, 'unsupported content encoding "' + encoding + '"', {
@@ -7879,7 +7880,7 @@ function contentstream (req, debug, inflate) {
       })
   }
 
-  return stream$$1
+  return stream
 }
 
 /*!
@@ -19888,8 +19889,8 @@ var UNMATCHED_SURROGATE_PAIR_REPLACE = '$1\uFFFD$2';
  * @public
  */
 
-function encodeUrl (url$$1) {
-  return String(url$$1)
+function encodeUrl (url) {
+  return String(url)
     .replace(UNMATCHED_SURROGATE_PAIR_REGEXP, UNMATCHED_SURROGATE_PAIR_REPLACE)
     .replace(ENCODE_CHARS_REGEXP, encodeURI)
 }
@@ -19977,8 +19978,8 @@ function escapeHtml(string) {
  */
 
 
-var parse$5 = url.parse;
-var Url = url.Url;
+var parse$5 = Url.parse;
+var Url$1 = Url.Url;
 
 /**
  * Module exports.
@@ -19997,23 +19998,23 @@ var original = originalurl;
  */
 
 function parseurl (req) {
-  var url$$1 = req.url;
+  var url = req.url;
 
-  if (url$$1 === undefined) {
+  if (url === undefined) {
     // URL is undefined
     return undefined
   }
 
   var parsed = req._parsedUrl;
 
-  if (fresh(url$$1, parsed)) {
+  if (fresh(url, parsed)) {
     // Return cached URL parse
     return parsed
   }
 
   // Parse the URL
-  parsed = fastparse(url$$1);
-  parsed._raw = url$$1;
+  parsed = fastparse(url);
+  parsed._raw = url;
 
   return (req._parsedUrl = parsed)
 }
@@ -20026,23 +20027,23 @@ function parseurl (req) {
  */
 
 function originalurl (req) {
-  var url$$1 = req.originalUrl;
+  var url = req.originalUrl;
 
-  if (typeof url$$1 !== 'string') {
+  if (typeof url !== 'string') {
     // Fallback
     return parseurl(req)
   }
 
   var parsed = req._parsedOriginalUrl;
 
-  if (fresh(url$$1, parsed)) {
+  if (fresh(url, parsed)) {
     // Return cached URL parse
     return parsed
   }
 
   // Parse the URL
-  parsed = fastparse(url$$1);
-  parsed._raw = url$$1;
+  parsed = fastparse(url);
+  parsed._raw = url;
 
   return (req._parsedOriginalUrl = parsed)
 }
@@ -20087,16 +20088,16 @@ function fastparse (str) {
     }
   }
 
-  var url$$1 = Url !== undefined
-    ? new Url()
+  var url = Url$1 !== undefined
+    ? new Url$1()
     : {};
-  url$$1.path = str;
-  url$$1.href = str;
-  url$$1.pathname = pathname;
-  url$$1.query = query;
-  url$$1.search = search;
+  url.path = str;
+  url.href = str;
+  url.pathname = pathname;
+  url.query = query;
+  url.search = search;
 
-  return url$$1
+  return url
 }
 
 /**
@@ -20108,11 +20109,11 @@ function fastparse (str) {
  * @private
  */
 
-function fresh (url$$1, parsedUrl) {
+function fresh (url, parsedUrl) {
   return typeof parsedUrl === 'object' &&
     parsedUrl !== null &&
-    (Url === undefined || parsedUrl instanceof Url) &&
-    parsedUrl._raw === url$$1
+    (Url$1 === undefined || parsedUrl instanceof Url$1) &&
+    parsedUrl._raw === url
 }
 parseurl_1.original = original;
 
@@ -21802,19 +21803,19 @@ function getPathname(req) {
 }
 
 // Get get protocol + host for a URL
-function getProtohost(url$$1) {
-  if (typeof url$$1 !== 'string' || url$$1.length === 0 || url$$1[0] === '/') {
+function getProtohost(url) {
+  if (typeof url !== 'string' || url.length === 0 || url[0] === '/') {
     return undefined
   }
 
-  var searchIndex = url$$1.indexOf('?');
+  var searchIndex = url.indexOf('?');
   var pathLength = searchIndex !== -1
     ? searchIndex
-    : url$$1.length;
-  var fqdnIndex = url$$1.substr(0, pathLength).indexOf('://');
+    : url.length;
+  var fqdnIndex = url.substr(0, pathLength).indexOf('://');
 
   return fqdnIndex !== -1
-    ? url$$1.substr(0, url$$1.indexOf('/', 3 + fqdnIndex))
+    ? url.substr(0, url.indexOf('/', 3 + fqdnIndex))
     : undefined
 }
 
@@ -22707,20 +22708,20 @@ var destroy_1 = destroy;
  * @public
  */
 
-function destroy(stream$$1) {
-  if (stream$$1 instanceof ReadStream) {
-    return destroyReadStream(stream$$1)
+function destroy(stream) {
+  if (stream instanceof ReadStream) {
+    return destroyReadStream(stream)
   }
 
-  if (!(stream$$1 instanceof stream)) {
-    return stream$$1
+  if (!(stream instanceof Stream)) {
+    return stream
   }
 
-  if (typeof stream$$1.destroy === 'function') {
-    stream$$1.destroy();
+  if (typeof stream.destroy === 'function') {
+    stream.destroy();
   }
 
-  return stream$$1
+  return stream
 }
 
 /**
@@ -22730,15 +22731,15 @@ function destroy(stream$$1) {
  * @private
  */
 
-function destroyReadStream(stream$$1) {
-  stream$$1.destroy();
+function destroyReadStream(stream) {
+  stream.destroy();
 
-  if (typeof stream$$1.close === 'function') {
+  if (typeof stream.close === 'function') {
     // node.js core bug work-around
-    stream$$1.on('open', onOpenClose);
+    stream.on('open', onOpenClose);
   }
 
-  return stream$$1
+  return stream
 }
 
 /**
@@ -26132,7 +26133,7 @@ function send$1 (req, path$$1, options) {
  */
 
 function SendStream (req, path$$1, options) {
-  stream.call(this);
+  Stream.call(this);
 
   var opts = options || {};
 
@@ -26208,7 +26209,7 @@ function SendStream (req, path$$1, options) {
  * Inherits from `Stream`.
  */
 
-util.inherits(SendStream, stream);
+util.inherits(SendStream, Stream);
 
 /**
  * Enable or disable etag generation.
@@ -26825,38 +26826,38 @@ SendStream.prototype.sendIndex = function sendIndex (path$$1) {
  * @api private
  */
 
-SendStream.prototype.stream = function stream$$1 (path$$1, options) {
+SendStream.prototype.stream = function stream (path$$1, options) {
   // TODO: this is all lame, refactor meeee
   var finished = false;
   var self = this;
   var res = this.res;
 
   // pipe
-  var stream$$1 = fs.createReadStream(path$$1, options);
-  this.emit('stream', stream$$1);
-  stream$$1.pipe(res);
+  var stream = fs.createReadStream(path$$1, options);
+  this.emit('stream', stream);
+  stream.pipe(res);
 
   // response finished, done with the fd
   onFinished_1(res, function onfinished () {
     finished = true;
-    destroy_1(stream$$1);
+    destroy_1(stream);
   });
 
   // error handling code-smell
-  stream$$1.on('error', function onerror (err) {
+  stream.on('error', function onerror (err) {
     // request already finished
     if (finished) return
 
     // clean up stream
     finished = true;
-    destroy_1(stream$$1);
+    destroy_1(stream);
 
     // error
     self.onStatError(err);
   });
 
   // end
-  stream$$1.on('end', function onend () {
+  stream.on('end', function onend () {
     self.emit('end');
   });
 };
@@ -32097,11 +32098,11 @@ res.cookie = function (name, value, options) {
  * @public
  */
 
-res.location = function location(url$$1) {
-  var loc = url$$1;
+res.location = function location(url) {
+  var loc = url;
 
   // "back" is an alias for the referrer
-  if (url$$1 === 'back') {
+  if (url === 'back') {
     loc = this.req.get('Referrer') || '/';
   }
 
@@ -32127,8 +32128,8 @@ res.location = function location(url$$1) {
  * @public
  */
 
-res.redirect = function redirect(url$$1) {
-  var address = url$$1;
+res.redirect = function redirect(url) {
+  var address = url;
   var body;
   var status = 302;
 
@@ -32446,26 +32447,26 @@ function serveStatic (root, options) {
     }
 
     // create send stream
-    var stream$$1 = send_1(req, path$$1, opts);
+    var stream = send_1(req, path$$1, opts);
 
     // add directory handler
-    stream$$1.on('directory', onDirectory);
+    stream.on('directory', onDirectory);
 
     // add headers listener
     if (setHeaders) {
-      stream$$1.on('headers', setHeaders);
+      stream.on('headers', setHeaders);
     }
 
     // add file listener for fallthrough
     if (fallthrough) {
-      stream$$1.on('file', function onFile () {
+      stream.on('file', function onFile () {
         // once file is determined, always forward error
         forwardError = true;
       });
     }
 
     // forward errors
-    stream$$1.on('error', function error (err) {
+    stream.on('error', function error (err) {
       if (forwardError || !(err.statusCode < 500)) {
         next(err);
         return
@@ -32475,7 +32476,7 @@ function serveStatic (root, options) {
     });
 
     // pipe
-    stream$$1.pipe(res);
+    stream.pipe(res);
   }
 }
 
@@ -32547,7 +32548,7 @@ function createRedirectDirectoryListener () {
     originalUrl.pathname = collapseLeadingSlashes$1(originalUrl.pathname + '/');
 
     // reformat the URL
-    var loc = encodeurl(url.format(originalUrl));
+    var loc = encodeurl(Url.format(originalUrl));
     var doc = createHtmlDocument$2('Redirecting', 'Redirecting to <a href="' + escapeHtml_1(loc) + '">' +
       escapeHtml_1(loc) + '</a>');
 
@@ -33008,6 +33009,1608 @@ var lib$2 = createCommonjsModule(function (module) {
 
 }());
 });
+
+// Based on https://github.com/tmpvar/jsdom/blob/aa85b2abf07766ff7bf5c1f6daafb3726f2f2db5/lib/jsdom/living/blob.js
+// (MIT licensed)
+
+const BUFFER = Symbol('buffer');
+const TYPE = Symbol('type');
+
+class Blob {
+	constructor() {
+		this[TYPE] = '';
+
+		const blobParts = arguments[0];
+		const options = arguments[1];
+
+		const buffers = [];
+
+		if (blobParts) {
+			const a = blobParts;
+			const length = Number(a.length);
+			for (let i = 0; i < length; i++) {
+				const element = a[i];
+				let buffer$$1;
+				if (element instanceof Buffer) {
+					buffer$$1 = element;
+				} else if (ArrayBuffer.isView(element)) {
+					buffer$$1 = Buffer.from(element.buffer, element.byteOffset, element.byteLength);
+				} else if (element instanceof ArrayBuffer) {
+					buffer$$1 = Buffer.from(element);
+				} else if (element instanceof Blob) {
+					buffer$$1 = element[BUFFER];
+				} else {
+					buffer$$1 = Buffer.from(typeof element === 'string' ? element : String(element));
+				}
+				buffers.push(buffer$$1);
+			}
+		}
+
+		this[BUFFER] = Buffer.concat(buffers);
+
+		let type = options && options.type !== undefined && String(options.type).toLowerCase();
+		if (type && !/[^\u0020-\u007E]/.test(type)) {
+			this[TYPE] = type;
+		}
+	}
+	get size() {
+		return this[BUFFER].length;
+	}
+	get type() {
+		return this[TYPE];
+	}
+	slice() {
+		const size = this.size;
+
+		const start = arguments[0];
+		const end = arguments[1];
+		let relativeStart, relativeEnd;
+		if (start === undefined) {
+			relativeStart = 0;
+		} else if (start < 0) {
+			relativeStart = Math.max(size + start, 0);
+		} else {
+			relativeStart = Math.min(start, size);
+		}
+		if (end === undefined) {
+			relativeEnd = size;
+		} else if (end < 0) {
+			relativeEnd = Math.max(size + end, 0);
+		} else {
+			relativeEnd = Math.min(end, size);
+		}
+		const span = Math.max(relativeEnd - relativeStart, 0);
+
+		const buffer$$1 = this[BUFFER];
+		const slicedBuffer = buffer$$1.slice(relativeStart, relativeStart + span);
+		const blob = new Blob([], { type: arguments[2] });
+		blob[BUFFER] = slicedBuffer;
+		return blob;
+	}
+}
+
+Object.defineProperties(Blob.prototype, {
+	size: { enumerable: true },
+	type: { enumerable: true },
+	slice: { enumerable: true }
+});
+
+Object.defineProperty(Blob.prototype, Symbol.toStringTag, {
+	value: 'Blob',
+	writable: false,
+	enumerable: false,
+	configurable: true
+});
+
+/**
+ * fetch-error.js
+ *
+ * FetchError interface for operational errors
+ */
+
+/**
+ * Create FetchError instance
+ *
+ * @param   String      message      Error message for human
+ * @param   String      type         Error type for machine
+ * @param   String      systemError  For Node.js system error
+ * @return  FetchError
+ */
+function FetchError(message, type, systemError) {
+  Error.call(this, message);
+
+  this.message = message;
+  this.type = type;
+
+  // when err.type is `system`, err.code contains system error code
+  if (systemError) {
+    this.code = this.errno = systemError.code;
+  }
+
+  // hide custom error implementation details from end-users
+  Error.captureStackTrace(this, this.constructor);
+}
+
+FetchError.prototype = Object.create(Error.prototype);
+FetchError.prototype.constructor = FetchError;
+FetchError.prototype.name = 'FetchError';
+
+let convert;
+try {
+	convert = require('encoding').convert;
+} catch (e) {}
+
+const INTERNALS = Symbol('Body internals');
+
+// fix an issue where "PassThrough" isn't a named export for node <10
+const PassThrough = Stream.PassThrough;
+
+/**
+ * Body mixin
+ *
+ * Ref: https://fetch.spec.whatwg.org/#body
+ *
+ * @param   Stream  body  Readable stream
+ * @param   Object  opts  Response options
+ * @return  Void
+ */
+function Body(body) {
+	var _this = this;
+
+	var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+	    _ref$size = _ref.size;
+
+	let size = _ref$size === undefined ? 0 : _ref$size;
+	var _ref$timeout = _ref.timeout;
+	let timeout = _ref$timeout === undefined ? 0 : _ref$timeout;
+
+	if (body == null) {
+		// body is undefined or null
+		body = null;
+	} else if (typeof body === 'string') ; else if (isURLSearchParams(body)) ; else if (body instanceof Blob) ; else if (Buffer.isBuffer(body)) ; else if (Object.prototype.toString.call(body) === '[object ArrayBuffer]') ; else if (ArrayBuffer.isView(body)) ; else if (body instanceof Stream) ; else {
+		// none of the above
+		// coerce to string
+		body = String(body);
+	}
+	this[INTERNALS] = {
+		body,
+		disturbed: false,
+		error: null
+	};
+	this.size = size;
+	this.timeout = timeout;
+
+	if (body instanceof Stream) {
+		body.on('error', function (err) {
+			const error = err.name === 'AbortError' ? err : new FetchError(`Invalid response body while trying to fetch ${_this.url}: ${err.message}`, 'system', err);
+			_this[INTERNALS].error = error;
+		});
+	}
+}
+
+Body.prototype = {
+	get body() {
+		return this[INTERNALS].body;
+	},
+
+	get bodyUsed() {
+		return this[INTERNALS].disturbed;
+	},
+
+	/**
+  * Decode response as ArrayBuffer
+  *
+  * @return  Promise
+  */
+	arrayBuffer() {
+		return consumeBody.call(this).then(function (buf) {
+			return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+		});
+	},
+
+	/**
+  * Return raw response as Blob
+  *
+  * @return Promise
+  */
+	blob() {
+		let ct = this.headers && this.headers.get('content-type') || '';
+		return consumeBody.call(this).then(function (buf) {
+			return Object.assign(
+			// Prevent copying
+			new Blob([], {
+				type: ct.toLowerCase()
+			}), {
+				[BUFFER]: buf
+			});
+		});
+	},
+
+	/**
+  * Decode response as json
+  *
+  * @return  Promise
+  */
+	json() {
+		var _this2 = this;
+
+		return consumeBody.call(this).then(function (buffer$$1) {
+			try {
+				return JSON.parse(buffer$$1.toString());
+			} catch (err) {
+				return Body.Promise.reject(new FetchError(`invalid json response body at ${_this2.url} reason: ${err.message}`, 'invalid-json'));
+			}
+		});
+	},
+
+	/**
+  * Decode response as text
+  *
+  * @return  Promise
+  */
+	text() {
+		return consumeBody.call(this).then(function (buffer$$1) {
+			return buffer$$1.toString();
+		});
+	},
+
+	/**
+  * Decode response as buffer (non-spec api)
+  *
+  * @return  Promise
+  */
+	buffer() {
+		return consumeBody.call(this);
+	},
+
+	/**
+  * Decode response as text, while automatically detecting the encoding and
+  * trying to decode to UTF-8 (non-spec api)
+  *
+  * @return  Promise
+  */
+	textConverted() {
+		var _this3 = this;
+
+		return consumeBody.call(this).then(function (buffer$$1) {
+			return convertBody(buffer$$1, _this3.headers);
+		});
+	}
+
+};
+
+// In browsers, all properties are enumerable.
+Object.defineProperties(Body.prototype, {
+	body: { enumerable: true },
+	bodyUsed: { enumerable: true },
+	arrayBuffer: { enumerable: true },
+	blob: { enumerable: true },
+	json: { enumerable: true },
+	text: { enumerable: true }
+});
+
+Body.mixIn = function (proto) {
+	for (const name of Object.getOwnPropertyNames(Body.prototype)) {
+		// istanbul ignore else: future proof
+		if (!(name in proto)) {
+			const desc = Object.getOwnPropertyDescriptor(Body.prototype, name);
+			Object.defineProperty(proto, name, desc);
+		}
+	}
+};
+
+/**
+ * Consume and convert an entire Body to a Buffer.
+ *
+ * Ref: https://fetch.spec.whatwg.org/#concept-body-consume-body
+ *
+ * @return  Promise
+ */
+function consumeBody() {
+	var _this4 = this;
+
+	if (this[INTERNALS].disturbed) {
+		return Body.Promise.reject(new TypeError(`body used already for: ${this.url}`));
+	}
+
+	this[INTERNALS].disturbed = true;
+
+	if (this[INTERNALS].error) {
+		return Body.Promise.reject(this[INTERNALS].error);
+	}
+
+	// body is null
+	if (this.body === null) {
+		return Body.Promise.resolve(Buffer.alloc(0));
+	}
+
+	// body is string
+	if (typeof this.body === 'string') {
+		return Body.Promise.resolve(Buffer.from(this.body));
+	}
+
+	// body is blob
+	if (this.body instanceof Blob) {
+		return Body.Promise.resolve(this.body[BUFFER]);
+	}
+
+	// body is buffer
+	if (Buffer.isBuffer(this.body)) {
+		return Body.Promise.resolve(this.body);
+	}
+
+	// body is ArrayBuffer
+	if (Object.prototype.toString.call(this.body) === '[object ArrayBuffer]') {
+		return Body.Promise.resolve(Buffer.from(this.body));
+	}
+
+	// body is ArrayBufferView
+	if (ArrayBuffer.isView(this.body)) {
+		return Body.Promise.resolve(Buffer.from(this.body.buffer, this.body.byteOffset, this.body.byteLength));
+	}
+
+	// istanbul ignore if: should never happen
+	if (!(this.body instanceof Stream)) {
+		return Body.Promise.resolve(Buffer.alloc(0));
+	}
+
+	// body is stream
+	// get ready to actually consume the body
+	let accum = [];
+	let accumBytes = 0;
+	let abort = false;
+
+	return new Body.Promise(function (resolve, reject) {
+		let resTimeout;
+
+		// allow timeout on slow response body
+		if (_this4.timeout) {
+			resTimeout = setTimeout(function () {
+				abort = true;
+				reject(new FetchError(`Response timeout while trying to fetch ${_this4.url} (over ${_this4.timeout}ms)`, 'body-timeout'));
+			}, _this4.timeout);
+		}
+
+		// handle stream errors
+		_this4.body.on('error', function (err) {
+			if (err.name === 'AbortError') {
+				// if the request was aborted, reject with this Error
+				abort = true;
+				reject(err);
+			} else {
+				// other errors, such as incorrect content-encoding
+				reject(new FetchError(`Invalid response body while trying to fetch ${_this4.url}: ${err.message}`, 'system', err));
+			}
+		});
+
+		_this4.body.on('data', function (chunk) {
+			if (abort || chunk === null) {
+				return;
+			}
+
+			if (_this4.size && accumBytes + chunk.length > _this4.size) {
+				abort = true;
+				reject(new FetchError(`content size at ${_this4.url} over limit: ${_this4.size}`, 'max-size'));
+				return;
+			}
+
+			accumBytes += chunk.length;
+			accum.push(chunk);
+		});
+
+		_this4.body.on('end', function () {
+			if (abort) {
+				return;
+			}
+
+			clearTimeout(resTimeout);
+
+			try {
+				resolve(Buffer.concat(accum));
+			} catch (err) {
+				// handle streams that have accumulated too much data (issue #414)
+				reject(new FetchError(`Could not create Buffer from response body for ${_this4.url}: ${err.message}`, 'system', err));
+			}
+		});
+	});
+}
+
+/**
+ * Detect buffer encoding and convert to target encoding
+ * ref: http://www.w3.org/TR/2011/WD-html5-20110113/parsing.html#determining-the-character-encoding
+ *
+ * @param   Buffer  buffer    Incoming buffer
+ * @param   String  encoding  Target encoding
+ * @return  String
+ */
+function convertBody(buffer$$1, headers) {
+	if (typeof convert !== 'function') {
+		throw new Error('The package `encoding` must be installed to use the textConverted() function');
+	}
+
+	const ct = headers.get('content-type');
+	let charset = 'utf-8';
+	let res, str;
+
+	// header
+	if (ct) {
+		res = /charset=([^;]*)/i.exec(ct);
+	}
+
+	// no charset in content type, peek at response body for at most 1024 bytes
+	str = buffer$$1.slice(0, 1024).toString();
+
+	// html5
+	if (!res && str) {
+		res = /<meta.+?charset=(['"])(.+?)\1/i.exec(str);
+	}
+
+	// html4
+	if (!res && str) {
+		res = /<meta[\s]+?http-equiv=(['"])content-type\1[\s]+?content=(['"])(.+?)\2/i.exec(str);
+
+		if (res) {
+			res = /charset=(.*)/i.exec(res.pop());
+		}
+	}
+
+	// xml
+	if (!res && str) {
+		res = /<\?xml.+?encoding=(['"])(.+?)\1/i.exec(str);
+	}
+
+	// found charset
+	if (res) {
+		charset = res.pop();
+
+		// prevent decode issues when sites use incorrect encoding
+		// ref: https://hsivonen.fi/encoding-menu/
+		if (charset === 'gb2312' || charset === 'gbk') {
+			charset = 'gb18030';
+		}
+	}
+
+	// turn raw buffers into a single utf-8 buffer
+	return convert(buffer$$1, 'UTF-8', charset).toString();
+}
+
+/**
+ * Detect a URLSearchParams object
+ * ref: https://github.com/bitinn/node-fetch/issues/296#issuecomment-307598143
+ *
+ * @param   Object  obj     Object to detect by type or brand
+ * @return  String
+ */
+function isURLSearchParams(obj) {
+	// Duck-typing as a necessary condition.
+	if (typeof obj !== 'object' || typeof obj.append !== 'function' || typeof obj.delete !== 'function' || typeof obj.get !== 'function' || typeof obj.getAll !== 'function' || typeof obj.has !== 'function' || typeof obj.set !== 'function') {
+		return false;
+	}
+
+	// Brand-checking and more duck-typing as optional condition.
+	return obj.constructor.name === 'URLSearchParams' || Object.prototype.toString.call(obj) === '[object URLSearchParams]' || typeof obj.sort === 'function';
+}
+
+/**
+ * Clone body given Res/Req instance
+ *
+ * @param   Mixed  instance  Response or Request instance
+ * @return  Mixed
+ */
+function clone(instance) {
+	let p1, p2;
+	let body = instance.body;
+
+	// don't allow cloning a used body
+	if (instance.bodyUsed) {
+		throw new Error('cannot clone body after it is used');
+	}
+
+	// check that body is a stream and not form-data object
+	// note: we can't clone the form-data object without having it as a dependency
+	if (body instanceof Stream && typeof body.getBoundary !== 'function') {
+		// tee instance body
+		p1 = new PassThrough();
+		p2 = new PassThrough();
+		body.pipe(p1);
+		body.pipe(p2);
+		// set instance body to teed body and return the other teed body
+		instance[INTERNALS].body = p1;
+		body = p2;
+	}
+
+	return body;
+}
+
+/**
+ * Performs the operation "extract a `Content-Type` value from |object|" as
+ * specified in the specification:
+ * https://fetch.spec.whatwg.org/#concept-bodyinit-extract
+ *
+ * This function assumes that instance.body is present.
+ *
+ * @param   Mixed  instance  Response or Request instance
+ */
+function extractContentType(instance) {
+	const body = instance.body;
+
+	// istanbul ignore if: Currently, because of a guard in Request, body
+	// can never be null. Included here for completeness.
+
+	if (body === null) {
+		// body is null
+		return null;
+	} else if (typeof body === 'string') {
+		// body is string
+		return 'text/plain;charset=UTF-8';
+	} else if (isURLSearchParams(body)) {
+		// body is a URLSearchParams
+		return 'application/x-www-form-urlencoded;charset=UTF-8';
+	} else if (body instanceof Blob) {
+		// body is blob
+		return body.type || null;
+	} else if (Buffer.isBuffer(body)) {
+		// body is buffer
+		return null;
+	} else if (Object.prototype.toString.call(body) === '[object ArrayBuffer]') {
+		// body is ArrayBuffer
+		return null;
+	} else if (ArrayBuffer.isView(body)) {
+		// body is ArrayBufferView
+		return null;
+	} else if (typeof body.getBoundary === 'function') {
+		// detect form data input from form-data module
+		return `multipart/form-data;boundary=${body.getBoundary()}`;
+	} else {
+		// body is stream
+		// can't really do much about this
+		return null;
+	}
+}
+
+/**
+ * The Fetch Standard treats this as if "total bytes" is a property on the body.
+ * For us, we have to explicitly get it with a function.
+ *
+ * ref: https://fetch.spec.whatwg.org/#concept-body-total-bytes
+ *
+ * @param   Body    instance   Instance of Body
+ * @return  Number?            Number of bytes, or null if not possible
+ */
+function getTotalBytes(instance) {
+	const body = instance.body;
+
+	// istanbul ignore if: included for completion
+
+	if (body === null) {
+		// body is null
+		return 0;
+	} else if (typeof body === 'string') {
+		// body is string
+		return Buffer.byteLength(body);
+	} else if (isURLSearchParams(body)) {
+		// body is URLSearchParams
+		return Buffer.byteLength(String(body));
+	} else if (body instanceof Blob) {
+		// body is blob
+		return body.size;
+	} else if (Buffer.isBuffer(body)) {
+		// body is buffer
+		return body.length;
+	} else if (Object.prototype.toString.call(body) === '[object ArrayBuffer]') {
+		// body is ArrayBuffer
+		return body.byteLength;
+	} else if (ArrayBuffer.isView(body)) {
+		// body is ArrayBufferView
+		return body.byteLength;
+	} else if (body && typeof body.getLengthSync === 'function') {
+		// detect form data input from form-data module
+		if (body._lengthRetrievers && body._lengthRetrievers.length == 0 || // 1.x
+		body.hasKnownLength && body.hasKnownLength()) {
+			// 2.x
+			return body.getLengthSync();
+		}
+		return null;
+	} else {
+		// body is stream
+		// can't really do much about this
+		return null;
+	}
+}
+
+/**
+ * Write a Body to a Node.js WritableStream (e.g. http.Request) object.
+ *
+ * @param   Body    instance   Instance of Body
+ * @return  Void
+ */
+function writeToStream(dest, instance) {
+	const body = instance.body;
+
+
+	if (body === null) {
+		// body is null
+		dest.end();
+	} else if (typeof body === 'string') {
+		// body is string
+		dest.write(body);
+		dest.end();
+	} else if (isURLSearchParams(body)) {
+		// body is URLSearchParams
+		dest.write(Buffer.from(String(body)));
+		dest.end();
+	} else if (body instanceof Blob) {
+		// body is blob
+		dest.write(body[BUFFER]);
+		dest.end();
+	} else if (Buffer.isBuffer(body)) {
+		// body is buffer
+		dest.write(body);
+		dest.end();
+	} else if (Object.prototype.toString.call(body) === '[object ArrayBuffer]') {
+		// body is ArrayBuffer
+		dest.write(Buffer.from(body));
+		dest.end();
+	} else if (ArrayBuffer.isView(body)) {
+		// body is ArrayBufferView
+		dest.write(Buffer.from(body.buffer, body.byteOffset, body.byteLength));
+		dest.end();
+	} else {
+		// body is stream
+		body.pipe(dest);
+	}
+}
+
+// expose Promise
+Body.Promise = global.Promise;
+
+/**
+ * headers.js
+ *
+ * Headers class offers convenient helpers
+ */
+
+const invalidTokenRegex = /[^\^_`a-zA-Z\-0-9!#$%&'*+.|~]/;
+const invalidHeaderCharRegex = /[^\t\x20-\x7e\x80-\xff]/;
+
+function validateName(name) {
+	name = `${name}`;
+	if (invalidTokenRegex.test(name)) {
+		throw new TypeError(`${name} is not a legal HTTP header name`);
+	}
+}
+
+function validateValue(value) {
+	value = `${value}`;
+	if (invalidHeaderCharRegex.test(value)) {
+		throw new TypeError(`${value} is not a legal HTTP header value`);
+	}
+}
+
+/**
+ * Find the key in the map object given a header name.
+ *
+ * Returns undefined if not found.
+ *
+ * @param   String  name  Header name
+ * @return  String|Undefined
+ */
+function find(map, name) {
+	name = name.toLowerCase();
+	for (const key in map) {
+		if (key.toLowerCase() === name) {
+			return key;
+		}
+	}
+	return undefined;
+}
+
+const MAP = Symbol('map');
+class Headers {
+	/**
+  * Headers class
+  *
+  * @param   Object  headers  Response headers
+  * @return  Void
+  */
+	constructor() {
+		let init = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : undefined;
+
+		this[MAP] = Object.create(null);
+
+		if (init instanceof Headers) {
+			const rawHeaders = init.raw();
+			const headerNames = Object.keys(rawHeaders);
+
+			for (const headerName of headerNames) {
+				for (const value of rawHeaders[headerName]) {
+					this.append(headerName, value);
+				}
+			}
+
+			return;
+		}
+
+		// We don't worry about converting prop to ByteString here as append()
+		// will handle it.
+		if (init == null) ; else if (typeof init === 'object') {
+			const method = init[Symbol.iterator];
+			if (method != null) {
+				if (typeof method !== 'function') {
+					throw new TypeError('Header pairs must be iterable');
+				}
+
+				// sequence<sequence<ByteString>>
+				// Note: per spec we have to first exhaust the lists then process them
+				const pairs = [];
+				for (const pair of init) {
+					if (typeof pair !== 'object' || typeof pair[Symbol.iterator] !== 'function') {
+						throw new TypeError('Each header pair must be iterable');
+					}
+					pairs.push(Array.from(pair));
+				}
+
+				for (const pair of pairs) {
+					if (pair.length !== 2) {
+						throw new TypeError('Each header pair must be a name/value tuple');
+					}
+					this.append(pair[0], pair[1]);
+				}
+			} else {
+				// record<ByteString, ByteString>
+				for (const key of Object.keys(init)) {
+					const value = init[key];
+					this.append(key, value);
+				}
+			}
+		} else {
+			throw new TypeError('Provided initializer must be an object');
+		}
+	}
+
+	/**
+  * Return combined header value given name
+  *
+  * @param   String  name  Header name
+  * @return  Mixed
+  */
+	get(name) {
+		name = `${name}`;
+		validateName(name);
+		const key = find(this[MAP], name);
+		if (key === undefined) {
+			return null;
+		}
+
+		return this[MAP][key].join(', ');
+	}
+
+	/**
+  * Iterate over all headers
+  *
+  * @param   Function  callback  Executed for each item with parameters (value, name, thisArg)
+  * @param   Boolean   thisArg   `this` context for callback function
+  * @return  Void
+  */
+	forEach(callback) {
+		let thisArg = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : undefined;
+
+		let pairs = getHeaders(this);
+		let i = 0;
+		while (i < pairs.length) {
+			var _pairs$i = pairs[i];
+			const name = _pairs$i[0],
+			      value = _pairs$i[1];
+
+			callback.call(thisArg, value, name, this);
+			pairs = getHeaders(this);
+			i++;
+		}
+	}
+
+	/**
+  * Overwrite header values given name
+  *
+  * @param   String  name   Header name
+  * @param   String  value  Header value
+  * @return  Void
+  */
+	set(name, value) {
+		name = `${name}`;
+		value = `${value}`;
+		validateName(name);
+		validateValue(value);
+		const key = find(this[MAP], name);
+		this[MAP][key !== undefined ? key : name] = [value];
+	}
+
+	/**
+  * Append a value onto existing header
+  *
+  * @param   String  name   Header name
+  * @param   String  value  Header value
+  * @return  Void
+  */
+	append(name, value) {
+		name = `${name}`;
+		value = `${value}`;
+		validateName(name);
+		validateValue(value);
+		const key = find(this[MAP], name);
+		if (key !== undefined) {
+			this[MAP][key].push(value);
+		} else {
+			this[MAP][name] = [value];
+		}
+	}
+
+	/**
+  * Check for header name existence
+  *
+  * @param   String   name  Header name
+  * @return  Boolean
+  */
+	has(name) {
+		name = `${name}`;
+		validateName(name);
+		return find(this[MAP], name) !== undefined;
+	}
+
+	/**
+  * Delete all header values given name
+  *
+  * @param   String  name  Header name
+  * @return  Void
+  */
+	delete(name) {
+		name = `${name}`;
+		validateName(name);
+		const key = find(this[MAP], name);
+		if (key !== undefined) {
+			delete this[MAP][key];
+		}
+	}
+
+	/**
+  * Return raw headers (non-spec api)
+  *
+  * @return  Object
+  */
+	raw() {
+		return this[MAP];
+	}
+
+	/**
+  * Get an iterator on keys.
+  *
+  * @return  Iterator
+  */
+	keys() {
+		return createHeadersIterator(this, 'key');
+	}
+
+	/**
+  * Get an iterator on values.
+  *
+  * @return  Iterator
+  */
+	values() {
+		return createHeadersIterator(this, 'value');
+	}
+
+	/**
+  * Get an iterator on entries.
+  *
+  * This is the default iterator of the Headers object.
+  *
+  * @return  Iterator
+  */
+	[Symbol.iterator]() {
+		return createHeadersIterator(this, 'key+value');
+	}
+}
+Headers.prototype.entries = Headers.prototype[Symbol.iterator];
+
+Object.defineProperty(Headers.prototype, Symbol.toStringTag, {
+	value: 'Headers',
+	writable: false,
+	enumerable: false,
+	configurable: true
+});
+
+Object.defineProperties(Headers.prototype, {
+	get: { enumerable: true },
+	forEach: { enumerable: true },
+	set: { enumerable: true },
+	append: { enumerable: true },
+	has: { enumerable: true },
+	delete: { enumerable: true },
+	keys: { enumerable: true },
+	values: { enumerable: true },
+	entries: { enumerable: true }
+});
+
+function getHeaders(headers) {
+	let kind = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'key+value';
+
+	const keys = Object.keys(headers[MAP]).sort();
+	return keys.map(kind === 'key' ? function (k) {
+		return k.toLowerCase();
+	} : kind === 'value' ? function (k) {
+		return headers[MAP][k].join(', ');
+	} : function (k) {
+		return [k.toLowerCase(), headers[MAP][k].join(', ')];
+	});
+}
+
+const INTERNAL = Symbol('internal');
+
+function createHeadersIterator(target, kind) {
+	const iterator = Object.create(HeadersIteratorPrototype);
+	iterator[INTERNAL] = {
+		target,
+		kind,
+		index: 0
+	};
+	return iterator;
+}
+
+const HeadersIteratorPrototype = Object.setPrototypeOf({
+	next() {
+		// istanbul ignore if
+		if (!this || Object.getPrototypeOf(this) !== HeadersIteratorPrototype) {
+			throw new TypeError('Value of `this` is not a HeadersIterator');
+		}
+
+		var _INTERNAL = this[INTERNAL];
+		const target = _INTERNAL.target,
+		      kind = _INTERNAL.kind,
+		      index = _INTERNAL.index;
+
+		const values = getHeaders(target, kind);
+		const len = values.length;
+		if (index >= len) {
+			return {
+				value: undefined,
+				done: true
+			};
+		}
+
+		this[INTERNAL].index = index + 1;
+
+		return {
+			value: values[index],
+			done: false
+		};
+	}
+}, Object.getPrototypeOf(Object.getPrototypeOf([][Symbol.iterator]())));
+
+Object.defineProperty(HeadersIteratorPrototype, Symbol.toStringTag, {
+	value: 'HeadersIterator',
+	writable: false,
+	enumerable: false,
+	configurable: true
+});
+
+/**
+ * Export the Headers object in a form that Node.js can consume.
+ *
+ * @param   Headers  headers
+ * @return  Object
+ */
+function exportNodeCompatibleHeaders(headers) {
+	const obj = Object.assign({ __proto__: null }, headers[MAP]);
+
+	// http.request() only supports string as Host header. This hack makes
+	// specifying custom Host header possible.
+	const hostHeaderKey = find(headers[MAP], 'Host');
+	if (hostHeaderKey !== undefined) {
+		obj[hostHeaderKey] = obj[hostHeaderKey][0];
+	}
+
+	return obj;
+}
+
+/**
+ * Create a Headers object from an object of headers, ignoring those that do
+ * not conform to HTTP grammar productions.
+ *
+ * @param   Object  obj  Object of headers
+ * @return  Headers
+ */
+function createHeadersLenient(obj) {
+	const headers = new Headers();
+	for (const name of Object.keys(obj)) {
+		if (invalidTokenRegex.test(name)) {
+			continue;
+		}
+		if (Array.isArray(obj[name])) {
+			for (const val of obj[name]) {
+				if (invalidHeaderCharRegex.test(val)) {
+					continue;
+				}
+				if (headers[MAP][name] === undefined) {
+					headers[MAP][name] = [val];
+				} else {
+					headers[MAP][name].push(val);
+				}
+			}
+		} else if (!invalidHeaderCharRegex.test(obj[name])) {
+			headers[MAP][name] = [obj[name]];
+		}
+	}
+	return headers;
+}
+
+const INTERNALS$1 = Symbol('Response internals');
+
+// fix an issue where "STATUS_CODES" aren't a named export for node <10
+const STATUS_CODES = http.STATUS_CODES;
+
+/**
+ * Response class
+ *
+ * @param   Stream  body  Readable stream
+ * @param   Object  opts  Response options
+ * @return  Void
+ */
+class Response {
+	constructor() {
+		let body = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+		let opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+		Body.call(this, body, opts);
+
+		const status = opts.status || 200;
+
+		this[INTERNALS$1] = {
+			url: opts.url,
+			status,
+			statusText: opts.statusText || STATUS_CODES[status],
+			headers: new Headers(opts.headers)
+		};
+	}
+
+	get url() {
+		return this[INTERNALS$1].url;
+	}
+
+	get status() {
+		return this[INTERNALS$1].status;
+	}
+
+	/**
+  * Convenience property representing if the request ended normally
+  */
+	get ok() {
+		return this[INTERNALS$1].status >= 200 && this[INTERNALS$1].status < 300;
+	}
+
+	get statusText() {
+		return this[INTERNALS$1].statusText;
+	}
+
+	get headers() {
+		return this[INTERNALS$1].headers;
+	}
+
+	/**
+  * Clone this response
+  *
+  * @return  Response
+  */
+	clone() {
+		return new Response(clone(this), {
+			url: this.url,
+			status: this.status,
+			statusText: this.statusText,
+			headers: this.headers,
+			ok: this.ok
+		});
+	}
+}
+
+Body.mixIn(Response.prototype);
+
+Object.defineProperties(Response.prototype, {
+	url: { enumerable: true },
+	status: { enumerable: true },
+	ok: { enumerable: true },
+	statusText: { enumerable: true },
+	headers: { enumerable: true },
+	clone: { enumerable: true }
+});
+
+Object.defineProperty(Response.prototype, Symbol.toStringTag, {
+	value: 'Response',
+	writable: false,
+	enumerable: false,
+	configurable: true
+});
+
+const INTERNALS$2 = Symbol('Request internals');
+
+// fix an issue where "format", "parse" aren't a named export for node <10
+const parse_url = Url.parse;
+const format_url = Url.format;
+
+const streamDestructionSupported = 'destroy' in Stream.Readable.prototype;
+
+/**
+ * Check if a value is an instance of Request.
+ *
+ * @param   Mixed   input
+ * @return  Boolean
+ */
+function isRequest(input) {
+	return typeof input === 'object' && typeof input[INTERNALS$2] === 'object';
+}
+
+function isAbortSignal(signal) {
+	const proto = signal && typeof signal === 'object' && Object.getPrototypeOf(signal);
+	return !!(proto && proto.constructor.name === 'AbortSignal');
+}
+
+/**
+ * Request class
+ *
+ * @param   Mixed   input  Url or Request instance
+ * @param   Object  init   Custom options
+ * @return  Void
+ */
+class Request {
+	constructor(input) {
+		let init = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+		let parsedURL;
+
+		// normalize input
+		if (!isRequest(input)) {
+			if (input && input.href) {
+				// in order to support Node.js' Url objects; though WHATWG's URL objects
+				// will fall into this branch also (since their `toString()` will return
+				// `href` property anyway)
+				parsedURL = parse_url(input.href);
+			} else {
+				// coerce input to a string before attempting to parse
+				parsedURL = parse_url(`${input}`);
+			}
+			input = {};
+		} else {
+			parsedURL = parse_url(input.url);
+		}
+
+		let method = init.method || input.method || 'GET';
+		method = method.toUpperCase();
+
+		if ((init.body != null || isRequest(input) && input.body !== null) && (method === 'GET' || method === 'HEAD')) {
+			throw new TypeError('Request with GET/HEAD method cannot have body');
+		}
+
+		let inputBody = init.body != null ? init.body : isRequest(input) && input.body !== null ? clone(input) : null;
+
+		Body.call(this, inputBody, {
+			timeout: init.timeout || input.timeout || 0,
+			size: init.size || input.size || 0
+		});
+
+		const headers = new Headers(init.headers || input.headers || {});
+
+		if (init.body != null) {
+			const contentType = extractContentType(this);
+			if (contentType !== null && !headers.has('Content-Type')) {
+				headers.append('Content-Type', contentType);
+			}
+		}
+
+		let signal = isRequest(input) ? input.signal : null;
+		if ('signal' in init) signal = init.signal;
+
+		if (signal != null && !isAbortSignal(signal)) {
+			throw new TypeError('Expected signal to be an instanceof AbortSignal');
+		}
+
+		this[INTERNALS$2] = {
+			method,
+			redirect: init.redirect || input.redirect || 'follow',
+			headers,
+			parsedURL,
+			signal
+		};
+
+		// node-fetch-only options
+		this.follow = init.follow !== undefined ? init.follow : input.follow !== undefined ? input.follow : 20;
+		this.compress = init.compress !== undefined ? init.compress : input.compress !== undefined ? input.compress : true;
+		this.counter = init.counter || input.counter || 0;
+		this.agent = init.agent || input.agent;
+	}
+
+	get method() {
+		return this[INTERNALS$2].method;
+	}
+
+	get url() {
+		return format_url(this[INTERNALS$2].parsedURL);
+	}
+
+	get headers() {
+		return this[INTERNALS$2].headers;
+	}
+
+	get redirect() {
+		return this[INTERNALS$2].redirect;
+	}
+
+	get signal() {
+		return this[INTERNALS$2].signal;
+	}
+
+	/**
+  * Clone this request
+  *
+  * @return  Request
+  */
+	clone() {
+		return new Request(this);
+	}
+}
+
+Body.mixIn(Request.prototype);
+
+Object.defineProperty(Request.prototype, Symbol.toStringTag, {
+	value: 'Request',
+	writable: false,
+	enumerable: false,
+	configurable: true
+});
+
+Object.defineProperties(Request.prototype, {
+	method: { enumerable: true },
+	url: { enumerable: true },
+	headers: { enumerable: true },
+	redirect: { enumerable: true },
+	clone: { enumerable: true },
+	signal: { enumerable: true }
+});
+
+/**
+ * Convert a Request to Node.js http request options.
+ *
+ * @param   Request  A Request instance
+ * @return  Object   The options object to be passed to http.request
+ */
+function getNodeRequestOptions(request) {
+	const parsedURL = request[INTERNALS$2].parsedURL;
+	const headers = new Headers(request[INTERNALS$2].headers);
+
+	// fetch step 1.3
+	if (!headers.has('Accept')) {
+		headers.set('Accept', '*/*');
+	}
+
+	// Basic fetch
+	if (!parsedURL.protocol || !parsedURL.hostname) {
+		throw new TypeError('Only absolute URLs are supported');
+	}
+
+	if (!/^https?:$/.test(parsedURL.protocol)) {
+		throw new TypeError('Only HTTP(S) protocols are supported');
+	}
+
+	if (request.signal && request.body instanceof Stream.Readable && !streamDestructionSupported) {
+		throw new Error('Cancellation of streamed requests with AbortSignal is not supported in node < 8');
+	}
+
+	// HTTP-network-or-cache fetch steps 2.4-2.7
+	let contentLengthValue = null;
+	if (request.body == null && /^(POST|PUT)$/i.test(request.method)) {
+		contentLengthValue = '0';
+	}
+	if (request.body != null) {
+		const totalBytes = getTotalBytes(request);
+		if (typeof totalBytes === 'number') {
+			contentLengthValue = String(totalBytes);
+		}
+	}
+	if (contentLengthValue) {
+		headers.set('Content-Length', contentLengthValue);
+	}
+
+	// HTTP-network-or-cache fetch step 2.11
+	if (!headers.has('User-Agent')) {
+		headers.set('User-Agent', 'node-fetch/1.0 (+https://github.com/bitinn/node-fetch)');
+	}
+
+	// HTTP-network-or-cache fetch step 2.15
+	if (request.compress && !headers.has('Accept-Encoding')) {
+		headers.set('Accept-Encoding', 'gzip,deflate');
+	}
+
+	if (!headers.has('Connection') && !request.agent) {
+		headers.set('Connection', 'close');
+	}
+
+	// HTTP-network fetch step 4.2
+	// chunked encoding is handled by Node.js
+
+	return Object.assign({}, parsedURL, {
+		method: request.method,
+		headers: exportNodeCompatibleHeaders(headers),
+		agent: request.agent
+	});
+}
+
+/**
+ * abort-error.js
+ *
+ * AbortError interface for cancelled requests
+ */
+
+/**
+ * Create AbortError instance
+ *
+ * @param   String      message      Error message for human
+ * @return  AbortError
+ */
+function AbortError(message) {
+  Error.call(this, message);
+
+  this.type = 'aborted';
+  this.message = message;
+
+  // hide custom error implementation details from end-users
+  Error.captureStackTrace(this, this.constructor);
+}
+
+AbortError.prototype = Object.create(Error.prototype);
+AbortError.prototype.constructor = AbortError;
+AbortError.prototype.name = 'AbortError';
+
+// fix an issue where "PassThrough", "resolve" aren't a named export for node <10
+const PassThrough$1 = Stream.PassThrough;
+const resolve_url = Url.resolve;
+
+/**
+ * Fetch function
+ *
+ * @param   Mixed    url   Absolute url or Request instance
+ * @param   Object   opts  Fetch options
+ * @return  Promise
+ */
+function fetch$1(url, opts) {
+
+	// allow custom promise
+	if (!fetch$1.Promise) {
+		throw new Error('native promise missing, set fetch.Promise to your favorite alternative');
+	}
+
+	Body.Promise = fetch$1.Promise;
+
+	// wrap http.request into fetch
+	return new fetch$1.Promise(function (resolve, reject) {
+		// build request object
+		const request = new Request(url, opts);
+		const options = getNodeRequestOptions(request);
+
+		const send = (options.protocol === 'https:' ? https : http).request;
+		const signal = request.signal;
+
+		let response = null;
+
+		const abort = function abort() {
+			let error = new AbortError('The user aborted a request.');
+			reject(error);
+			if (request.body && request.body instanceof Stream.Readable) {
+				request.body.destroy(error);
+			}
+			if (!response || !response.body) return;
+			response.body.emit('error', error);
+		};
+
+		if (signal && signal.aborted) {
+			abort();
+			return;
+		}
+
+		const abortAndFinalize = function abortAndFinalize() {
+			abort();
+			finalize();
+		};
+
+		// send request
+		const req = send(options);
+		let reqTimeout;
+
+		if (signal) {
+			signal.addEventListener('abort', abortAndFinalize);
+		}
+
+		function finalize() {
+			req.abort();
+			if (signal) signal.removeEventListener('abort', abortAndFinalize);
+			clearTimeout(reqTimeout);
+		}
+
+		if (request.timeout) {
+			req.once('socket', function (socket) {
+				reqTimeout = setTimeout(function () {
+					reject(new FetchError(`network timeout at: ${request.url}`, 'request-timeout'));
+					finalize();
+				}, request.timeout);
+			});
+		}
+
+		req.on('error', function (err) {
+			reject(new FetchError(`request to ${request.url} failed, reason: ${err.message}`, 'system', err));
+			finalize();
+		});
+
+		req.on('response', function (res) {
+			clearTimeout(reqTimeout);
+
+			const headers = createHeadersLenient(res.headers);
+
+			// HTTP fetch step 5
+			if (fetch$1.isRedirect(res.statusCode)) {
+				// HTTP fetch step 5.2
+				const location = headers.get('Location');
+
+				// HTTP fetch step 5.3
+				const locationURL = location === null ? null : resolve_url(request.url, location);
+
+				// HTTP fetch step 5.5
+				switch (request.redirect) {
+					case 'error':
+						reject(new FetchError(`redirect mode is set to error: ${request.url}`, 'no-redirect'));
+						finalize();
+						return;
+					case 'manual':
+						// node-fetch-specific step: make manual redirect a bit easier to use by setting the Location header value to the resolved URL.
+						if (locationURL !== null) {
+							// handle corrupted header
+							try {
+								headers.set('Location', locationURL);
+							} catch (err) {
+								// istanbul ignore next: nodejs server prevent invalid response headers, we can't test this through normal request
+								reject(err);
+							}
+						}
+						break;
+					case 'follow':
+						// HTTP-redirect fetch step 2
+						if (locationURL === null) {
+							break;
+						}
+
+						// HTTP-redirect fetch step 5
+						if (request.counter >= request.follow) {
+							reject(new FetchError(`maximum redirect reached at: ${request.url}`, 'max-redirect'));
+							finalize();
+							return;
+						}
+
+						// HTTP-redirect fetch step 6 (counter increment)
+						// Create a new Request object.
+						const requestOpts = {
+							headers: new Headers(request.headers),
+							follow: request.follow,
+							counter: request.counter + 1,
+							agent: request.agent,
+							compress: request.compress,
+							method: request.method,
+							body: request.body,
+							signal: request.signal
+						};
+
+						// HTTP-redirect fetch step 9
+						if (res.statusCode !== 303 && request.body && getTotalBytes(request) === null) {
+							reject(new FetchError('Cannot follow redirect with body being a readable stream', 'unsupported-redirect'));
+							finalize();
+							return;
+						}
+
+						// HTTP-redirect fetch step 11
+						if (res.statusCode === 303 || (res.statusCode === 301 || res.statusCode === 302) && request.method === 'POST') {
+							requestOpts.method = 'GET';
+							requestOpts.body = undefined;
+							requestOpts.headers.delete('content-length');
+						}
+
+						// HTTP-redirect fetch step 15
+						resolve(fetch$1(new Request(locationURL, requestOpts)));
+						finalize();
+						return;
+				}
+			}
+
+			// prepare response
+			res.once('end', function () {
+				if (signal) signal.removeEventListener('abort', abortAndFinalize);
+			});
+			let body = res.pipe(new PassThrough$1());
+
+			const response_options = {
+				url: request.url,
+				status: res.statusCode,
+				statusText: res.statusMessage,
+				headers: headers,
+				size: request.size,
+				timeout: request.timeout
+			};
+
+			// HTTP-network fetch step 12.1.1.3
+			const codings = headers.get('Content-Encoding');
+
+			// HTTP-network fetch step 12.1.1.4: handle content codings
+
+			// in following scenarios we ignore compression support
+			// 1. compression support is disabled
+			// 2. HEAD request
+			// 3. no Content-Encoding header
+			// 4. no content response (204)
+			// 5. content not modified response (304)
+			if (!request.compress || request.method === 'HEAD' || codings === null || res.statusCode === 204 || res.statusCode === 304) {
+				response = new Response(body, response_options);
+				resolve(response);
+				return;
+			}
+
+			// For Node v6+
+			// Be less strict when decoding compressed responses, since sometimes
+			// servers send slightly invalid responses that are still accepted
+			// by common browsers.
+			// Always using Z_SYNC_FLUSH is what cURL does.
+			const zlibOptions = {
+				flush: zlib.Z_SYNC_FLUSH,
+				finishFlush: zlib.Z_SYNC_FLUSH
+			};
+
+			// for gzip
+			if (codings == 'gzip' || codings == 'x-gzip') {
+				body = body.pipe(zlib.createGunzip(zlibOptions));
+				response = new Response(body, response_options);
+				resolve(response);
+				return;
+			}
+
+			// for deflate
+			if (codings == 'deflate' || codings == 'x-deflate') {
+				// handle the infamous raw deflate response from old servers
+				// a hack for old IIS and Apache servers
+				const raw = res.pipe(new PassThrough$1());
+				raw.once('data', function (chunk) {
+					// see http://stackoverflow.com/questions/37519828
+					if ((chunk[0] & 0x0F) === 0x08) {
+						body = body.pipe(zlib.createInflate());
+					} else {
+						body = body.pipe(zlib.createInflateRaw());
+					}
+					response = new Response(body, response_options);
+					resolve(response);
+				});
+				return;
+			}
+
+			// otherwise, use response as-is
+			response = new Response(body, response_options);
+			resolve(response);
+		});
+
+		writeToStream(req, request);
+	});
+}
+/**
+ * Redirect code matching
+ *
+ * @param   Number   code  Status code
+ * @return  Boolean
+ */
+fetch$1.isRedirect = function (code) {
+	return code === 301 || code === 302 || code === 303 || code === 307 || code === 308;
+};
+
+// expose Promise
+fetch$1.Promise = global.Promise;
 
 const storageAPI = () => {
     let store = {};
@@ -33520,7 +35123,7 @@ const stringifyDate = (date) => {
         ":" +
         toDigits(2, offset % 60));
 };
-const POST = (url$$1, data) => fetch(url$$1, {
+const POST = (url, data) => fetch(url, {
     method: "POST",
     body: JSON.stringify(data),
     headers: {
@@ -33633,6 +35236,7 @@ const generateUser = (domain, id) => `${hex_sha1(domain)}.${hex_sha1(id)}`;
 function Dispatcher(attrs) {
     let tenant = "";
     let providers = [];
+    let sessionEvents = true;
     const isPartner = (host) => providers.indexOf(host) > -1;
     const user = createUserManager(attrs);
     let session = createSessionManager({
@@ -33662,7 +35266,9 @@ function Dispatcher(attrs) {
                 user,
                 isPartner: attrs.referrer ? isPartner(attrs.referrer.hostname) : false
             });
-            api.submitEvent(webEvent(eventAttrs, "as.web.session.started"));
+            if (sessionEvents) {
+                api.submitEvent(webEvent(eventAttrs, "as.web.session.started"));
+            }
         }
         else {
             session.refreshSession({
@@ -33671,11 +35277,14 @@ function Dispatcher(attrs) {
                 user,
                 isPartner: attrs.referrer ? isPartner(attrs.referrer.hostname) : false
             });
-            api.submitEvent(webEvent(eventAttrs, "as.web.session.resumed"));
+            if (sessionEvents) {
+                api.submitEvent(webEvent(eventAttrs, "as.web.session.resumed"));
+            }
             logger.log("session resumed");
         }
     };
     const types = {
+        "set.session.events.enabled": (enabled) => (sessionEvents = enabled),
         "create.custom.session": (sessionManager) => {
             session = sessionManager;
             eventAttrs.session = session;
@@ -35173,12 +36782,12 @@ function isSpecialScheme(scheme) {
   return specialSchemes[scheme] !== undefined;
 }
 
-function isSpecial(url$$1) {
-  return isSpecialScheme(url$$1.scheme);
+function isSpecial(url) {
+  return isSpecialScheme(url.scheme);
 }
 
-function isNotSpecial(url$$1) {
-  return !isSpecialScheme(url$$1.scheme);
+function isNotSpecial(url) {
+  return !isSpecialScheme(url.scheme);
 }
 
 function defaultPort(scheme) {
@@ -35582,45 +37191,45 @@ function domainToASCII(domain, beStrict = false) {
   return result;
 }
 
-function trimControlChars(url$$1) {
-  return url$$1.replace(/^[\u0000-\u001F\u0020]+|[\u0000-\u001F\u0020]+$/g, "");
+function trimControlChars(url) {
+  return url.replace(/^[\u0000-\u001F\u0020]+|[\u0000-\u001F\u0020]+$/g, "");
 }
 
-function trimTabAndNewline(url$$1) {
-  return url$$1.replace(/\u0009|\u000A|\u000D/g, "");
+function trimTabAndNewline(url) {
+  return url.replace(/\u0009|\u000A|\u000D/g, "");
 }
 
-function shortenPath(url$$1) {
-  const { path: path$$1 } = url$$1;
+function shortenPath(url) {
+  const { path: path$$1 } = url;
   if (path$$1.length === 0) {
     return;
   }
-  if (url$$1.scheme === "file" && path$$1.length === 1 && isNormalizedWindowsDriveLetter(path$$1[0])) {
+  if (url.scheme === "file" && path$$1.length === 1 && isNormalizedWindowsDriveLetter(path$$1[0])) {
     return;
   }
 
   path$$1.pop();
 }
 
-function includesCredentials(url$$1) {
-  return url$$1.username !== "" || url$$1.password !== "";
+function includesCredentials(url) {
+  return url.username !== "" || url.password !== "";
 }
 
-function cannotHaveAUsernamePasswordPort(url$$1) {
-  return url$$1.host === null || url$$1.host === "" || url$$1.cannotBeABaseURL || url$$1.scheme === "file";
+function cannotHaveAUsernamePasswordPort(url) {
+  return url.host === null || url.host === "" || url.cannotBeABaseURL || url.scheme === "file";
 }
 
 function isNormalizedWindowsDriveLetter(string) {
   return /^[A-Za-z]:$/.test(string);
 }
 
-function URLStateMachine(input, base, encodingOverride, url$$1, stateOverride) {
+function URLStateMachine(input, base, encodingOverride, url, stateOverride) {
   this.pointer = 0;
   this.input = input;
   this.base = base || null;
   this.encodingOverride = encodingOverride || "utf-8";
   this.stateOverride = stateOverride;
-  this.url = url$$1;
+  this.url = url;
   this.failure = false;
   this.parseError = false;
 
@@ -36281,42 +37890,42 @@ URLStateMachine.prototype["parse fragment"] = function parseFragment(c) {
   return true;
 };
 
-function serializeURL(url$$1, excludeFragment) {
-  let output = url$$1.scheme + ":";
-  if (url$$1.host !== null) {
+function serializeURL(url, excludeFragment) {
+  let output = url.scheme + ":";
+  if (url.host !== null) {
     output += "//";
 
-    if (url$$1.username !== "" || url$$1.password !== "") {
-      output += url$$1.username;
-      if (url$$1.password !== "") {
-        output += ":" + url$$1.password;
+    if (url.username !== "" || url.password !== "") {
+      output += url.username;
+      if (url.password !== "") {
+        output += ":" + url.password;
       }
       output += "@";
     }
 
-    output += serializeHost(url$$1.host);
+    output += serializeHost(url.host);
 
-    if (url$$1.port !== null) {
-      output += ":" + url$$1.port;
+    if (url.port !== null) {
+      output += ":" + url.port;
     }
-  } else if (url$$1.host === null && url$$1.scheme === "file") {
+  } else if (url.host === null && url.scheme === "file") {
     output += "//";
   }
 
-  if (url$$1.cannotBeABaseURL) {
-    output += url$$1.path[0];
+  if (url.cannotBeABaseURL) {
+    output += url.path[0];
   } else {
-    for (const string of url$$1.path) {
+    for (const string of url.path) {
       output += "/" + string;
     }
   }
 
-  if (url$$1.query !== null) {
-    output += "?" + url$$1.query;
+  if (url.query !== null) {
+    output += "?" + url.query;
   }
 
-  if (!excludeFragment && url$$1.fragment !== null) {
-    output += "#" + url$$1.fragment;
+  if (!excludeFragment && url.fragment !== null) {
+    output += "#" + url.fragment;
   }
 
   return output;
@@ -36335,12 +37944,12 @@ function serializeOrigin(tuple) {
 
 module.exports.serializeURL = serializeURL;
 
-module.exports.serializeURLOrigin = function (url$$1) {
+module.exports.serializeURLOrigin = function (url) {
   // https://url.spec.whatwg.org/#concept-url-origin
-  switch (url$$1.scheme) {
+  switch (url.scheme) {
     case "blob":
       try {
-        return module.exports.serializeURLOrigin(module.exports.parseURL(url$$1.path[0]));
+        return module.exports.serializeURLOrigin(module.exports.parseURL(url.path[0]));
       } catch (e) {
         // serializing an opaque origin returns "null"
         return "null";
@@ -36352,9 +37961,9 @@ module.exports.serializeURLOrigin = function (url$$1) {
     case "ws":
     case "wss":
       return serializeOrigin({
-        scheme: url$$1.scheme,
-        host: url$$1.host,
-        port: url$$1.port
+        scheme: url.scheme,
+        host: url.host,
+        port: url.port
       });
     case "file":
       // The spec says:
@@ -36384,19 +37993,19 @@ module.exports.basicURLParse = function (input, options) {
   return usm.url;
 };
 
-module.exports.setTheUsername = function (url$$1, username) {
-  url$$1.username = "";
+module.exports.setTheUsername = function (url, username) {
+  url.username = "";
   const decoded = punycode_1.ucs2.decode(username);
   for (let i = 0; i < decoded.length; ++i) {
-    url$$1.username += percentEncodeChar(decoded[i], isUserinfoPercentEncode);
+    url.username += percentEncodeChar(decoded[i], isUserinfoPercentEncode);
   }
 };
 
-module.exports.setThePassword = function (url$$1, password) {
-  url$$1.password = "";
+module.exports.setThePassword = function (url, password) {
+  url.password = "";
   const decoded = punycode_1.ucs2.decode(password);
   for (let i = 0; i < decoded.length; ++i) {
-    url$$1.password += percentEncodeChar(decoded[i], isUserinfoPercentEncode);
+    url.password += percentEncodeChar(decoded[i], isUserinfoPercentEncode);
   }
 };
 
@@ -39617,7 +41226,7 @@ module.exports = iface;
 
 var implementation$1 = class URLImpl {
   constructor(constructorArgs) {
-    const url$$1 = constructorArgs[0];
+    const url = constructorArgs[0];
     const base = constructorArgs[1];
 
     let parsedBase = null;
@@ -39628,9 +41237,9 @@ var implementation$1 = class URLImpl {
       }
     }
 
-    const parsedURL = urlStateMachine.basicURLParse(url$$1, { baseURL: parsedBase });
+    const parsedURL = urlStateMachine.basicURLParse(url, { baseURL: parsedBase });
     if (parsedURL === null) {
-      throw new TypeError(`Invalid URL: ${url$$1}`);
+      throw new TypeError(`Invalid URL: ${url}`);
     }
 
     const query = parsedURL.query !== null ? parsedURL.query : "";
@@ -39699,17 +41308,17 @@ var implementation$1 = class URLImpl {
   }
 
   get host() {
-    const url$$1 = this._url;
+    const url = this._url;
 
-    if (url$$1.host === null) {
+    if (url.host === null) {
       return "";
     }
 
-    if (url$$1.port === null) {
-      return urlStateMachine.serializeHost(url$$1.host);
+    if (url.port === null) {
+      return urlStateMachine.serializeHost(url.host);
     }
 
-    return urlStateMachine.serializeHost(url$$1.host) + ":" + urlStateMachine.serializeInteger(url$$1.port);
+    return urlStateMachine.serializeHost(url.host) + ":" + urlStateMachine.serializeInteger(url.port);
   }
 
   set host(v) {
@@ -39786,17 +41395,17 @@ var implementation$1 = class URLImpl {
   }
 
   set search(v) {
-    const url$$1 = this._url;
+    const url = this._url;
 
     if (v === "") {
-      url$$1.query = null;
+      url.query = null;
       this._query._list = [];
       return;
     }
 
     const input = v[0] === "?" ? v.substring(1) : v;
-    url$$1.query = "";
-    urlStateMachine.basicURLParse(input, { url: url$$1, stateOverride: "query" });
+    url.query = "";
+    urlStateMachine.basicURLParse(input, { url, stateOverride: "query" });
     this._query._list = urlencoded$1.parseUrlencoded(input);
   }
 
@@ -39840,7 +41449,7 @@ var URL_1 = createCommonjsModule(function (module) {
 const impl = utils$2.implSymbol;
 
 class URL {
-  constructor(url$$1) {
+  constructor(url) {
     if (arguments.length < 1) {
       throw new TypeError("Failed to construct 'URL': 1 argument required, but only " + arguments.length + " present.");
     }
@@ -40180,22 +41789,34 @@ var setTheUsername = urlStateMachine.setTheUsername;
 var setThePassword = urlStateMachine.setThePassword;
 var cannotHaveAUsernamePasswordPort = urlStateMachine.cannotHaveAUsernamePasswordPort;
 
-const app = express$1();
-app.use(lib$2());
+// @ts-ignore
+global.fetch = fetch$1;
+const app = express$1.Router();
 app.get("/asa.png", (req, res) => {
-    fs.createReadStream(path.resolve(__dirname, "./pixel.png")).pipe(res);
     const query = req.query;
-    let locationString = req.get("Referrer");
+    if (!query.tenantId) {
+        fs.createReadStream(path.resolve(__dirname, "./pixel.png")).pipe(res);
+        return;
+    }
+    const storage = storageAPI();
+    let locationString = req.get("Referrer") || query.referrer || "";
     if (!locationString) {
         locationString = "http://activitystreampixel.com";
     }
     const location = new URL$1(locationString);
+    // Fill storage with campaign information from the url
+    Object.keys(query).forEach(key => {
+        if (key.startsWith("utm_")) {
+            storage.setItem("__as." + key, query[key]);
+        }
+    });
     const dispatcher = Dispatcher({
         location,
         referrer: undefined,
-        storage: storageAPI(),
+        storage,
         title: req.query.title
     });
+    dispatcher("set.session.events.enabled", false);
     dispatcher("set.tenant.id", query.tenantId);
     if (query.event === "as.web.payment.completed") {
         dispatcher(query.event, [query.order]);
@@ -40203,11 +41824,18 @@ app.get("/asa.png", (req, res) => {
     else if (query.event === "as.web.product.viewed") {
         dispatcher(query.event, [query.product]);
     }
+    console.log("Sent ", query.event, " for tenant ", query.tenantId);
+    fs.createReadStream(path.resolve(__dirname, "./pixel.png")).pipe(res);
 });
-app.get("/", (req, res) => {
-    console.log("serving index.html");
+
+const app$1 = express$1();
+app$1.use(lib$2());
+app$1.use(app);
+app$1.get("/", (req, res) => {
     fs.createReadStream(path.resolve(__dirname, "./test.html")).pipe(res);
 });
-app.listen(8000, () => {
+app$1.use(express$1.static(path.resolve(__dirname, "../dist")));
+
+app$1.listen(8000, () => {
     console.log("ASA pixel server started");
 });
