@@ -4,6 +4,5 @@ stages:
 build-test-and-publish:
   stage: build
   script:
-    - BUILD_NO="docker run --rm -e REPO=https://${GITLABUSER}:${GITLABPASS}@gitlab.activitystream.com/sysops/build-counters.git registry.activitystream.com:5043/as-get-build-number:1_HEAD_c48ee5e bump $CI_PROJECT_NAME"
-    - REVISION=$(eval "${BUILD_NO}")_${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA:0:7}
+    - REVISION=$(eval "${CI_PIPELINE_IID}")_${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA:0:7}
     - PUSH=true REV=$REVISION ./build.sh does-not-matter
