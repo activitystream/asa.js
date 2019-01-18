@@ -4,5 +4,5 @@ stages:
 build-test-and-publish:
   stage: build
   script:
-    - REVISION=$(eval "${CI_PIPELINE_IID}")_${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA:0:7}
+    - REVISION=${CI_PIPELINE_IID}_${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA:0:7}
     - PUSH=true REV=$REVISION ./build.sh does-not-matter
