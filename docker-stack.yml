@@ -6,6 +6,7 @@ services:
     networks:
       - webgateway
     deploy:
+      replicas: 2
       labels:
         - "traefik.backend=asapixel"
         - "traefik.enable=true"
