@@ -12,7 +12,7 @@ services:
         - "traefik.backend.loadbalancer.swarm=true"
         - "traefik.frontend.passHostHeader=true"
         - "traefik.frontend.entryPoints=http,https"
-        - "traefik.port=8080"
+        - "traefik.port=8000"
         - "traefik.docker.network=webgateway"
         - "traefik.frontend.rule=Host:pixel.activitystream.com"
 
