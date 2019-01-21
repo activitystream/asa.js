@@ -1,8 +1,8 @@
 stages:
-  - build
+  - test
 
-build-test-and-publish:
-  stage: build
+testjob:
+  stage: test
   script:
     - REVISION=${CI_PIPELINE_IID}_${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA:0:7}
-    - PUSH=true REV=$REVISION ./build.sh does-not-matter
+    - PUSH=false REV=$REVISION ./build.sh does-not-matter

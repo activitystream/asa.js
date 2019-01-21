@@ -1,0 +1,21 @@
+version: "3.3"
+
+services:
+  pixel:
+    image: registry.activitystream.com:5043/asapixel:${PIXEL_REV}
+    networks:
+      - webgateway
+    deploy:
+      labels:
+        - "traefik.backend=asapixel"
+        - "traefik.enable=true"
+        - "traefik.backend.loadbalancer.swarm=true"
+        - "traefik.frontend.passHostHeader=true"
+        - "traefik.frontend.entryPoints=http,https"
+        - "traefik.port=8080"
+        - "traefik.docker.network=webgateway"
+        - "traefik.frontend.rule=Host:pixel.activitystream.com"
+
+networks:
+  webgateway:
+    external: true
