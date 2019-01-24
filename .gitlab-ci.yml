@@ -5,16 +5,21 @@ stages:
 build-other:
   stage: build
   script:
-    - REVISION=${CI_PIPELINE_IID}_${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA:0:7}
-    - PUSH=false REV=$REVISION ./build.sh does-not-matter
+    - docker build .
   except:
     - master
 
 build-master:
   stage: build
   script:
-    - REVISION=${CI_PIPELINE_IID}_${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA:0:7}
-    - PUSH=true REV=$REVISION ./build.sh does-not-matter
+    - REV=${CI_PIPELINE_IID}_${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA:0:7}
+    - APP=asapixel
+    - IMG="registry.activitystream.com:5043/${APP}"
+    - docker build -t ${IMG}:${REV} .
+    - docker tag ${APP}:${REV} ${IMG}:latest
+    - docker push ${IMG}:${REV}
+    - docker push ${IMG}:latest
+
   only:
     - master
 
