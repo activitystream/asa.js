@@ -16,7 +16,7 @@ build-master:
     - APP=asapixel
     - IMG="registry.activitystream.com:5043/${APP}"
     - docker build -t ${IMG}:${REV} .
-    - docker tag ${APP}:${REV} ${IMG}:latest
+    - docker tag ${IMG}:${REV} ${IMG}:latest
     - docker push ${IMG}:${REV}
     - docker push ${IMG}:latest
 
