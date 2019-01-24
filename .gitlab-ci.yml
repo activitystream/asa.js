@@ -1,30 +1,28 @@
 stages:
   - build
-  - deploy
+  - deploy-prod
 
-build-other:
+build-other-job:
   stage: build
   script:
     - docker build .
   except:
     - master
 
-build-master:
+build-master-job:
   stage: build
   script:
     - REV=${CI_PIPELINE_IID}_${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA:0:7}
-    - APP=asapixel
-    - IMG="registry.activitystream.com:5043/${APP}"
+    - IMG="registry.activitystream.com:5043/asapixel"
     - docker build -t ${IMG}:${REV} .
     - docker tag ${IMG}:${REV} ${IMG}:latest
     - docker push ${IMG}:${REV}
     - docker push ${IMG}:latest
-
   only:
     - master
 
-deploy-to-swarm:
-  stage: deploy
+deploy-prod-job:
+  stage: deploy-prod
   variables:
     DOCKER_HOST: "tcp://prodmanager2-int.activitystream.com:2376"
     DOCKER_TLS_VERIFY: 1
@@ -36,6 +34,7 @@ deploy-to-swarm:
     - echo "$TLSCERT" > "${DOCKER_CERT_PATH}/cert.pem"
     - echo "$TLSKEY" > "${DOCKER_CERT_PATH}/key.pem"
     - export PIXEL_REV=${CI_PIPELINE_IID}_${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA:0:7}
+    - echo PIXEL_REV=${PIXEL_REV}
     - docker stack deploy -c docker-stack.yml --with-registry-auth pixel
   environment:
     name: prod
