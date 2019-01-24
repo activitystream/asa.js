@@ -1,8 +1,39 @@
 stages:
-  - test
+  - build
+  - deploy
 
-testjob:
-  stage: test
+build-other:
+  stage: build
   script:
     - REVISION=${CI_PIPELINE_IID}_${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA:0:7}
     - PUSH=false REV=$REVISION ./build.sh does-not-matter
+  except:
+    - master
+
+build-master:
+  stage: build
+  script:
+    - REVISION=${CI_PIPELINE_IID}_${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA:0:7}
+    - PUSH=true REV=$REVISION ./build.sh does-not-matter
+  only:
+    - master
+
+deploy-to-swarm:
+  stage: deploy
+  variables:
+    DOCKER_HOST: "tcp://prodmanager2-int.activitystream.com:2376"
+    DOCKER_TLS_VERIFY: 1
+    DOCKER_CERT_PATH: "~/.docker"
+  image: docker:latest
+  script:
+    - mkdir -p "${DOCKER_CERT_PATH}"
+    - echo "$TLSCACERT" > "${DOCKER_CERT_PATH}/ca.pem"
+    - echo "$TLSCERT" > "${DOCKER_CERT_PATH}/cert.pem"
+    - echo "$TLSKEY" > "${DOCKER_CERT_PATH}/key.pem"
+    - export PIXEL_REV=${CI_PIPELINE_IID}_${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA:0:7}
+    - docker stack deploy -c docker-stack.yml --with-registry-auth pixel
+  environment:
+    name: prod
+    url: http://pixel.activitystream.com
+  only:
+    - master
