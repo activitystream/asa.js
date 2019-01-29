@@ -7,10 +7,9 @@ ADD package.json yarn.lock ./
 RUN npm i -g yarn
 RUN yarn
 
-ADD .babelrc rollup.config.js tsconfig.json ./
-ADD server ./server
-ADD src ./src
+ADD . .
 
+RUN CI=true yarn test
 RUN yarn build
 RUN cp dist/server.js server/server.js
 
