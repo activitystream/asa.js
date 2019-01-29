@@ -13,6 +13,7 @@ import { setUTMAliases, UTM } from "./campaign";
 import { createUserManager } from "./user";
 
 export interface Dispatcher {
+  (type: "set.session.events.enabled", enabled: boolean): void;
   (type: "create.custom.session", sessionManager: SessionManager): void;
   (type: "set.tenant.id", id: string): void;
   (type: "tenant.id.provided", id: string): void;
@@ -36,6 +37,7 @@ export interface DispatcherAttrs {
 export function Dispatcher(attrs: DispatcherAttrs): Dispatcher {
   let tenant: string = "";
   let providers: string[] = [];
+  let sessionEvents = true;
   const isPartner = (host: string) => providers.indexOf(host) > -1;
 
   const user = createUserManager(attrs);
@@ -69,7 +71,9 @@ export function Dispatcher(attrs: DispatcherAttrs): Dispatcher {
         user,
         isPartner: attrs.referrer ? isPartner(attrs.referrer.hostname) : false
       });
-      api.submitEvent(webEvent(eventAttrs, "as.web.session.started"));
+      if (sessionEvents) {
+        api.submitEvent(webEvent(eventAttrs, "as.web.session.started"));
+      }
     } else {
       session.refreshSession({
         ...attrs,
@@ -77,12 +81,16 @@ export function Dispatcher(attrs: DispatcherAttrs): Dispatcher {
         user,
         isPartner: attrs.referrer ? isPartner(attrs.referrer.hostname) : false
       });
-      api.submitEvent(webEvent(eventAttrs, "as.web.session.resumed"));
+      if (sessionEvents) {
+        api.submitEvent(webEvent(eventAttrs, "as.web.session.resumed"));
+      }
       logger.log("session resumed");
     }
   };
 
   const types = {
+    "set.session.events.enabled": (enabled: boolean) =>
+      (sessionEvents = enabled),
     "create.custom.session": (sessionManager: SessionManager) => {
       session = sessionManager;
       eventAttrs.session = session;
