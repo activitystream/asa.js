@@ -4,8 +4,6 @@ export default describe("microdata", () => {
   it("should extract metadata from DOM element with a single metadata root", () => {
     const data = m.extract("#offer1");
 
-    console.log(data);
-
     expect(data).toEqual({
       type: "http://schema.org/Offer",
       properties: {

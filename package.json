@@ -7,7 +7,7 @@
   "module": "dist/asa.es",
   "private": false,
   "repository": {
-    "url": "git@github.com:activitystream/asa.js.git"
+    "url": "https://gitlab.activitystream.com/activitystream/asa"
   },
   "scripts": {
     "test": "jest",
