@@ -45,8 +45,13 @@ export type ErrorRequest = {
   context?: { [key: string]: any };
 };
 
+const logEvent = (data: EventRequest) => (res: Response) => {
+  logger.log(JSON.stringify(data));
+  return res;
+};
+
 export const EVENT = (data: EventRequest): Promise<Response> =>
-  POST("https://inbox2.activitystream.com/asa", data);
+  POST("https://inbox2.activitystream.com/asa", data).then(logEvent(data));
 export const ERROR = (data: { [key: string]: any }): Promise<Response> =>
   POST("https://inbox2.activitystream.com/asa/error", data);
 
