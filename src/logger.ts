@@ -4,31 +4,22 @@
 
 const log = (...message: any[]) => {
   try {
-    console.log(...message);
+    console.log(new Date(), ...message);
   } catch (e) {
     // swallow error
   }
 };
 
-export class Logger {
-  static none(...args: any[]): void {}
-  static console(...args: any[]) {
-    log("js", ...args);
-  }
+let isEnabled = false;
 
-  private _logger: typeof Logger.none | typeof Logger.console = Logger.none;
-
-  public mode(mode: boolean): void {
-    this._logger = mode ? Logger.console : Logger.none;
-  }
-
-  public log(...args: any[]) {
-    this._logger(...args);
-  }
-
-  public force(...args: any[]) {
-    Logger.console(...args);
-  }
-}
-
-export default new Logger();
+export default {
+  mode(enabled: boolean) {
+    isEnabled = enabled;
+  },
+  log(...message: any[]) {
+    if (isEnabled) {
+      log(...message);
+    }
+  },
+  force: log
+};

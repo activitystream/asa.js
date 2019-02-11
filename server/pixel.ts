@@ -44,13 +44,14 @@ app.get("/asa.png", (req, res) => {
 
   dispatcher("set.tenant.id", query.tenantId);
 
+  dispatcher("set.logger.mode", true);
+
   if (query.event === "as.web.payment.completed") {
     dispatcher(query.event, [query.order]);
   } else if (query.event === "as.web.product.viewed") {
     dispatcher(query.event, [query.product]);
   }
 
-  console.log("Sent ", query.event, " for tenant ", query.tenantId);
   fs.createReadStream(path.resolve(__dirname, "./pixel.png")).pipe(res);
 });
 
