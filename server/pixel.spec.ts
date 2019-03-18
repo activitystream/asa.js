@@ -45,6 +45,64 @@ describe("pixel", () => {
       })
     );
   });
+  it("Able to send refferrer information", async () => {
+    await request(pixel)
+      .get(
+        "/asa.png?tenantId=ASATEST&event=as.web.payment.completed&order=Order/1&utm_campaign=my_campaign&referrer=astickets.com"
+      )
+      .set("Referrer", "http://ticketingsystem.com")
+      .expect(200);
+
+    expect(api.submitEvent).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        campaign: { campaign: "my_campaign" },
+        orders: ["Order/1"],
+        type: "as.web.payment.completed",
+        page: {
+          referrer: "astickets.com",
+          url: "http://ticketingsystem.com/"
+        }
+      })
+    );
+
+    await request(pixel)
+      .get(
+        "/asa.png?tenantId=ASATEST&event=as.web.payment.completed&order=Order/1&utm_campaign=my_campaign&referrer=http://astickets.com"
+      )
+      .set("Referrer", "http://ticketingsystem.com")
+      .expect(200);
+
+    expect(api.submitEvent).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        campaign: { campaign: "my_campaign" },
+        orders: ["Order/1"],
+        type: "as.web.payment.completed",
+        page: {
+          referrer: "astickets.com",
+          url: "http://ticketingsystem.com/"
+        }
+      })
+    );
+
+    await request(pixel)
+      .get(
+        "/asa.png?tenantId=ASATEST&event=as.web.payment.completed&order=Order/1&utm_campaign=my_campaign&referrer=https://astickets.com"
+      )
+      .set("Referrer", "http://ticketingsystem.com")
+      .expect(200);
+
+    expect(api.submitEvent).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        campaign: { campaign: "my_campaign" },
+        orders: ["Order/1"],
+        type: "as.web.payment.completed",
+        page: {
+          referrer: "astickets.com",
+          url: "http://ticketingsystem.com/"
+        }
+      })
+    );
+  });
   it("Gets campaign info from the query string", async () => {
     await request(pixel)
       .get(
