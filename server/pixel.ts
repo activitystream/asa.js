@@ -33,9 +33,16 @@ app.get("/asa.png", (req, res) => {
     }
   });
 
+  const referrer = query.referrer
+    ? query.referrer.startsWith("http://") ||
+      query.referrer.startsWith("https://")
+      ? new window.URL(query.referrer)
+      : new window.URL(`http://${query.referrer}`)
+    : undefined;
+
   const dispatcher = Dispatcher({
     location,
-    referrer: undefined,
+    referrer,
     storage,
     title: req.query.title
   });
