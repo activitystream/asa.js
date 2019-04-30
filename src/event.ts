@@ -43,10 +43,11 @@ export interface EventAttrs {
   user: UserManager;
   session: SessionManager;
   meta?: { [key: string]: string };
+  pixelMetaData?: { originalUrl: string };
 }
 
 export const webEvent = (
-  { location, title, storage, user, session, meta }: EventAttrs,
+  { location, title, storage, user, session, meta, pixelMetaData }: EventAttrs,
   type: EventType
 ): Event => {
   const { id, referrer, campaign, tenant }: Session = session.getSession();
@@ -70,6 +71,7 @@ export const webEvent = (
     page,
     meta,
     tenant,
+    pixelMetaData,
     v: version
   };
 };
