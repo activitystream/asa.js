@@ -115,7 +115,11 @@ describe("pixel", () => {
       jasmine.objectContaining({
         campaign: { campaign: "my_campaign" },
         orders: ["Order/1"],
-        type: "as.web.payment.completed"
+        type: "as.web.payment.completed",
+        pixelMetadata: {
+          originalUrl:
+            "/asa.png?tenantId=ASATEST&event=as.web.payment.completed&order=Order/1&utm_campaign=my_campaign"
+        }
       })
     );
   });
