@@ -32,7 +32,7 @@ export interface DispatcherAttrs {
   referrer?: URL | undefined;
   storage: Storage;
   title: string;
-  pixelMetaData?: { originalUrl: string };
+  pixelMetadata?: { originalUrl: string };
 }
 
 export function Dispatcher(attrs: DispatcherAttrs): Dispatcher {

@@ -116,7 +116,7 @@ describe("pixel", () => {
         campaign: { campaign: "my_campaign" },
         orders: ["Order/1"],
         type: "as.web.payment.completed",
-        pixelMetaData: {
+        pixelMetadata: {
           originalUrl:
             "/asa.png?tenantId=ASATEST&event=as.web.payment.completed&order=Order/1&utm_campaign=my_campaign"
         }

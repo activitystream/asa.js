@@ -45,7 +45,7 @@ app.get("/asa.png", (req, res) => {
     referrer,
     storage,
     title: req.query.title,
-    pixelMetaData: { originalUrl: req.originalUrl }
+    pixelMetadata: { originalUrl: req.originalUrl }
   });
 
   dispatcher("set.session.events.enabled", false);
