@@ -1,0 +1,158 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "$ref": "#/definitions/ASAMessage",
+    "definitions": {
+        "ASAMessage": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "tid": {
+                    "type": "string"
+                },
+                "ev": {
+                    "$ref": "#/definitions/Ev"
+                },
+                "t": {
+                    "type": "string",
+                    "format": "date-time"
+                }
+            },
+            "required": [
+                "ev",
+                "t",
+                "tid"
+            ],
+            "title": "ASAMessage"
+        },
+        "Ev": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "type": {
+                    "type": "string"
+                },
+                "partner_id": {
+                    "type": "string"
+                },
+                "partner_sid": {
+                    "type": "string"
+                },
+                "origin": {
+                    "type": "string",
+                    "format": "uri",
+                    "qt-uri-protocols": [
+                        "http"
+                    ]
+                },
+                "occurred": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "campaign": {
+                    "$ref": "#/definitions/Campaign"
+                },
+                "user": {
+                    "$ref": "#/definitions/User"
+                },
+                "page": {
+                    "$ref": "#/definitions/Page"
+                },
+                "tenant": {
+                    "type": "string"
+                },
+                "pixelMetadata": {
+                    "$ref": "#/definitions/PixelMetadata"
+                },
+                "v": {
+                    "type": "string"
+                },
+                "orders": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": [
+                "campaign",
+                "occurred",
+                "orders",
+                "origin",
+                "page",
+                "partner_id",
+                "partner_sid",
+                "pixelMetadata",
+                "tenant",
+                "type",
+                "user",
+                "v"
+            ],
+            "title": "Ev"
+        },
+        "Campaign": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "campaign": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "campaign",
+                "source"
+            ],
+            "title": "Campaign"
+        },
+        "Page": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "format": "uri",
+                    "qt-uri-protocols": [
+                        "http"
+                    ]
+                }
+            },
+            "required": [
+                "url"
+            ],
+            "title": "Page"
+        },
+        "PixelMetadata": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "originalUrl": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "originalUrl"
+            ],
+            "title": "PixelMetadata"
+        },
+        "User": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "did": {
+                    "type": "string"
+                },
+                "sid": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "did",
+                "sid"
+            ],
+            "title": "User"
+        }
+    }
+}
+
