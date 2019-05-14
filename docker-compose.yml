@@ -1,0 +1,8 @@
+version: "2"
+
+services:
+  pixel:
+    ports:
+      - 4000:8000
+    build:
+      context: .

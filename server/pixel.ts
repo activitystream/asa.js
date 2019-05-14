@@ -4,7 +4,7 @@ import path from "path";
 import fetch from "node-fetch";
 import { storageAPI } from "../src/storage";
 import { Dispatcher } from "../src/dispatcher";
-import { URL } from "whatwg-url";
+import { URL } from "url";
 
 // @ts-ignore
 global.fetch = fetch;
@@ -18,13 +18,11 @@ app.get("/asa.png", (req, res) => {
     return;
   }
   const storage = storageAPI();
-  let locationString: string = req.get("Referrer") || query.referrer || "";
+  let locationString: string = req.get("Referrer") || "";
   if (!locationString) {
     locationString = "http://activitystreampixel.com";
   }
-  const location = (new URL(
-    locationString
-  ) as any) as Window["URL"]["prototype"];
+  const location = new URL(locationString);
 
   // Fill storage with campaign information from the url
   Object.keys(query).forEach(key => {
@@ -33,12 +31,24 @@ app.get("/asa.png", (req, res) => {
     }
   });
 
-  const referrer = query.referrer
-    ? query.referrer.startsWith("http://") ||
-      query.referrer.startsWith("https://")
-      ? new window.URL(query.referrer)
-      : new window.URL(`http://${query.referrer}`)
-    : undefined;
+  let referrer: URL | undefined = undefined;
+  if (query.referrer) {
+    try {
+      referrer =
+        query.referrer.startsWith("http://") ||
+        query.referrer.startsWith("https://")
+          ? new URL(query.referrer)
+          : new URL(`http://${query.referrer}`);
+      storage.setItem(
+        "__asa_session",
+        JSON.stringify({
+          referrer
+        })
+      );
+    } catch (error) {
+      referrer = undefined;
+    }
+  }
 
   const dispatcher = Dispatcher({
     location,
