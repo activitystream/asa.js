@@ -72,7 +72,8 @@ export const createSessionManager = (attrs: SessionAttrs): SessionManager => {
       SESSION_COOKIE_NAME,
       JSON.stringify({
         ...data,
-        ...(campaign && { campaign }),
+        ...{ campaign },
+        storage: undefined,
         id: `${hex_sha1(location.host)}.${hex_sha1(
           `${user.getUser()}.${uid()}`
         )}`,
@@ -90,8 +91,10 @@ export const createSessionManager = (attrs: SessionAttrs): SessionManager => {
     const oldSession = getSession();
     const session: Session = {
       ...oldSession,
-      ...(campaign && { campaign }),
+      ...(Object.keys(campaign).length && { campaign }),
       ...data,
+      // @ts-ignore
+      storage: undefined,
       data: { ...(oldSession.data || {}), ...(data.data || {}) },
       t: Date.now() + SESSION_EXPIRE_TIMEOUT
     };
