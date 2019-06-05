@@ -5,7 +5,7 @@
 import { SessionManager } from "./session";
 import { mapUTM } from "./campaign";
 import { KEY } from "./partner";
-import { ASA_REFFERER_PARAM } from "./constants";
+import { ASA_REFERRER_KEY } from "./constants";
 
 interface TrackAttrs {
   tenant: string;
@@ -37,7 +37,7 @@ export function track({ session, tenant, domains }: TrackAttrs): void {
       });
       if (currentSession.referrer) {
         destination.searchParams.set(
-          ASA_REFFERER_PARAM,
+          ASA_REFERRER_KEY,
           currentSession.referrer.hostname
         );
       }

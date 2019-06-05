@@ -2,7 +2,7 @@ import { setPartnerInfo } from "./partner";
 import logger from "./logger";
 import { Dispatcher } from "./dispatcher";
 import api from "./api";
-import { ASA_REFFERER_PARAM } from "./constants";
+import { ASA_REFERRER_KEY } from "./constants";
 
 declare global {
   interface Window {
@@ -16,20 +16,20 @@ export default (): void => {
   try {
     const queue: QueueItem[] = (window.asa && window.asa["q"]) || [];
     const location = new URL(document.location.toString());
-    const asaReffererParam = location.searchParams.get(ASA_REFFERER_PARAM);
-    let partnerRefferer;
+    const asaReffererParam = location.searchParams.get(ASA_REFERRER_KEY);
+    let partnerReferrer;
     try {
       if (asaReffererParam) {
-        partnerRefferer = new URL(asaReffererParam);
+        partnerReferrer = new URL(asaReffererParam);
       }
     } catch (e) {
-      partnerRefferer = undefined;
+      partnerReferrer = undefined;
     }
-    const documetReferrer = document.referrer
+    const documentReferrer = document.referrer
       ? new URL(document.referrer)
       : undefined;
 
-    const referrer = partnerRefferer || documetReferrer;
+    const referrer = partnerReferrer || documentReferrer;
     const attrs = {
       location,
       referrer,

@@ -7,10 +7,17 @@ import * as microdata from "./microdata";
 import { track } from "./tracking";
 import logger from "./logger";
 import { web, EventType, webEvent, Product, Order, EventAttrs } from "./event";
-import { KEY, setPartnerInfo } from "./partner";
+import {
+  KEY,
+  setPartnerInfo,
+  PARTNER_ID_KEY,
+  PARTNER_SID_KEY
+} from "./partner";
 import api from "./api";
 import { setUTMAliases, UTM } from "./campaign";
 import { createUserManager } from "./user";
+import { ASA_REFERRER_KEY } from "./constants";
+import { ASAParams } from "./types";
 
 export interface Dispatcher {
   (type: "set.session.events.enabled", enabled: boolean): void;
@@ -43,7 +50,7 @@ export function Dispatcher(attrs: DispatcherAttrs): Dispatcher {
 
   const user = createUserManager(attrs);
 
-  let session = createSessionManager({
+  let sessionManager = createSessionManager({
     ...attrs,
     user,
     tenant: "",
@@ -53,7 +60,7 @@ export function Dispatcher(attrs: DispatcherAttrs): Dispatcher {
   const eventAttrs: EventAttrs = {
     ...attrs,
     user,
-    session
+    session: sessionManager
   };
 
   try {
@@ -64,9 +71,9 @@ export function Dispatcher(attrs: DispatcherAttrs): Dispatcher {
 
   const setTenantId = (id: string) => {
     tenant = id;
-    if (!session.hasSession()) {
+    if (!sessionManager.hasSession()) {
       logger.log("no session, starting a new one");
-      session.createSession({
+      sessionManager.createSession({
         ...attrs,
         tenant,
         user,
@@ -76,7 +83,7 @@ export function Dispatcher(attrs: DispatcherAttrs): Dispatcher {
         api.submitEvent(webEvent(eventAttrs, "as.web.session.started"));
       }
     } else {
-      session.refreshSession({
+      sessionManager.refreshSession({
         ...attrs,
         tenant,
         user,
@@ -92,14 +99,18 @@ export function Dispatcher(attrs: DispatcherAttrs): Dispatcher {
   const types = {
     "set.session.events.enabled": (enabled: boolean) =>
       (sessionEvents = enabled),
-    "create.custom.session": (sessionManager: SessionManager) => {
-      session = sessionManager;
-      eventAttrs.session = session;
+    "create.custom.session": (_sessionManager: SessionManager) => {
+      sessionManager = _sessionManager;
+      eventAttrs.session = sessionManager;
     },
     "set.tenant.id": setTenantId,
     "tenant.id.provided": setTenantId,
     "set.connected.partners": (partners: string[]) =>
-      track({ session, tenant: tenant || "", domains: partners }),
+      track({
+        session: sessionManager,
+        tenant: tenant || "",
+        domains: partners
+      }),
     "set.service.providers": (domains: string[]) => (providers = domains),
     "set.partner.key": (name: string, value: string) => {
       KEY[name] = value;
@@ -109,7 +120,7 @@ export function Dispatcher(attrs: DispatcherAttrs): Dispatcher {
     "set.metadata.transformer": microdata.setMapper,
     "set.utm.aliases": (aliases: Partial<typeof UTM>) => {
       setUTMAliases(aliases);
-      session.refreshSession({
+      sessionManager.refreshSession({
         ...attrs,
         tenant,
         user,
@@ -120,7 +131,7 @@ export function Dispatcher(attrs: DispatcherAttrs): Dispatcher {
 
   type Type = keyof typeof types | EventType;
 
-  return function Dispatcher(type: Type, ...data: any[]) {
+  const Dispatcher = function(type: Type, ...data: any[]) {
     try {
       if (!(type in web)) {
         if (type in types) {
@@ -138,4 +149,27 @@ export function Dispatcher(attrs: DispatcherAttrs): Dispatcher {
       });
     }
   };
+
+  Dispatcher.getParams = function getParams(): Partial<ASAParams> {
+    const currentSession = sessionManager.getSession();
+    const campaign = currentSession.campaign || {};
+    const referrer = currentSession.referrer;
+
+    const params: Partial<ASAParams> = {};
+
+    Object.keys(campaign).forEach(function(key) {
+      params[`utm_${key}`] = campaign[key];
+    });
+
+    if (referrer) {
+      params[ASA_REFERRER_KEY] = referrer.toString();
+    }
+
+    params[PARTNER_ID_KEY] = currentSession.tenant;
+    params[PARTNER_SID_KEY] = currentSession.id;
+
+    return params;
+  };
+
+  return Dispatcher;
 }
