@@ -89,10 +89,14 @@ export const createSessionManager = (attrs: SessionAttrs): SessionManager => {
   function refreshSession(data: SessionAttrs) {
     const campaign: Campaign = getCampaign(data);
     const oldSession = getSession();
+    const referrer = Object.keys(campaign).length
+      ? data.referrer
+      : oldSession.referrer;
     const session: Session = {
       ...oldSession,
       ...(Object.keys(campaign).length && { campaign }),
       ...data,
+      ...{ referrer },
       // @ts-ignore
       storage: undefined,
       data: { ...(oldSession.data || {}), ...(data.data || {}) },

@@ -5,6 +5,7 @@
 import { SessionManager } from "./session";
 import { mapUTM } from "./campaign";
 import { KEY } from "./partner";
+import { ASA_REFERRER_KEY } from "./constants";
 
 interface TrackAttrs {
   tenant: string;
@@ -26,13 +27,20 @@ export function track({ session, tenant, domains }: TrackAttrs): void {
         KEY.PARTNER_SID_KEY,
         session.getSession().id
       );
-      const campaign = session.getSession().campaign || {};
+      const currentSession = session.getSession();
+      const campaign = currentSession.campaign || {};
       mapUTM((key: string) => {
         const value = campaign[key.substr(4)];
         if (value) {
           destination.searchParams.set(key, value);
         }
       });
+      if (currentSession.referrer) {
+        destination.searchParams.set(
+          ASA_REFERRER_KEY,
+          currentSession.referrer.hostname
+        );
+      }
       target.href = destination.href;
     }
   };

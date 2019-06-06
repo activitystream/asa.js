@@ -4,9 +4,11 @@
 
 import { mapUTM } from "./campaign";
 
+export const PARTNER_ID_KEY = "__as.partner_id";
+export const PARTNER_SID_KEY = "__as.partner_sid";
 export const KEY = {
-  PARTNER_ID_KEY: "__as.partner_id",
-  PARTNER_SID_KEY: "__as.partner_sid"
+  PARTNER_ID_KEY,
+  PARTNER_SID_KEY
 };
 
 interface PartnerAttrs {
