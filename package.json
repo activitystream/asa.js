@@ -1,6 +1,6 @@
 {
   "name": "@activitystream/asa",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Activity Stream Analytics data sumbission library",
   "browser": "dist/asa.min.js",
   "main": "dist/asa.cjs",
