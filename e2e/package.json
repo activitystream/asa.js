@@ -24,7 +24,7 @@
     "@novnc/novnc": "^1.0.0",
     "ansi-to-html": "^0.6.4",
     "chai": "^4.1.2",
-    "express": "^4.16.3",
+    "express": "^4.17.3",
     "nightwatch": "^0.9.21",
     "node-fetch": "^2.1.2",
     "rollup": "^0.59.1",
