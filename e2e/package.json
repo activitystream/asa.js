@@ -25,7 +25,7 @@
     "ansi-to-html": "^0.6.4",
     "chai": "^4.1.2",
     "express": "^4.16.3",
-    "nightwatch": "^0.9.21",
+    "nightwatch": "^2.6.9",
     "node-fetch": "^2.1.2",
     "rollup": "^0.59.1",
     "rollup-plugin-commonjs": "^9.1.3",
